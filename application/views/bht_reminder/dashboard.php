@@ -62,9 +62,25 @@
                                         <?php if (!empty($kategori_jenis)): ?>
                                             <?php foreach ($kategori_jenis as $kategori): ?>
                                                 <option value="<?= $kategori->jenis_perkara_nama ?>" <?= $jenis == $kategori->jenis_perkara_nama ? 'selected' : '' ?>>
-                                                    <?= $kategori->jenis_perkara_nama ?>
+                                                    <?= $kategori->jenis_perkara_nama ?> (<?= $kategori->jumlah ?>)
                                                 </option>
                                             <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                </div>
+                                <div class="form-group mr-3">
+                                    <label for="tahun" class="mr-2">Tahun Minimal:</label>
+                                    <select class="form-control" id="tahun" name="tahun">
+                                        <?php if (!empty($available_years)): ?>
+                                            <?php foreach ($available_years as $year): ?>
+                                                <option value="<?= $year->tahun ?>" <?= $tahun_filter == $year->tahun ? 'selected' : '' ?>>
+                                                    <?= $year->tahun ?> ke atas
+                                                </option>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <option value="2024" <?= $tahun_filter == '2024' ? 'selected' : '' ?>>2024 ke atas</option>
+                                            <option value="2023" <?= $tahun_filter == '2023' ? 'selected' : '' ?>>2023 ke atas</option>
+                                            <option value="2022" <?= $tahun_filter == '2022' ? 'selected' : '' ?>>2022 ke atas</option>
                                         <?php endif; ?>
                                     </select>
                                 </div>

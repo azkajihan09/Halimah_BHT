@@ -98,7 +98,7 @@ class Menu_baru_model extends CI_Model
 	/**
 	 * 3. Get jadwal BHT harian
 	 */
-	public function get_jadwal_bht_harian($tanggal)
+	public function get_jadwal_bht_harian($tanggal, $jenis = 'semua', $tahun_filter = '2024')
 	{
 		$this->db->select("
             p.nomor_perkara,
@@ -127,12 +127,23 @@ class Menu_baru_model extends CI_Model
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
 		$this->db->where('pp.tanggal_bht IS NULL');
+
+		// Add year filter - only show cases from specified year onwards
+		if ($tahun_filter) {
+			$this->db->where('YEAR(pp.tanggal_putusan) >=', $tahun_filter);
+		}
+
+		// Add case type filter if specified
+		if ($jenis != 'semua') {
+			$this->db->where('p.jenis_perkara_nama', $jenis);
+		}
+
 		$this->db->order_by('hari_sejak_pbt', 'DESC');
 
 		return $this->db->get()->result();
 	}
 
-	public function get_pengingat_urgent($tanggal)
+	public function get_pengingat_urgent($tanggal, $jenis = 'semua', $tahun_filter = '2024')
 	{
 		$this->db->select('COUNT(*) as total');
 		$this->db->from('perkara p');
@@ -143,11 +154,21 @@ class Menu_baru_model extends CI_Model
 		$this->db->where('pp.tanggal_bht IS NULL');
 		$this->db->where('DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 5');
 
+		// Add year filter
+		if ($tahun_filter) {
+			$this->db->where('YEAR(pp.tanggal_putusan) >=', $tahun_filter);
+		}
+
+		// Add case type filter
+		if ($jenis != 'semua') {
+			$this->db->where('p.jenis_perkara_nama', $jenis);
+		}
+
 		$result = $this->db->get()->row();
 		return $result ? $result->total : 0;
 	}
 
-	public function count_jadwal_bht_harian($tanggal)
+	public function count_jadwal_bht_harian($tanggal, $jenis = 'semua', $tahun_filter = '2024')
 	{
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
@@ -155,6 +176,16 @@ class Menu_baru_model extends CI_Model
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
 		$this->db->where('pp.tanggal_bht IS NULL');
+
+		// Add year filter
+		if ($tahun_filter) {
+			$this->db->where('YEAR(pp.tanggal_putusan) >=', $tahun_filter);
+		}
+
+		// Add case type filter
+		if ($jenis != 'semua') {
+			$this->db->where('p.jenis_perkara_nama', $jenis);
+		}
 
 		return $this->db->count_all_results();
 	}
@@ -467,7 +498,7 @@ class Menu_baru_model extends CI_Model
 
 	// ===== METHODS FOR BHT REMINDER SYSTEM =====
 
-	public function get_berkas_pending_bht($limit = null)
+	public function get_berkas_pending_bht($limit = null, $tahun_filter = null)
 	{
 		$this->db->select("
             p.nomor_perkara,
@@ -493,6 +524,12 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pp.tanggal_bht IS NULL');
+
+		// Add year filter if specified
+		if ($tahun_filter) {
+			$this->db->where('YEAR(pp.tanggal_putusan) >=', $tahun_filter);
+		}
+
 		$this->db->order_by('pp.tanggal_putusan', 'ASC');
 		if ($limit) {
 			$this->db->limit($limit);
@@ -500,7 +537,7 @@ class Menu_baru_model extends CI_Model
 		return $this->db->get()->result();
 	}
 
-	public function get_reminder_statistics($periode)
+	public function get_reminder_statistics($periode, $tahun_filter = null)
 	{
 		$year = substr($periode, 0, 4);
 		$month = substr($periode, 5, 2);
@@ -519,10 +556,15 @@ class Menu_baru_model extends CI_Model
 		$this->db->where('MONTH(pp.tanggal_putusan)', $month);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 
+		// Add year filter if specified
+		if ($tahun_filter) {
+			$this->db->where('YEAR(pp.tanggal_putusan) >=', $tahun_filter);
+		}
+
 		return $this->db->get()->row();
 	}
 
-	public function get_overdue_pbt_cases($days = 7)
+	public function get_overdue_pbt_cases($days = 7, $tahun_filter = null)
 	{
 		$this->db->select("
             p.nomor_perkara,
@@ -537,12 +579,18 @@ class Menu_baru_model extends CI_Model
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NULL');
 		$this->db->where('DATEDIFF(CURDATE(), pp.tanggal_putusan) >=', $days);
+
+		// Add year filter if specified
+		if ($tahun_filter) {
+			$this->db->where('YEAR(pp.tanggal_putusan) >=', $tahun_filter);
+		}
+
 		$this->db->order_by('pp.tanggal_putusan', 'ASC');
 
 		return $this->db->get()->result();
 	}
 
-	public function get_overdue_bht_cases($days = 14)
+	public function get_overdue_bht_cases($days = 14, $tahun_filter = null)
 	{
 		$this->db->select("
             p.nomor_perkara,
@@ -559,6 +607,12 @@ class Menu_baru_model extends CI_Model
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
 		$this->db->where('pp.tanggal_bht IS NULL');
 		$this->db->where('DATEDIFF(CURDATE(), pjs.tanggal_sidang) >=', $days);
+
+		// Add year filter if specified
+		if ($tahun_filter) {
+			$this->db->where('YEAR(pp.tanggal_putusan) >=', $tahun_filter);
+		}
+
 		$this->db->order_by('pjs.tanggal_sidang', 'ASC');
 
 		return $this->db->get()->result();
@@ -747,7 +801,7 @@ class Menu_baru_model extends CI_Model
 		return $this->db->get()->result();
 	}
 
-	public function get_jenis_perkara_kategori()
+	public function get_jenis_perkara_kategori($tahun_filter = null)
 	{
 		$this->db->select("
             p.jenis_perkara_nama,
@@ -756,8 +810,26 @@ class Menu_baru_model extends CI_Model
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+
+		// Add year filter if specified
+		if ($tahun_filter) {
+			$this->db->where('YEAR(pp.tanggal_putusan) >=', $tahun_filter);
+		}
+
 		$this->db->group_by('p.jenis_perkara_nama');
 		$this->db->order_by('jumlah', 'DESC');
+
+		return $this->db->get()->result();
+	}
+
+	public function get_available_years()
+	{
+		$this->db->select('DISTINCT YEAR(pp.tanggal_putusan) as tahun');
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->db->where('YEAR(pp.tanggal_putusan) >= 2020'); // Only show from 2020 onwards
+		$this->db->order_by('tahun', 'DESC');
 
 		return $this->db->get()->result();
 	}

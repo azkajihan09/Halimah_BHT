@@ -24,22 +24,27 @@ class Bht_reminder extends CI_Controller
 		$tanggal = $this->input->get('tanggal') ? $this->input->get('tanggal') : date('Y-m-d');
 		$periode = $this->input->get('periode') ? $this->input->get('periode') : date('Y-m');
 		$jenis = $this->input->get('jenis') ? $this->input->get('jenis') : 'semua';
+		$tahun_filter = $this->input->get('tahun') ? $this->input->get('tahun') : '2024'; // Default 2024 and above
 
 		$data['tanggal'] = $tanggal;
 		$data['periode'] = $periode;
 		$data['jenis'] = $jenis;
+		$data['tahun_filter'] = $tahun_filter;
 
-		// Get reminder data
-		$data['jadwal_bht_hari_ini'] = $this->Menu_baru_model->get_jadwal_bht_harian($tanggal);
-		$data['perkara_tanpa_pbt'] = $this->Menu_baru_model->get_perkara_putus_tanpa_pbt($tanggal);
-		$data['berkas_pending'] = $this->Menu_baru_model->get_berkas_pending_bht();
-		$data['statistik_reminder'] = $this->Menu_baru_model->get_reminder_statistics($periode);
+		// Get reminder data with year filter
+		$data['jadwal_bht_hari_ini'] = $this->Menu_baru_model->get_jadwal_bht_harian($tanggal, $jenis, $tahun_filter);
+		$data['perkara_tanpa_pbt'] = $this->Menu_baru_model->get_perkara_putus_tanpa_pbt($tanggal, $jenis, $tahun_filter);
+		$data['berkas_pending'] = $this->Menu_baru_model->get_berkas_pending_bht(null, $tahun_filter);
+		$data['statistik_reminder'] = $this->Menu_baru_model->get_reminder_statistics($periode, $tahun_filter);
 
 		// Get categories for filter
-		$data['kategori_jenis'] = $this->Menu_baru_model->get_jenis_perkara_kategori();
+		$data['kategori_jenis'] = $this->Menu_baru_model->get_jenis_perkara_kategori($tahun_filter);
+
+		// Get available years for filter dropdown
+		$data['available_years'] = $this->Menu_baru_model->get_available_years();
 
 		// Priority reminders (urgent cases)
-		$data['urgent_reminders'] = $this->get_urgent_reminders($tanggal);
+		$data['urgent_reminders'] = $this->get_urgent_reminders($tanggal, $tahun_filter);
 
 		$this->load->view('template/new_header', $data);
 		$this->load->view('template/new_sidebar', $data);
@@ -47,13 +52,13 @@ class Bht_reminder extends CI_Controller
 		$this->load->view('template/new_footer');
 	}
 
-	private function get_urgent_reminders($tanggal)
+	private function get_urgent_reminders($tanggal, $tahun_filter = '2024')
 	{
 		// Get cases that are overdue or need immediate attention
 		$urgent = array();
 
 		// Cases without PBT after more than 7 days
-		$overdue_pbt = $this->Menu_baru_model->get_overdue_pbt_cases(7);
+		$overdue_pbt = $this->Menu_baru_model->get_overdue_pbt_cases(7, $tahun_filter);
 		foreach ($overdue_pbt as $case) {
 			$urgent[] = array(
 				'type' => 'overdue_pbt',
@@ -64,7 +69,7 @@ class Bht_reminder extends CI_Controller
 		}
 
 		// Cases with PBT but no BHT after more than 14 days
-		$overdue_bht = $this->Menu_baru_model->get_overdue_bht_cases(14);
+		$overdue_bht = $this->Menu_baru_model->get_overdue_bht_cases(14, $tahun_filter);
 		foreach ($overdue_bht as $case) {
 			$urgent[] = array(
 				'type' => 'overdue_bht',

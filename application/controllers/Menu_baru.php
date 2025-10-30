@@ -59,13 +59,19 @@ class Menu_baru extends CI_Controller
 	public function jadwal_bht_harian()
 	{
 		$tanggal = $this->input->get('tanggal') ?: date('Y-m-d');
+		$jenis = $this->input->get('jenis') ?: 'semua';
+		$tahun_filter = $this->input->get('tahun') ?: '2024'; // Default filter tahun 2024 ke atas
 
 		$data = array(
 			'title' => 'Jadwal BHT Per Hari - Pengingat',
 			'tanggal' => $tanggal,
-			'jadwal_bht' => $this->Menu_baru_model->get_jadwal_bht_harian($tanggal),
-			'pengingat_urgent' => $this->Menu_baru_model->get_pengingat_urgent($tanggal),
-			'total_jadwal' => $this->Menu_baru_model->count_jadwal_bht_harian($tanggal)
+			'jenis' => $jenis,
+			'tahun_filter' => $tahun_filter,
+			'jadwal_bht' => $this->Menu_baru_model->get_jadwal_bht_harian($tanggal, $jenis, $tahun_filter),
+			'pengingat_urgent' => $this->Menu_baru_model->get_pengingat_urgent($tanggal, $jenis, $tahun_filter),
+			'total_jadwal' => $this->Menu_baru_model->count_jadwal_bht_harian($tanggal, $jenis, $tahun_filter),
+			'kategori_jenis' => $this->Menu_baru_model->get_jenis_perkara_kategori($tahun_filter),
+			'available_years' => $this->Menu_baru_model->get_available_years()
 		);
 
 		$this->load->view('template/new_header');
@@ -213,8 +219,10 @@ class Menu_baru extends CI_Controller
 				break;
 
 			case 'jadwal_bht_harian':
-				$data = $this->Menu_baru_model->get_jadwal_bht_harian($tanggal);
-				$filename = 'Jadwal_BHT_Harian_' . $tanggal . '.xlsx';
+				$jenis = $this->input->get('jenis') ?: 'semua';
+				$tahun_filter = $this->input->get('tahun') ?: '2024';
+				$data = $this->Menu_baru_model->get_jadwal_bht_harian($tanggal, $jenis, $tahun_filter);
+				$filename = 'Jadwal_BHT_Harian_' . $tanggal . '_' . $tahun_filter . '.xlsx';
 				$this->_export_jadwal_bht_harian($sheet, $data, $tanggal);
 				break;
 
