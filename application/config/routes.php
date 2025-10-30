@@ -53,6 +53,10 @@ $route['default_controller'] = 'home';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
+// Simple route for bht_reminder
+$route['bht_reminder'] = 'bht_reminder/index';
+$route['bht_reminder/(:any)'] = 'bht_reminder/$1';
+
 // ========== CUSTOM ROUTES UNTUK SISTEM BHT ==========
 
 // Route untuk BHT Reminder System

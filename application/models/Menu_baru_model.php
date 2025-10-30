@@ -464,4 +464,301 @@ class Menu_baru_model extends CI_Model
 		$this->db->where('pjs.tanggal_sidang IS NULL');
 		return $this->db->count_all_results();
 	}
+
+	// ===== METHODS FOR BHT REMINDER SYSTEM =====
+
+	public function get_berkas_pending_bht($limit = null)
+	{
+		$this->db->select("
+            p.nomor_perkara,
+            p.jenis_perkara_nama as jenis_perkara,
+            pp.tanggal_putusan,
+            pjs.tanggal_sidang as tanggal_pbt,
+            pp.tanggal_bht,
+            CASE 
+                WHEN pp.tanggal_bht IS NOT NULL THEN 'SELESAI'
+                WHEN pjs.tanggal_sidang IS NOT NULL THEN 'MENUNGGU BHT'
+                ELSE 'MENUNGGU PBT'
+            END as status_reminder,
+            CASE 
+                WHEN pp.tanggal_bht IS NULL AND pjs.tanggal_sidang IS NOT NULL 
+                THEN DATEDIFF(CURDATE(), pjs.tanggal_sidang)
+                WHEN pjs.tanggal_sidang IS NULL 
+                THEN DATEDIFF(CURDATE(), pp.tanggal_putusan)
+                ELSE 0
+            END as hari_tertunda
+        ");
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->db->where('pp.tanggal_bht IS NULL');
+		$this->db->order_by('pp.tanggal_putusan', 'ASC');
+		if ($limit) {
+			$this->db->limit($limit);
+		}
+		return $this->db->get()->result();
+	}
+
+	public function get_reminder_statistics($periode)
+	{
+		$year = substr($periode, 0, 4);
+		$month = substr($periode, 5, 2);
+
+		$this->db->select("
+            COUNT(*) as total_perkara,
+            SUM(CASE WHEN pjs.tanggal_sidang IS NOT NULL THEN 1 ELSE 0 END) as sudah_pbt,
+            SUM(CASE WHEN pp.tanggal_bht IS NOT NULL THEN 1 ELSE 0 END) as sudah_bht,
+            SUM(CASE WHEN pjs.tanggal_sidang IS NULL THEN 1 ELSE 0 END) as belum_pbt,
+            SUM(CASE WHEN pjs.tanggal_sidang IS NOT NULL AND pp.tanggal_bht IS NULL THEN 1 ELSE 0 END) as belum_bht
+        ");
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->where('YEAR(pp.tanggal_putusan)', $year);
+		$this->db->where('MONTH(pp.tanggal_putusan)', $month);
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+
+		return $this->db->get()->row();
+	}
+
+	public function get_overdue_pbt_cases($days = 7)
+	{
+		$this->db->select("
+            p.nomor_perkara,
+            p.jenis_perkara_nama as jenis_perkara,
+            pp.tanggal_putusan,
+            DATEDIFF(CURDATE(), pp.tanggal_putusan) as hari_tertunda,
+            p.perkara_id
+        ");
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->db->where('pjs.tanggal_sidang IS NULL');
+		$this->db->where('DATEDIFF(CURDATE(), pp.tanggal_putusan) >=', $days);
+		$this->db->order_by('pp.tanggal_putusan', 'ASC');
+
+		return $this->db->get()->result();
+	}
+
+	public function get_overdue_bht_cases($days = 14)
+	{
+		$this->db->select("
+            p.nomor_perkara,
+            p.jenis_perkara_nama as jenis_perkara,
+            pp.tanggal_putusan,
+            pjs.tanggal_sidang as tanggal_pbt,
+            DATEDIFF(CURDATE(), pjs.tanggal_sidang) as hari_tertunda,
+            p.perkara_id
+        ");
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
+		$this->db->where('pp.tanggal_bht IS NULL');
+		$this->db->where('DATEDIFF(CURDATE(), pjs.tanggal_sidang) >=', $days);
+		$this->db->order_by('pjs.tanggal_sidang', 'ASC');
+
+		return $this->db->get()->result();
+	}
+
+	public function get_daily_trend($periode)
+	{
+		$year = substr($periode, 0, 4);
+		$month = substr($periode, 5, 2);
+
+		$this->db->select("
+            DATE(pp.tanggal_putusan) as tanggal,
+            COUNT(*) as total_putus,
+            SUM(CASE WHEN pjs.tanggal_sidang IS NOT NULL THEN 1 ELSE 0 END) as total_pbt,
+            SUM(CASE WHEN pp.tanggal_bht IS NOT NULL THEN 1 ELSE 0 END) as total_bht
+        ");
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->where('YEAR(pp.tanggal_putusan)', $year);
+		$this->db->where('MONTH(pp.tanggal_putusan)', $month);
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->db->group_by('DATE(pp.tanggal_putusan)');
+		$this->db->order_by('pp.tanggal_putusan', 'ASC');
+
+		return $this->db->get()->result();
+	}
+
+	public function get_top_delayed_case_types($periode, $limit = 5)
+	{
+		$year = substr($periode, 0, 4);
+		$month = substr($periode, 5, 2);
+
+		$this->db->select("
+            p.jenis_perkara_nama as jenis_perkara,
+            COUNT(*) as total_tertunda,
+            AVG(DATEDIFF(CURDATE(), pp.tanggal_putusan)) as rata_hari_tertunda
+        ");
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->where('YEAR(pp.tanggal_putusan)', $year);
+		$this->db->where('MONTH(pp.tanggal_putusan)', $month);
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->db->where('pp.tanggal_bht IS NULL');
+		$this->db->group_by('p.jenis_perkara_nama');
+		$this->db->order_by('total_tertunda', 'DESC');
+		$this->db->limit($limit);
+
+		return $this->db->get()->result();
+	}
+
+	public function update_perkara_pbt($perkara_id, $data)
+	{
+		$this->db->where('perkara_id', $perkara_id);
+		return $this->db->update('perkara_jadwal_sidang', $data);
+	}
+
+	public function update_perkara_bht($perkara_id, $data)
+	{
+		$this->db->where('perkara_id', $perkara_id);
+		return $this->db->update('perkara_putusan', $data);
+	}
+
+	public function log_reminder_action($data)
+	{
+		// For now, just return true. You can create a separate table for logging if needed
+		return true;
+	}
+
+	public function get_all_reminders_for_period($periode, $jenis = 'semua')
+	{
+		$year = substr($periode, 0, 4);
+		$month = substr($periode, 5, 2);
+
+		$this->db->select("
+            p.nomor_perkara,
+            p.jenis_perkara_nama as jenis_perkara,
+            pp.tanggal_putusan,
+            pjs.tanggal_sidang as tanggal_pbt,
+            pp.tanggal_bht,
+            CASE 
+                WHEN pp.tanggal_bht IS NOT NULL THEN 'SELESAI BHT'
+                WHEN pjs.tanggal_sidang IS NOT NULL THEN 'MENUNGGU BHT'
+                ELSE 'MENUNGGU PBT'
+            END as status_reminder,
+            CASE 
+                WHEN pp.tanggal_bht IS NULL AND pjs.tanggal_sidang IS NOT NULL 
+                THEN DATEDIFF(CURDATE(), pjs.tanggal_sidang)
+                WHEN pjs.tanggal_sidang IS NULL 
+                THEN DATEDIFF(CURDATE(), pp.tanggal_putusan)
+                ELSE 0
+            END as hari_tertunda,
+            CASE 
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'high'
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 7 THEN 'medium'
+                ELSE 'low'
+            END as priority_level
+        ");
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->where('YEAR(pp.tanggal_putusan)', $year);
+		$this->db->where('MONTH(pp.tanggal_putusan)', $month);
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+
+		if ($jenis != 'semua') {
+			$this->db->where('p.jenis_perkara_nama', $jenis);
+		}
+
+		$this->db->order_by('pp.tanggal_putusan', 'ASC');
+
+		return $this->db->get()->result();
+	}
+
+	public function get_daily_completion_chart($periode)
+	{
+		$year = substr($periode, 0, 4);
+		$month = substr($periode, 5, 2);
+
+		$this->db->select("
+            DATE(pp.tanggal_bht) as tanggal,
+            COUNT(*) as completed_count
+        ");
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->where('YEAR(pp.tanggal_bht)', $year);
+		$this->db->where('MONTH(pp.tanggal_bht)', $month);
+		$this->db->where('pp.tanggal_bht IS NOT NULL');
+		$this->db->group_by('DATE(pp.tanggal_bht)');
+		$this->db->order_by('pp.tanggal_bht', 'ASC');
+
+		return $this->db->get()->result();
+	}
+
+	public function get_case_type_distribution($periode)
+	{
+		$year = substr($periode, 0, 4);
+		$month = substr($periode, 5, 2);
+
+		$this->db->select("
+            p.jenis_perkara_nama as jenis_perkara,
+            COUNT(*) as jumlah
+        ");
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->where('YEAR(pp.tanggal_putusan)', $year);
+		$this->db->where('MONTH(pp.tanggal_putusan)', $month);
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->db->group_by('p.jenis_perkara_nama');
+		$this->db->order_by('jumlah', 'DESC');
+
+		return $this->db->get()->result();
+	}
+
+	public function get_delay_analysis_chart($periode)
+	{
+		$year = substr($periode, 0, 4);
+		$month = substr($periode, 5, 2);
+
+		$this->db->select("
+            CASE 
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) <= 7 THEN '1-7 hari'
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) <= 14 THEN '8-14 hari'
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) <= 30 THEN '15-30 hari'
+                ELSE 'Lebih 30 hari'
+            END as kategori_delay,
+            COUNT(*) as jumlah
+        ");
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->where('YEAR(pp.tanggal_putusan)', $year);
+		$this->db->where('MONTH(pp.tanggal_putusan)', $month);
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->db->where('pp.tanggal_bht IS NULL');
+		$this->db->group_by("
+            CASE 
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) <= 7 THEN '1-7 hari'
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) <= 14 THEN '8-14 hari'
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) <= 30 THEN '15-30 hari'
+                ELSE 'Lebih 30 hari'
+            END
+        ");
+		$this->db->order_by('jumlah', 'DESC');
+
+		return $this->db->get()->result();
+	}
+
+	public function get_jenis_perkara_kategori()
+	{
+		$this->db->select("
+            p.jenis_perkara_nama,
+            COUNT(*) as jumlah
+        ");
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->db->group_by('p.jenis_perkara_nama');
+		$this->db->order_by('jumlah', 'DESC');
+
+		return $this->db->get()->result();
+	}
 }
