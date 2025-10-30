@@ -32,6 +32,78 @@
 
 				<li class="nav-header">MANAJEMEN PERKARA</li>
 
+				<!-- Menu Baru - Monitoring Harian -->
+				<li class="nav-item">
+					<a href="#" class="nav-link">
+						<i class="nav-icon fas fa-calendar-day text-success"></i>
+						<p>
+							Monitoring Harian
+							<i class="fas fa-angle-left right"></i>
+						</p>
+					</a>
+					<ul class="nav nav-treeview">
+						<li class="nav-item">
+							<a href="<?php echo site_url('Menu_baru/perkara_putus_harian') ?>" class="nav-link <?= $this->uri->segment(2) == 'perkara_putus_harian' ? 'active' : '' ?>">
+								<i class="fas fa-gavel nav-icon text-info"></i>
+								<p>Perkara Putus Tiap Hari</p>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('Menu_baru/jadwal_bht_harian') ?>" class="nav-link <?= $this->uri->segment(2) == 'jadwal_bht_harian' ? 'active' : '' ?>">
+								<i class="fas fa-clock nav-icon text-warning"></i>
+								<p>Jadwal BHT Per Hari</p>
+								<span class="badge badge-warning right" id="jadwal-alert">0</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('Menu_baru/perkara_putus_tanpa_pbt') ?>" class="nav-link <?= $this->uri->segment(2) == 'perkara_putus_tanpa_pbt' ? 'active' : '' ?>">
+								<i class="fas fa-exclamation-triangle nav-icon text-danger"></i>
+								<p>Perkara Putus Tanpa PBT</p>
+								<span class="badge badge-danger right" id="tanpa-pbt-alert">!</span>
+							</a>
+						</li>
+					</ul>
+				</li>
+
+				<!-- Menu Baru - Manajemen Berkas -->
+				<li class="nav-item">
+					<a href="#" class="nav-link">
+						<i class="nav-icon fas fa-folder-open text-primary"></i>
+						<p>
+							Manajemen Berkas
+							<i class="fas fa-angle-left right"></i>
+						</p>
+					</a>
+					<ul class="nav nav-treeview">
+						<li class="nav-item">
+							<a href="<?php echo site_url('Menu_baru/berkas_masuk') ?>" class="nav-link <?= $this->uri->segment(2) == 'berkas_masuk' ? 'active' : '' ?>">
+								<i class="fas fa-inbox nav-icon text-success"></i>
+								<p>Berkas Masuk</p>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('Menu_baru/pbt_masuk') ?>" class="nav-link <?= $this->uri->segment(2) == 'pbt_masuk' ? 'active' : '' ?>">
+								<i class="fas fa-file-import nav-icon text-info"></i>
+								<p>PBT Masuk</p>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('Menu_baru/berkas_menu_bht') ?>" class="nav-link <?= $this->uri->segment(2) == 'berkas_menu_bht' ? 'active' : '' ?>">
+								<i class="fas fa-archive nav-icon text-secondary"></i>
+								<p>Berkas Menu BHT</p>
+							</a>
+						</li>
+					</ul>
+				</li>
+
+				<!-- Menu Baru - Kalender & Tanggal -->
+				<li class="nav-item">
+					<a href="<?php echo site_url('Menu_baru/tanggal_pbt_bht') ?>" class="nav-link <?= $this->uri->segment(2) == 'tanggal_pbt_bht' ? 'active' : '' ?>">
+						<i class="nav-icon fas fa-calendar-alt text-purple"></i>
+						<p>Tanggal PBT dan BHT</p>
+					</a>
+				</li>
+
 				<!-- Laporan Kegiatan Hakim -->
 				<li class="nav-item">
 					<a href="#" class="nav-link">
@@ -162,9 +234,11 @@
 	$(document).ready(function() {
 		// Update reminder counter saat halaman dimuat
 		updateReminderCounter();
+		updateMenuBaruNotifications();
 
 		// Update setiap 2 menit
 		setInterval(updateReminderCounter, 2 * 60 * 1000);
+		setInterval(updateMenuBaruNotifications, 2 * 60 * 1000);
 	});
 
 	function updateReminderCounter() {
@@ -195,6 +269,44 @@
 			error: function() {
 				// Jika error, set badge ke tanda tanya
 				$('#reminder-count').text('?').removeClass('badge-danger').addClass('badge-warning');
+			}
+		});
+	}
+
+	function updateMenuBaruNotifications() {
+		$.ajax({
+			url: '<?= base_url("Menu_baru/api_notifikasi") ?>',
+			method: 'GET',
+			dataType: 'json',
+			success: function(response) {
+				if (response.success && response.data) {
+					const data = response.data;
+
+					// Update jadwal BHT alert
+					const jadwalBadge = $('#jadwal-alert');
+					if (data.jadwal_bht_urgent > 0) {
+						jadwalBadge.text(data.jadwal_bht_urgent);
+						jadwalBadge.removeClass('badge-secondary').addClass('badge-warning badge-pulse');
+					} else {
+						jadwalBadge.text('0');
+						jadwalBadge.removeClass('badge-warning badge-pulse').addClass('badge-secondary');
+					}
+
+					// Update perkara tanpa PBT alert
+					const tanpaPbtBadge = $('#tanpa-pbt-alert');
+					if (data.perkara_putus_tanpa_pbt > 0) {
+						tanpaPbtBadge.text(data.perkara_putus_tanpa_pbt);
+						tanpaPbtBadge.removeClass('badge-secondary').addClass('badge-danger badge-pulse');
+					} else {
+						tanpaPbtBadge.text('0');
+						tanpaPbtBadge.removeClass('badge-danger badge-pulse').addClass('badge-secondary');
+					}
+				}
+			},
+			error: function() {
+				// Jika error, set badge ke tanda tanya
+				$('#jadwal-alert').text('?').removeClass('badge-warning').addClass('badge-secondary');
+				$('#tanpa-pbt-alert').text('?').removeClass('badge-danger').addClass('badge-secondary');
 			}
 		});
 	}
