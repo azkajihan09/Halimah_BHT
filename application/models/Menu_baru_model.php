@@ -19,7 +19,7 @@ class Menu_baru_model extends CI_Model
             p.nomor_perkara,
             p.jenis_perkara_nama as jenis_perkara,
             DATE(pp.tanggal_putusan) as tanggal_putus,
-            '-' as hakim,
+            COALESCE(pen.majelis_hakim_nama, '-') as hakim,
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 'Sudah BHT'
                 ELSE 'Belum BHT'
@@ -30,6 +30,7 @@ class Menu_baru_model extends CI_Model
         ");
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(pp.tanggal_putusan)', $tanggal);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->order_by('pp.tanggal_putusan', 'DESC');
@@ -41,6 +42,7 @@ class Menu_baru_model extends CI_Model
 	{
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(pp.tanggal_putusan)', $tanggal);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		return $this->db->count_all_results();
@@ -107,6 +109,7 @@ class Menu_baru_model extends CI_Model
             DATE(pjs.tanggal_sidang) as tanggal_pbt,
             DATE_ADD(pjs.tanggal_sidang, INTERVAL 7 DAY) as target_bht,
             DATE(pp.tanggal_bht) as tanggal_bht,
+            COALESCE(pen.majelis_hakim_nama, '-') as hakim,
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 'Selesai'
                 WHEN pjs.tanggal_sidang IS NULL THEN 'Menunggu PBT'
@@ -124,6 +127,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
 		$this->db->where('pp.tanggal_bht IS NULL');
@@ -149,6 +153,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
 		$this->db->where('pp.tanggal_bht IS NULL');
@@ -173,6 +178,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
 		$this->db->where('pp.tanggal_bht IS NULL');
@@ -199,7 +205,7 @@ class Menu_baru_model extends CI_Model
             p.nomor_perkara,
             p.jenis_perkara_nama as jenis_perkara,
             DATE(pp.tanggal_putusan) as tanggal_putus,
-            '-' as hakim,
+            COALESCE(pen.majelis_hakim_nama, '-') as hakim,
             DATEDIFF(CURDATE(), pp.tanggal_putusan) as hari_sejak_putus,
             CASE 
                 WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'KRITIS'
@@ -210,6 +216,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NULL');
 		$this->db->order_by('hari_sejak_putus', 'DESC');
@@ -222,6 +229,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NULL');
 		return $this->db->count_all_results();
@@ -237,6 +245,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NULL');
 
@@ -256,7 +265,7 @@ class Menu_baru_model extends CI_Model
                 WHEN pp.tanggal_putusan IS NOT NULL THEN 'PUTUS'
                 ELSE 'PROSES'
             END as status_perkara,
-            '-' as hakim,
+            COALESCE(pen.majelis_hakim_nama, '-') as hakim,
             CASE 
                 WHEN pp.tanggal_putusan IS NOT NULL THEN 'Sudah Putus'
                 ELSE 'Sedang Diproses'
@@ -264,6 +273,7 @@ class Menu_baru_model extends CI_Model
         ");
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(p.tanggal_pendaftaran)', $tanggal);
 
 		if ($status == 'putus') {
@@ -281,6 +291,7 @@ class Menu_baru_model extends CI_Model
 	{
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(p.tanggal_pendaftaran)', $tanggal);
 
 		if ($status == 'putus') {
@@ -303,6 +314,7 @@ class Menu_baru_model extends CI_Model
         ");
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(p.tanggal_pendaftaran)', $tanggal);
 		$this->db->group_by("CASE WHEN pp.tanggal_putusan IS NOT NULL THEN 'PUTUS' ELSE 'PROSES' END");
 
@@ -319,7 +331,7 @@ class Menu_baru_model extends CI_Model
             p.jenis_perkara_nama as jenis_perkara,
             DATE(pjs.tanggal_sidang) as tanggal_pbt,
             DATE(pp.tanggal_putusan) as tanggal_putusan,
-            '-' as hakim,
+            COALESCE(pen.majelis_hakim_nama, '-') as hakim,
             DATE(pp.tanggal_bht) as tanggal_bht,
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 'Sudah BHT'
@@ -330,6 +342,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(pjs.tanggal_sidang)', $tanggal);
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
 
@@ -349,6 +362,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(pjs.tanggal_sidang)', $tanggal);
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
 
