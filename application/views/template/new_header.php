@@ -294,15 +294,15 @@
 				<li class="nav-item dropdown user-menu">
 					<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
 						<img src="<?php echo base_url() ?>assets/dist/img/Logo PA Amuntai - Trans.png" class="user-image img-circle elevation-2" alt="User Image">
-						<span class="d-none d-md-inline">Admin SIPP</span>
+						<span class="d-none d-md-inline">DATA SIPP</span>
 					</a>
 					<ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
 						<!-- User image -->
 						<li class="user-header bg-primary">
 							<img src="<?php echo base_url() ?>assets/dist/img/Logo PA Amuntai - Trans.png" class="img-circle elevation-2" alt="User Image">
 							<p>
-								Admin SIPP - PA Amuntai
-								<small>Administrator</small>
+								Sata SIPP - PA Amuntai
+								<small>Perkara</small>
 							</p>
 						</li>
 						<!-- Menu Footer-->

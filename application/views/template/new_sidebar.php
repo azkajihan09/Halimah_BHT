@@ -3,7 +3,7 @@
 	<!-- Brand Logo -->
 	<a href="<?php echo site_url('home') ?>" class="brand-link navbar-green">
 		<img src="<?php echo base_url() ?>assets/dist/img/logo-mahkamah-agung.png" alt="Logo PA Amuntai" class="brand-image img-circle elevation-2" style="opacity: .8">
-		<span class="brand-text font-weight-light">SIPP PA Amuntai</span>
+		<span class="brand-text font-weight-light">Monitoring BHT</span>
 	</a>
 
 	<!-- Sidebar -->
@@ -14,7 +14,7 @@
 				<img src="<?php echo base_url() ?>assets/dist/img/Logo PA Amuntai - Trans.png" class="img-circle elevation-2" alt="User Image">
 			</div>
 			<div class="info">
-				<a href="#" class="d-block">Administrator</a>
+				<a href="#" class="d-block">Halimah, S.H</a>
 				<span class="badge badge-success">Online</span>
 			</div>
 		</div>
@@ -30,7 +30,7 @@
 					</a>
 				</li>
 
-				<li class="nav-header">MANAJEMEN PERKARA</li>
+				<li class="nav-header">MANAJEMEN BHT</li>
 
 				<!-- Menu Baru - Monitoring Harian -->
 				<li class="nav-item">
