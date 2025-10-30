@@ -33,6 +33,10 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(pp.tanggal_putusan)', $tanggal);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		
+		// Filter untuk tidak menampilkan perkara yang dicabut
+		$this->_filter_perkara_dicabut();
+		
 		$this->db->order_by('pp.tanggal_putusan', 'DESC');
 
 		return $this->db->get()->result();
@@ -45,6 +49,10 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(pp.tanggal_putusan)', $tanggal);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		
+		// Filter untuk tidak menampilkan perkara yang dicabut
+		$this->_filter_perkara_dicabut();
+		
 		return $this->db->count_all_results();
 	}
 
@@ -72,6 +80,10 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
 		$this->db->where('DATE_FORMAT(pp.tanggal_putusan, "%Y-%m") =', $bulan);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		
+		// Filter untuk tidak menampilkan perkara yang dicabut
+		$this->_filter_perkara_dicabut();
+		
 		$this->db->order_by('pp.tanggal_putusan', 'DESC');
 
 		return $this->db->get()->result();
@@ -91,6 +103,10 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
 		$this->db->where('DATE_FORMAT(pp.tanggal_putusan, "%Y-%m") =', $bulan);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		
+		// Filter untuk tidak menampilkan perkara yang dicabut
+		$this->_filter_perkara_dicabut();
+		
 		$this->db->group_by('DATE(pp.tanggal_putusan)');
 		$this->db->order_by('pp.tanggal_putusan', 'ASC');
 
@@ -132,6 +148,9 @@ class Menu_baru_model extends CI_Model
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
 		$this->db->where('pp.tanggal_bht IS NULL');
 
+		// Filter untuk tidak menampilkan perkara yang dicabut
+		$this->_filter_perkara_dicabut();
+
 		// Add year filter - only show cases from specified year onwards
 		if ($tahun_filter) {
 			$this->db->where('YEAR(pp.tanggal_putusan) >=', $tahun_filter);
@@ -159,6 +178,9 @@ class Menu_baru_model extends CI_Model
 		$this->db->where('pp.tanggal_bht IS NULL');
 		$this->db->where('DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 5');
 
+		// Filter untuk tidak menampilkan perkara yang dicabut
+		$this->_filter_perkara_dicabut();
+
 		// Add year filter
 		if ($tahun_filter) {
 			$this->db->where('YEAR(pp.tanggal_putusan) >=', $tahun_filter);
@@ -182,6 +204,9 @@ class Menu_baru_model extends CI_Model
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
 		$this->db->where('pp.tanggal_bht IS NULL');
+
+		// Filter untuk tidak menampilkan perkara yang dicabut
+		$this->_filter_perkara_dicabut();
 
 		// Add year filter
 		if ($tahun_filter) {
@@ -219,6 +244,10 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NULL');
+		
+		// Filter untuk tidak menampilkan perkara yang dicabut
+		$this->_filter_perkara_dicabut();
+		
 		$this->db->order_by('hari_sejak_putus', 'DESC');
 
 		return $this->db->get()->result();
@@ -232,6 +261,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NULL');
+		$this->_filter_perkara_dicabut();
 		return $this->db->count_all_results();
 	}
 
@@ -248,6 +278,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NULL');
+		$this->_filter_perkara_dicabut();
 
 		return $this->db->get()->row();
 	}
@@ -300,6 +331,7 @@ class Menu_baru_model extends CI_Model
 			$this->db->where('pp.tanggal_putusan IS NULL');
 		}
 
+		$this->_filter_perkara_dicabut();
 		return $this->db->count_all_results();
 	}
 
@@ -316,6 +348,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(p.tanggal_pendaftaran)', $tanggal);
+		$this->_filter_perkara_dicabut();
 		$this->db->group_by("CASE WHEN pp.tanggal_putusan IS NOT NULL THEN 'PUTUS' ELSE 'PROSES' END");
 
 		return $this->db->get()->result();
@@ -352,6 +385,7 @@ class Menu_baru_model extends CI_Model
 			$this->db->where('pp.tanggal_bht IS NULL');
 		}
 
+		$this->_filter_perkara_dicabut();
 		$this->db->order_by('pjs.tanggal_sidang', 'DESC');
 
 		return $this->db->get()->result();
@@ -372,6 +406,7 @@ class Menu_baru_model extends CI_Model
 			$this->db->where('pp.tanggal_bht IS NULL');
 		}
 
+		$this->_filter_perkara_dicabut();
 		return $this->db->count_all_results();
 	}
 
@@ -387,6 +422,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
 		$this->db->where('DATE(pjs.tanggal_sidang)', $tanggal);
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
+		$this->_filter_perkara_dicabut();
 
 		return $this->db->get()->row();
 	}
@@ -424,6 +460,7 @@ class Menu_baru_model extends CI_Model
 			$this->db->where('p.jenis_perkara_nama', $jenis);
 		}
 
+		$this->_filter_perkara_dicabut();
 		$this->db->order_by('pp.tanggal_putusan', 'DESC');
 
 		return $this->db->get()->result();
@@ -440,6 +477,7 @@ class Menu_baru_model extends CI_Model
 			$this->db->where('p.jenis_perkara_nama', $jenis);
 		}
 
+		$this->_filter_perkara_dicabut();
 		return $this->db->count_all_results();
 	}
 
@@ -453,6 +491,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->where('DATE_FORMAT(pp.tanggal_putusan, "%Y-%m") =', $periode);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->_filter_perkara_dicabut();
 		$this->db->group_by('p.jenis_perkara_nama');
 		$this->db->order_by('jumlah', 'DESC');
 
@@ -472,6 +511,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
 		$this->db->where('DATE_FORMAT(pp.tanggal_putusan, "%Y-%m") =', $periode);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->_filter_perkara_dicabut();
 
 		return $this->db->get()->row();
 	}
@@ -488,6 +528,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
 		$this->db->where('pp.tanggal_bht IS NULL');
 		$this->db->where('DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 5');
+		$this->_filter_perkara_dicabut();
 
 		return $this->db->count_all_results();
 	}
@@ -497,6 +538,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NULL');
+		$this->_filter_perkara_dicabut();
 		return $this->db->count_all_results();
 	}
 
@@ -507,6 +549,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NULL');
+		$this->_filter_perkara_dicabut();
 		return $this->db->count_all_results();
 	}
 
@@ -544,6 +587,7 @@ class Menu_baru_model extends CI_Model
 			$this->db->where('YEAR(pp.tanggal_putusan) >=', $tahun_filter);
 		}
 
+		$this->_filter_perkara_dicabut();
 		$this->db->order_by('pp.tanggal_putusan', 'ASC');
 		if ($limit) {
 			$this->db->limit($limit);
@@ -846,5 +890,19 @@ class Menu_baru_model extends CI_Model
 		$this->db->order_by('tahun', 'DESC');
 
 		return $this->db->get()->result();
+	}
+
+	/**
+	 * Helper method untuk memfilter perkara yang dicabut
+	 * Khusus untuk tabel perkara_putusan yang mengandung kata "dicabut"
+	 */
+	private function _filter_perkara_dicabut()
+	{
+		// Filter untuk tidak menampilkan perkara yang dicabut dari tabel perkara_putusan
+		// Mengecek berbagai field yang mungkin mengandung kata "dicabut" atau tanggal cabut yang ada
+		$this->db->where("(pp.tanggal_cabut IS NULL)", NULL, FALSE);
+		$this->db->where("(pp.amar_putusan IS NULL OR (pp.amar_putusan NOT LIKE '%dicabut%' AND pp.amar_putusan NOT LIKE '%DICABUT%'))", NULL, FALSE);
+		$this->db->where("(pp.status_putusan_nama IS NULL OR (pp.status_putusan_nama NOT LIKE '%dicabut%' AND pp.status_putusan_nama NOT LIKE '%DICABUT%'))", NULL, FALSE);
+		$this->db->where("(pp.catatan_putusan IS NULL OR (pp.catatan_putusan NOT LIKE '%dicabut%' AND pp.catatan_putusan NOT LIKE '%DICABUT%'))", NULL, FALSE);
 	}
 }
