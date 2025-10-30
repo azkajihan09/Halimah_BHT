@@ -121,6 +121,43 @@
 <!-- Chart Helper for consistent chart initialization -->
 <script src="<?= base_url() ?>assets/js/chart-helper.js"></script>
 
+<!-- AdminLTE sidebar fix for dashboard pages -->
+<script>
+	$(document).ready(function() {
+		// Ensure sidebar menu functionality
+		if (typeof AdminLTE === 'undefined') {
+			console.warn('AdminLTE not loaded, initializing sidebar manually');
+
+			// Manual sidebar toggle
+			$('[data-widget="pushmenu"]').off('click').on('click', function(e) {
+				e.preventDefault();
+				$('body').toggleClass('sidebar-collapse');
+			});
+
+			// Manual tree menu
+			$('.nav-sidebar .nav-item > .nav-link').off('click').on('click', function(e) {
+				var $this = $(this);
+				var $parent = $this.parent();
+
+				if ($parent.hasClass('nav-item') && $this.siblings('.nav-treeview').length > 0) {
+					e.preventDefault();
+
+					if ($parent.hasClass('menu-open')) {
+						$parent.removeClass('menu-open');
+						$this.siblings('.nav-treeview').slideUp(300);
+					} else {
+						// Close other menus first
+						$('.nav-sidebar .menu-open').removeClass('menu-open').children('.nav-treeview').slideUp(300);
+						// Open current menu
+						$parent.addClass('menu-open');
+						$this.siblings('.nav-treeview').slideDown(300);
+					}
+				}
+			});
+		}
+	});
+</script>
+
 </body>
 
 </html>

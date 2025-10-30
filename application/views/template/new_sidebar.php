@@ -30,6 +30,15 @@
 					</a>
 				</li>
 
+				<!-- Dashboard Home - Enhanced -->
+				<li class="nav-item">
+					<a href="<?= site_url('dashboard_home') ?>" class="nav-link <?= $this->uri->segment(1) == 'dashboard_home' ? 'active' : '' ?>">
+						<i class="nav-icon fas fa-home text-success"></i>
+						<p>Dashboard Home</p>
+						<span class="badge badge-success right">Enhanced</span>
+					</a>
+				</li>
+
 				<li class="nav-header">MANAJEMEN BHT</li>
 
 				<!-- Menu Baru - Monitoring Harian -->
