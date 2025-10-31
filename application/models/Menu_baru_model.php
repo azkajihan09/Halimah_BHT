@@ -134,31 +134,121 @@ class Menu_baru_model extends CI_Model
             p.jenis_perkara_nama as jenis_perkara,
             DATE(pp.tanggal_putusan) as tanggal_putusan,
             DATE(pjs.tanggal_sidang) as tanggal_pbt,
-            DATE_ADD(pjs.tanggal_sidang, INTERVAL 14 DAY) as target_bht,
-            DATE(pp.tanggal_bht) as tanggal_bht,
+            pp.tanggal_bht,
+            p.perkara_id,
             COALESCE(pen.majelis_hakim_nama, '-') as hakim,
+            
+            -- Target BHT Calculation (Complex)
+            CASE 
+                WHEN pjs.tanggal_sidang IS NOT NULL THEN DATE_ADD(pjs.tanggal_sidang, INTERVAL 14 DAY)
+                WHEN pp.tanggal_putusan IS NOT NULL THEN DATE_ADD(pp.tanggal_putusan, INTERVAL 28 DAY)
+                ELSE NULL
+            END as target_bht,
+            
+            -- Hari Sejak PBT (Complex Calculation)
+            CASE 
+                WHEN pp.tanggal_bht IS NOT NULL THEN DATEDIFF(pp.tanggal_bht, pjs.tanggal_sidang)
+                WHEN pjs.tanggal_sidang IS NOT NULL THEN DATEDIFF(CURDATE(), pjs.tanggal_sidang)
+                ELSE DATEDIFF(CURDATE(), pp.tanggal_putusan)
+            END as hari_sejak_pbt,
+            
+            -- Remaining Days to Target BHT
+            CASE 
+                WHEN pp.tanggal_bht IS NOT NULL THEN 0
+                WHEN pjs.tanggal_sidang IS NOT NULL THEN 
+                    GREATEST(0, DATEDIFF(DATE_ADD(pjs.tanggal_sidang, INTERVAL 14 DAY), CURDATE()))
+                ELSE 
+                    GREATEST(0, DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 28 DAY), CURDATE()))
+            END as sisa_hari_target,
+            
+            -- Days Overdue from Target
+            CASE 
+                WHEN pp.tanggal_bht IS NOT NULL THEN 0
+                WHEN pjs.tanggal_sidang IS NOT NULL THEN 
+                    GREATEST(0, DATEDIFF(CURDATE(), DATE_ADD(pjs.tanggal_sidang, INTERVAL 14 DAY)))
+                ELSE 
+                    GREATEST(0, DATEDIFF(CURDATE(), DATE_ADD(pp.tanggal_putusan, INTERVAL 28 DAY)))
+            END as hari_terlambat,
+            
+            -- Status (Complex Logic)
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 'Selesai BHT'
-                WHEN pjs.tanggal_sidang IS NULL THEN 'Menunggu PBT'
-                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 14 THEN 'Terlambat'
-                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 10 THEN 'Urgent'
-                ELSE 'Normal'
+                WHEN pjs.tanggal_sidang IS NULL THEN 
+                    CASE 
+                        WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'Critical - Menunggu PBT'
+                        WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'Urgent - Menunggu PBT'
+                        ELSE 'Menunggu PBT'
+                    END
+                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 21 THEN 'Critical - Terlambat BHT'
+                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 14 THEN 'Terlambat BHT'
+                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 10 THEN 'Urgent BHT'
+                ELSE 'Normal - Menunggu BHT'
             END as status,
+            
+            -- Priority Level (Complex)
             CASE 
-                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 21 THEN 'CRITICAL'
-                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 14 THEN 'HIGH'
-                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 10 THEN 'MEDIUM'
+                WHEN pp.tanggal_bht IS NOT NULL THEN 'COMPLETED'
+                WHEN pjs.tanggal_sidang IS NULL AND DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'CRITICAL_PBT'
+                WHEN pjs.tanggal_sidang IS NULL AND DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'HIGH_PBT'
+                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 21 THEN 'CRITICAL_BHT'
+                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 14 THEN 'HIGH_BHT'
+                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 10 THEN 'MEDIUM_BHT'
                 ELSE 'LOW'
             END as prioritas,
-            DATEDIFF(CURDATE(), pjs.tanggal_sidang) as hari_sejak_pbt
+            
+            -- Progress Percentage
+            CASE 
+                WHEN pp.tanggal_bht IS NOT NULL THEN 100
+                WHEN pjs.tanggal_sidang IS NOT NULL THEN 
+                    LEAST(100, GREATEST(0, 
+                        ROUND((DATEDIFF(CURDATE(), pjs.tanggal_sidang) / 14.0) * 100, 0)
+                    ))
+                ELSE 
+                    LEAST(50, GREATEST(0, 
+                        ROUND((DATEDIFF(CURDATE(), pp.tanggal_putusan) / 28.0) * 50, 0)
+                    ))
+            END as progress_percentage,
+            
+            -- Working Days Calculation (excluding weekends)
+            CASE 
+                WHEN pp.tanggal_bht IS NOT NULL THEN 
+                    DATEDIFF(pp.tanggal_bht, pjs.tanggal_sidang) - 
+                    (WEEK(pp.tanggal_bht) - WEEK(pjs.tanggal_sidang)) * 2
+                WHEN pjs.tanggal_sidang IS NOT NULL THEN 
+                    DATEDIFF(CURDATE(), pjs.tanggal_sidang) - 
+                    (WEEK(CURDATE()) - WEEK(pjs.tanggal_sidang)) * 2
+                ELSE 
+                    DATEDIFF(CURDATE(), pp.tanggal_putusan) - 
+                    (WEEK(CURDATE()) - WEEK(pp.tanggal_putusan)) * 2
+            END as hari_kerja_sejak_pbt,
+            
+            -- Efficiency Score (0-100)
+            CASE 
+                WHEN pp.tanggal_bht IS NOT NULL AND pjs.tanggal_sidang IS NOT NULL THEN
+                    CASE 
+                        WHEN DATEDIFF(pp.tanggal_bht, pjs.tanggal_sidang) <= 7 THEN 100
+                        WHEN DATEDIFF(pp.tanggal_bht, pjs.tanggal_sidang) <= 14 THEN 80
+                        WHEN DATEDIFF(pp.tanggal_bht, pjs.tanggal_sidang) <= 21 THEN 60
+                        ELSE 40
+                    END
+                WHEN pp.tanggal_bht IS NULL AND pjs.tanggal_sidang IS NOT NULL THEN
+                    CASE 
+                        WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) <= 7 THEN 90
+                        WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) <= 14 THEN 70
+                        WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) <= 21 THEN 50
+                        ELSE 20
+                    END
+                ELSE 30
+            END as efficiency_score
         ");
 		$this->db->from('perkara p');
-		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
-		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
-		$this->db->where('pp.tanggal_bht IS NULL');
+
+		// Show both completed and pending BHT cases for comprehensive view
+		// $this->db->where('pp.tanggal_bht IS NULL'); // Remove this to show all cases
 
 		// Filter untuk tidak menampilkan perkara yang dicabut
 		$this->_filter_perkara_dicabut();
@@ -174,6 +264,7 @@ class Menu_baru_model extends CI_Model
 		}
 
 		$this->db->order_by('hari_sejak_pbt', 'DESC');
+		$this->db->order_by('prioritas', 'DESC');
 
 		return $this->db->get()->result();
 	}
