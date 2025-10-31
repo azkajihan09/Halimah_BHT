@@ -22,14 +22,25 @@ class Menu_baru_model extends CI_Model
             COALESCE(pen.majelis_hakim_nama, '-') as hakim,
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 'Sudah BHT'
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'Critical - Belum BHT'
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'Terlambat - Belum BHT'
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 10 THEN 'Urgent - Belum BHT'
                 ELSE 'Belum BHT'
             END as status_bht,
             p.perkara_id,
-            DATE(pp.tanggal_bht) as tanggal_bht,
-            DATEDIFF(CURDATE(), pp.tanggal_putusan) as hari_sejak_putus
+            pp.tanggal_bht,
+            DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY) as target_bht,
+            DATEDIFF(CURDATE(), pp.tanggal_putusan) as hari_sejak_putus,
+            CASE 
+                WHEN pp.tanggal_bht IS NOT NULL THEN 'SELESAI'
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'CRITICAL'
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'TERLAMBAT'
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 10 THEN 'URGENT'
+                ELSE 'NORMAL'
+            END as kategori_status
         ");
 		$this->db->from('perkara p');
-		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(pp.tanggal_putusan)', $tanggal);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
@@ -45,7 +56,7 @@ class Menu_baru_model extends CI_Model
 	public function count_perkara_putus_harian($tanggal)
 	{
 		$this->db->from('perkara p');
-		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(pp.tanggal_putusan)', $tanggal);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
