@@ -471,11 +471,35 @@ class Menu_baru_model extends CI_Model
             DATE(pp.tanggal_putusan) as tanggal_putusan,
             COALESCE(pen.majelis_hakim_nama, '-') as hakim,
             DATE(pp.tanggal_bht) as tanggal_bht,
+            -- Status BHT dengan kekhususan Pengadilan Agama
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 'Sudah BHT'
+                WHEN p.jenis_perkara_nama LIKE '%Cerai Talak%' THEN 'Belum BHT - Menunggu Ikrar Talak'
                 ELSE 'Belum BHT'
             END as status_bht,
-            DATEDIFF(pjs.tanggal_sidang, pp.tanggal_putusan) as selisih_hari
+            
+            -- Selisih hari PBT ke BHT (14 hari kalender)
+            CASE 
+                WHEN pp.tanggal_bht IS NOT NULL THEN DATEDIFF(pp.tanggal_bht, pjs.tanggal_sidang)
+                ELSE DATEDIFF(CURDATE(), pjs.tanggal_sidang)
+            END as selisih_hari,
+            
+            -- Target BHT berdasarkan jenis perkara
+            CASE 
+                WHEN p.jenis_perkara_nama LIKE '%Cerai Talak%' THEN 
+                    CONCAT('Target Izin Talak: ', DATE_FORMAT(DATE_ADD(pjs.tanggal_sidang, INTERVAL 14 DAY), '%d/%m/%Y'), 
+                           ' | Max Ikrar: ', DATE_FORMAT(DATE_ADD(pjs.tanggal_sidang, INTERVAL 6 MONTH), '%d/%m/%Y'))
+                ELSE DATE_FORMAT(DATE_ADD(pjs.tanggal_sidang, INTERVAL 14 DAY), '%d/%m/%Y')
+            END as target_bht_info,
+            
+            -- Kategori khusus Pengadilan Agama
+            CASE 
+                WHEN p.jenis_perkara_nama LIKE '%Cerai Talak%' AND pp.tanggal_bht IS NULL THEN 'CERAI_TALAK_PROSES'
+                WHEN p.jenis_perkara_nama LIKE '%Cerai Gugat%' THEN 'CERAI_GUGAT'
+                WHEN p.jenis_perkara_nama LIKE '%Waris%' THEN 'WARIS'
+                WHEN p.jenis_perkara_nama LIKE '%Isbat%' THEN 'ISBAT_NIKAH'
+                ELSE 'UMUM'
+            END as kategori_pa
         ");
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
