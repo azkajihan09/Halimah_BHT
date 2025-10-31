@@ -127,7 +127,7 @@ class Menu_baru_model extends CI_Model
 	/**
 	 * 3. Get jadwal BHT harian
 	 */
-	public function get_jadwal_bht_harian($tanggal, $jenis = 'semua', $tahun_filter = '2024')
+	public function get_jadwal_bht_harian($tanggal, $jenis = 'semua', $tahun_filter = '2025')
 	{
 		$this->db->select("
             p.nomor_perkara,
@@ -269,7 +269,7 @@ class Menu_baru_model extends CI_Model
 		return $this->db->get()->result();
 	}
 
-	public function get_pengingat_urgent($tanggal, $jenis = 'semua', $tahun_filter = '2024')
+	public function get_pengingat_urgent($tanggal, $jenis = 'semua', $tahun_filter = '2025')
 	{
 		$this->db->select('COUNT(*) as total');
 		$this->db->from('perkara p');
@@ -298,7 +298,7 @@ class Menu_baru_model extends CI_Model
 		return $result ? $result->total : 0;
 	}
 
-	public function count_jadwal_bht_harian($tanggal, $jenis = 'semua', $tahun_filter = '2024')
+	public function count_jadwal_bht_harian($tanggal, $jenis = 'semua', $tahun_filter = '2025')
 	{
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
@@ -336,8 +336,9 @@ class Menu_baru_model extends CI_Model
             COALESCE(pen.majelis_hakim_nama, '-') as hakim,
             DATEDIFF(CURDATE(), pp.tanggal_putusan) as hari_sejak_putus,
             CASE 
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'CRITICAL'
                 WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'KRITIS'
-                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 7 THEN 'PERINGATAN'
+                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 10 THEN 'PERINGATAN'
                 ELSE 'NORMAL'
             END as level_peringatan
         ");
@@ -371,9 +372,10 @@ class Menu_baru_model extends CI_Model
 	public function get_alert_level_tanpa_pbt($tanggal)
 	{
 		$this->db->select('
-            SUM(CASE WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 1 ELSE 0 END) as kritis,
-            SUM(CASE WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 7 AND DATEDIFF(CURDATE(), pp.tanggal_putusan) <= 14 THEN 1 ELSE 0 END) as peringatan,
-            SUM(CASE WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) <= 7 THEN 1 ELSE 0 END) as normal
+            SUM(CASE WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 1 ELSE 0 END) as critical,
+            SUM(CASE WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 AND DATEDIFF(CURDATE(), pp.tanggal_putusan) <= 21 THEN 1 ELSE 0 END) as kritis,
+            SUM(CASE WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 10 AND DATEDIFF(CURDATE(), pp.tanggal_putusan) <= 14 THEN 1 ELSE 0 END) as peringatan,
+            SUM(CASE WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) <= 10 THEN 1 ELSE 0 END) as normal
         ');
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
