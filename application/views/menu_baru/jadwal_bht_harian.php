@@ -26,10 +26,11 @@
 
 			<!-- Alert untuk pengingat urgent -->
 			<?php if ($pengingat_urgent > 0): ?>
-				<div class="alert alert-danger alert-dismissible">
+				<div class="alert alert-warning alert-dismissible">
 					<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-					<h5><i class="icon fas fa-ban"></i> Perhatian!</h5>
-					Ada <strong><?= $pengingat_urgent ?></strong> perkara yang sudah lebih dari 5 hari sejak PBT dan belum BHT!
+					<h5><i class="icon fas fa-exclamation-triangle"></i> Perhatian!</h5>
+					Ada <strong><?= $pengingat_urgent ?></strong> perkara yang sudah lebih dari 10 hari sejak PBT dan belum BHT!<br>
+					<small><strong>Catatan:</strong> Berdasarkan aturan resmi, perkara harus BHT dalam 14 hari kalender setelah PBT.</small>
 				</div>
 			<?php endif; ?>
 
@@ -124,7 +125,7 @@
 							<h3><?= count(array_filter($jadwal_bht, function ($j) {
 									return $j->status == 'Urgent';
 								})) ?></h3>
-							<p>Urgent (5-7 hari)</p>
+							<p>Urgent (11-14 hari)</p>
 						</div>
 						<div class="icon">
 							<i class="fas fa-exclamation-triangle"></i>
@@ -137,10 +138,23 @@
 							<h3><?= count(array_filter($jadwal_bht, function ($j) {
 									return $j->status == 'Terlambat';
 								})) ?></h3>
-							<p>Terlambat (>7 hari)</p>
+							<p>Terlambat (15-21 hari)</p>
 						</div>
 						<div class="icon">
 							<i class="fas fa-times-circle"></i>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-6">
+					<div class="small-box bg-dark">
+						<div class="inner">
+							<h3><?= count(array_filter($jadwal_bht, function ($j) {
+									return $j->prioritas == 'CRITICAL';
+								})) ?></h3>
+							<p>Critical (>21 hari)</p>
+						</div>
+						<div class="icon">
+							<i class="fas fa-skull-crossbones"></i>
 						</div>
 					</div>
 				</div>
@@ -183,7 +197,7 @@
 											<?php $no = 1;
 											foreach ($jadwal_bht as $jadwal): ?>
 												<tr class="<?=
-															$jadwal->status == 'Terlambat' ? 'table-danger' : ($jadwal->status == 'Urgent' ? 'table-warning' : 'table-info')
+															$jadwal->prioritas == 'CRITICAL' ? 'table-dark' : ($jadwal->status == 'Terlambat' ? 'table-danger' : ($jadwal->status == 'Urgent' ? 'table-warning' : 'table-info'))
 															?>">
 													<td><?= $no++ ?></td>
 													<td><?= htmlspecialchars($jadwal->nomor_perkara) ?></td>
@@ -193,13 +207,17 @@
 													<td><?= date('d/m/Y', strtotime($jadwal->target_bht)) ?></td>
 													<td>
 														<span class="badge <?=
-																			$jadwal->hari_sejak_pbt > 7 ? 'badge-danger' : ($jadwal->hari_sejak_pbt > 5 ? 'badge-warning' : 'badge-success')
+																			$jadwal->hari_sejak_pbt > 21 ? 'badge-dark' : ($jadwal->hari_sejak_pbt > 14 ? 'badge-danger' : ($jadwal->hari_sejak_pbt > 10 ? 'badge-warning' : 'badge-success'))
 																			?>">
 															<?= $jadwal->hari_sejak_pbt ?> hari
 														</span>
 													</td>
 													<td>
-														<?php if ($jadwal->prioritas == 'HIGH'): ?>
+														<?php if ($jadwal->prioritas == 'CRITICAL'): ?>
+															<span class="badge badge-dark">
+																<i class="fas fa-skull-crossbones"></i> CRITICAL
+															</span>
+														<?php elseif ($jadwal->prioritas == 'HIGH'): ?>
 															<span class="badge badge-danger">
 																<i class="fas fa-fire"></i> TINGGI
 															</span>

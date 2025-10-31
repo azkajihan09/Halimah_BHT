@@ -33,10 +33,10 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(pp.tanggal_putusan)', $tanggal);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
-		
+
 		// Filter untuk tidak menampilkan perkara yang dicabut
 		$this->_filter_perkara_dicabut();
-		
+
 		$this->db->order_by('pp.tanggal_putusan', 'DESC');
 
 		return $this->db->get()->result();
@@ -49,10 +49,10 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('DATE(pp.tanggal_putusan)', $tanggal);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
-		
+
 		// Filter untuk tidak menampilkan perkara yang dicabut
 		$this->_filter_perkara_dicabut();
-		
+
 		return $this->db->count_all_results();
 	}
 
@@ -80,10 +80,10 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
 		$this->db->where('DATE_FORMAT(pp.tanggal_putusan, "%Y-%m") =', $bulan);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
-		
+
 		// Filter untuk tidak menampilkan perkara yang dicabut
 		$this->_filter_perkara_dicabut();
-		
+
 		$this->db->order_by('pp.tanggal_putusan', 'DESC');
 
 		return $this->db->get()->result();
@@ -103,10 +103,10 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
 		$this->db->where('DATE_FORMAT(pp.tanggal_putusan, "%Y-%m") =', $bulan);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
-		
+
 		// Filter untuk tidak menampilkan perkara yang dicabut
 		$this->_filter_perkara_dicabut();
-		
+
 		$this->db->group_by('DATE(pp.tanggal_putusan)');
 		$this->db->order_by('pp.tanggal_putusan', 'ASC');
 
@@ -123,19 +123,20 @@ class Menu_baru_model extends CI_Model
             p.jenis_perkara_nama as jenis_perkara,
             DATE(pp.tanggal_putusan) as tanggal_putusan,
             DATE(pjs.tanggal_sidang) as tanggal_pbt,
-            DATE_ADD(pjs.tanggal_sidang, INTERVAL 7 DAY) as target_bht,
+            DATE_ADD(pjs.tanggal_sidang, INTERVAL 14 DAY) as target_bht,
             DATE(pp.tanggal_bht) as tanggal_bht,
             COALESCE(pen.majelis_hakim_nama, '-') as hakim,
             CASE 
-                WHEN pp.tanggal_bht IS NOT NULL THEN 'Selesai'
+                WHEN pp.tanggal_bht IS NOT NULL THEN 'Selesai BHT'
                 WHEN pjs.tanggal_sidang IS NULL THEN 'Menunggu PBT'
-                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 7 THEN 'Terlambat'
-                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 5 THEN 'Urgent'
+                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 14 THEN 'Terlambat'
+                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 10 THEN 'Urgent'
                 ELSE 'Normal'
             END as status,
             CASE 
-                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 7 THEN 'HIGH'
-                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 5 THEN 'MEDIUM'
+                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 21 THEN 'CRITICAL'
+                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 14 THEN 'HIGH'
+                WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 10 THEN 'MEDIUM'
                 ELSE 'LOW'
             END as prioritas,
             DATEDIFF(CURDATE(), pjs.tanggal_sidang) as hari_sejak_pbt
@@ -174,9 +175,9 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
-		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
+		$this->db->where('pjs.tanggal_sidang IS NULL');
 		$this->db->where('pp.tanggal_bht IS NULL');
-		$this->db->where('DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 5');
+		$this->db->where('DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 10');
 
 		// Filter untuk tidak menampilkan perkara yang dicabut
 		$this->_filter_perkara_dicabut();
@@ -244,10 +245,10 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 		$this->db->where('pjs.tanggal_sidang IS NULL');
-		
+
 		// Filter untuk tidak menampilkan perkara yang dicabut
 		$this->_filter_perkara_dicabut();
-		
+
 		$this->db->order_by('hari_sejak_putus', 'DESC');
 
 		return $this->db->get()->result();

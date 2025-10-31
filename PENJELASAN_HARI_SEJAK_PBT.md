@@ -1,16 +1,19 @@
 # 📊 **PENJELASAN DETAIL "HARI SEJAK PBT"**
 
-## 🔍 **1. KONSEP DASAR**
+## 🔍 **1. KONSEP DASAR (ATURAN RESMI)**
 
 ### **Apa itu PBT?**
-- **PBT** = **Pemberitahuan Berkas Telah lengkap**
-- Ini adalah tahap dalam proses pengadilan setelah perkara diputus
-- Setelah PBT, berkas harus diselesaikan (BHT) dalam waktu tertentu
+- **PBT** = **Pemberitahuan Isi Putusan**
+- Disampaikan kepada pihak yang tidak hadir saat pembacaan putusan
+- Dilakukan oleh juru sita pengadilan
+- Ini adalah awal perhitungan waktu menuju BHT
 
 ### **Apa itu BHT?**
-- **BHT** = **Berkas Harus selesai/lengkap**  
-- Target waktu penyelesaian berkas setelah PBT
-- Standar waktu: **7 hari** setelah PBT
+- **BHT** = **Berkekuatan Hukum Tetap**  
+- Putusan yang sudah tidak bisa diajukan banding lagi
+- **Standar waktu resmi: 14 hari kalender** setelah PBT
+- Menggunakan hari kalender, bukan hari kerja
+- Jika hari ke-14 jatuh pada libur, diperpanjang ke hari kerja berikutnya
 
 ---
 
@@ -49,7 +52,7 @@ SELECT
     p.jenis_perkara_nama as jenis_perkara,
     DATE(pp.tanggal_putusan) as tanggal_putusan,
     DATE(pjs.tanggal_sidang) as tanggal_pbt,                    -- Tanggal PBT
-    DATE_ADD(pjs.tanggal_sidang, INTERVAL 7 DAY) as target_bht, -- Target 7 hari setelah PBT
+    DATE_ADD(pjs.tanggal_sidang, INTERVAL 14 DAY) as target_bht, -- Target 14 hari kalender setelah PBT
     DATE(pp.tanggal_bht) as tanggal_bht,                        -- Tanggal selesai BHT (NULL jika belum)
     DATEDIFF(CURDATE(), pjs.tanggal_sidang) as hari_sejak_pbt   -- PERHITUNGAN UTAMA
 FROM perkara p
@@ -80,48 +83,53 @@ DATEDIFF(CURDATE(), pjs.tanggal_sidang) as hari_sejak_pbt
 ```
 Tanggal Putusan: 02/05/2025
 Tanggal PBT: 10/03/2025
+Target BHT: 24/03/2025 (14 hari setelah PBT)
 Hari ini: 31/10/2025
 
 Perhitungan:
 DATEDIFF('2025-10-31', '2025-03-10') = 235 hari
+Keterlambatan: 235 - 14 = 221 hari terlambat
 
-Status: TERLAMBAT (>7 hari)
-Prioritas: HIGH
+Status: SANGAT TERLAMBAT (>14 hari)
+Prioritas: CRITICAL
 ```
 
 **Perkara 2:**
 ```
 Tanggal PBT: 20/03/2025
+Target BHT: 03/04/2025 (14 hari setelah PBT)
 Hari ini: 31/10/2025
 
 Perhitungan:
 DATEDIFF('2025-10-31', '2025-03-20') = 225 hari
+Keterlambatan: 225 - 14 = 211 hari terlambat
 
-Status: TERLAMBAT (>7 hari)
-Prioritas: HIGH
+Status: SANGAT TERLAMBAT (>14 hari)
+Prioritas: CRITICAL
 ```
 
 ---
 
 ## 🚦 **5. SISTEM KATEGORI STATUS**
 
-### **Logic dalam Kode:**
+### **Logic dalam Kode (ATURAN RESMI 14 HARI):**
 ```sql
 CASE 
-    WHEN pp.tanggal_bht IS NOT NULL THEN 'Selesai'           -- Sudah BHT
+    WHEN pp.tanggal_bht IS NOT NULL THEN 'Selesai BHT'       -- Sudah BHT
     WHEN pjs.tanggal_sidang IS NULL THEN 'Menunggu PBT'      -- Belum PBT
-    WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 7 THEN 'Terlambat'   -- >7 hari
-    WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 5 THEN 'Urgent'      -- 6-7 hari
-    ELSE 'Normal'                                            -- 0-5 hari
+    WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 14 THEN 'Terlambat'  -- >14 hari
+    WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 10 THEN 'Urgent'     -- 11-14 hari
+    ELSE 'Normal'                                            -- 0-10 hari
 END as status
 ```
 
-### **Prioritas:**
+### **Prioritas (BERDASARKAN ATURAN 14 HARI):**
 ```sql
 CASE 
-    WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 7 THEN 'HIGH'    -- >7 hari
-    WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 5 THEN 'MEDIUM'  -- 6-7 hari
-    ELSE 'LOW'                                                      -- 0-5 hari
+    WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 21 THEN 'CRITICAL'   -- >21 hari (1 minggu lebih)
+    WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 14 THEN 'HIGH'       -- >14 hari (melewati batas)
+    WHEN DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 10 THEN 'MEDIUM'     -- 11-14 hari (mendekati batas)
+    ELSE 'LOW'                                                          -- 0-10 hari (aman)
 END as prioritas
 ```
 
@@ -130,49 +138,65 @@ END as prioritas
 ## 📈 **6. VISUALISASI TIMELINE**
 
 ```
-Timeline Proses Perkara:
+Timeline Proses Perkara (ATURAN RESMI):
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│  Pendaftaran│ -> │   Putusan   │ -> │     PBT     │ -> │     BHT     │
-│             │    │             │    │             │    │  (Target)   │
+│  Pendaftaran│ -> │   Putusan   │ -> │ PBT (Juru   │ -> │ BHT (14 hari│
+│             │    │  Dibacakan  │    │ Sita)       │    │  kalender)  │
 └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
                                               │
                                               ↓
-                                      ⏰ Mulai hitung hari
+                                      ⏰ Mulai hitung 14 hari kalender
                                       
-Hari ke-0 sampai 5:  🟢 NORMAL
-Hari ke-6 sampai 7:  🟡 URGENT  
-Hari ke-8 keatas:    🔴 TERLAMBAT
+Hari ke-0 sampai 10:  🟢 NORMAL
+Hari ke-11 sampai 14: 🟡 URGENT (mendekati batas)
+Hari ke-15 sampai 21: 🔴 TERLAMBAT  
+Hari ke-22 keatas:    ⚫ CRITICAL (sangat terlambat)
+
+CATATAN KHUSUS:
+- Jika kedua pihak hadir saat putusan dibacakan = LANGSUNG BHT
+- Jika hari ke-14 jatuh pada libur = diperpanjang ke hari kerja berikutnya
+- Setelah BHT, baru bisa terbitkan akta cerai
 ```
 
 ---
 
 ## 💡 **7. CONTOH KASUS KONKRET**
 
-### **Kasus Normal:**
+### **Kasus Normal (ATURAN RESMI 14 HARI):**
 ```
-Tanggal PBT: 28 Oktober 2025
+Tanggal PBT: 25 Oktober 2025
 Hari ini: 31 Oktober 2025
-Hari sejak PBT: 3 hari
+Hari sejak PBT: 6 hari
 Status: NORMAL (hijau)
-Target BHT: 04 November 2025
+Target BHT: 08 November 2025 (masih 8 hari lagi)
 ```
 
 ### **Kasus Urgent:**
 ```
-Tanggal PBT: 25 Oktober 2025  
+Tanggal PBT: 18 Oktober 2025  
 Hari ini: 31 Oktober 2025
-Hari sejak PBT: 6 hari
+Hari sejak PBT: 13 hari
 Status: URGENT (kuning)
-Target BHT: 01 November 2025 (sudah terlewat 1 hari)
+Target BHT: 01 November 2025 (tinggal 1 hari lagi!)
 ```
 
-### **Kasus Terlambat (seperti di screenshot):**
+### **Kasus Terlambat:**
+```
+Tanggal PBT: 15 Oktober 2025
+Hari ini: 31 Oktober 2025
+Hari sejak PBT: 16 hari
+Status: TERLAMBAT (merah)
+Target BHT: 29 Oktober 2025 (sudah terlewat 2 hari)
+```
+
+### **Kasus Critical (seperti di screenshot):**
 ```
 Tanggal PBT: 10 Maret 2025
 Hari ini: 31 Oktober 2025
 Hari sejak PBT: 235 hari
-Status: TERLAMBAT (merah)
-Target BHT: 17 Maret 2025 (sudah terlewat 228 hari!)
+Status: CRITICAL (hitam)
+Target BHT: 24 Maret 2025 (sudah terlewat 221 hari!)
+Keterangan: Perlu investigasi mengapa sangat terlambat
 ```
 
 ---
