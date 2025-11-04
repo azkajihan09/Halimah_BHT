@@ -20,6 +20,7 @@ class Menu_baru_model extends CI_Model
             p.jenis_perkara_nama as jenis_perkara,
             DATE(pp.tanggal_putusan) as tanggal_putus,
             COALESCE(pen.majelis_hakim_nama, '-') as hakim,
+            DATE(pppp.tanggal_pemberitahuan_putusan) as tanggal_pemberitahuan_putusan,
             COALESCE(DATE(pppp.tanggal_pemberitahuan_putusan), DATE(pp.tanggal_putusan)) as tanggal_pbt_efektif,
             
             -- Status BHT dengan kekhususan PA
