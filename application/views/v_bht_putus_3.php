@@ -285,7 +285,8 @@
 										<strong>Fitur Baru:</strong>
 										<ul class="mb-2">
 											<li><strong>Target BHT:</strong> Dihitung +14 hari dari PBT yang akurat</li>
-											<li><strong>Hari Sejak PBT:</strong> Monitoring real-time berdasarkan PBT efektif</li>
+											<li><strong>Jangka Waktu:</strong> Periode dari PBT ke target BHT (selalu 14 hari)</li>
+											<li><strong>Sisa Hari:</strong> Monitoring real-time sisa waktu ke target BHT</li>
 											<li><strong>Sumber PBT:</strong> Transparansi data (PP/JS) untuk akurasi</li>
 										</ul>
 									</div>
@@ -340,7 +341,8 @@
 														<th style="width: 8%;">PBT</th>
 														<th style="width: 6%;">Sumber PBT</th>
 														<th style="width: 8%;">Target BHT</th>
-														<th style="width: 6%;">Hari Sejak PBT</th>
+														<th style="width: 6%;">Jangka Waktu</th>
+														<th style="width: 6%;">Sisa Hari</th>
 														<th style="width: 8%;">BHT</th>
 														<th style="width: 8%;">Ikrar</th>
 														<th style="width: 6%;">Status BHT</th>
@@ -391,17 +393,33 @@
 															}
 														}
 
-														// Hari sejak PBT dengan kategori warna
+														// Hari sejak PBT ke target BHT (selalu 14 hari)
 														$hari_sejak_pbt_display = '-';
-														if (isset($row->hari_sejak_pbt)) {
-															$hari = $row->hari_sejak_pbt;
-															$badge_class = 'badge-secondary';
-															if ($hari <= 10) $badge_class = 'badge-success';
-															elseif ($hari <= 14) $badge_class = 'badge-warning';
-															elseif ($hari <= 21) $badge_class = 'badge-danger';
-															else $badge_class = 'badge-dark';
+														if (isset($row->hari_sejak_pbt_ke_target)) {
+															$hari = $row->hari_sejak_pbt_ke_target;
+															// Untuk hari sejak PBT ke target, selalu hijau karena menunjukkan jangka waktu tetap 14 hari
+															$badge_class = 'badge-primary';
 
-															$hari_sejak_pbt_display = '<span class="badge ' . $badge_class . ' badge-status" title="' . $hari . ' hari sejak PBT">' . $hari . ' hari</span>';
+															$hari_sejak_pbt_display = '<span class="badge ' . $badge_class . ' badge-status" title="Jangka waktu dari PBT ke target BHT: ' . $hari . ' hari">' . $hari . ' hari</span>';
+														}
+
+														// Sisa hari ke target BHT dari hari ini
+														$sisa_hari_display = '-';
+														if (isset($row->sisa_hari_ke_target)) {
+															$sisa = $row->sisa_hari_ke_target;
+															$badge_class = 'badge-secondary';
+															if ($sisa > 0) $badge_class = 'badge-success';      // Masih ada waktu
+															elseif ($sisa == 0) $badge_class = 'badge-warning'; // Hari ini deadline
+															elseif ($sisa >= -7) $badge_class = 'badge-danger'; // Terlambat 1-7 hari
+															else $badge_class = 'badge-dark';                   // Sangat terlambat
+
+															if ($sisa > 0) {
+																$sisa_hari_display = '<span class="badge ' . $badge_class . ' badge-status" title="Sisa ' . $sisa . ' hari ke target BHT">' . $sisa . ' hari lagi</span>';
+															} elseif ($sisa == 0) {
+																$sisa_hari_display = '<span class="badge ' . $badge_class . ' badge-status" title="Hari ini adalah deadline target BHT">Hari ini</span>';
+															} else {
+																$sisa_hari_display = '<span class="badge ' . $badge_class . ' badge-status" title="Terlambat ' . abs($sisa) . ' hari dari target BHT">Terlambat ' . abs($sisa) . ' hari</span>';
+															}
 														}
 
 														// Status badge
@@ -432,6 +450,9 @@
 															</td>
 															<td class="text-center">
 																<?= $hari_sejak_pbt_display ?>
+															</td>
+															<td class="text-center">
+																<?= $sisa_hari_display ?>
 															</td>
 															<td class="text-center">
 																<?php if ($row->bht): ?>

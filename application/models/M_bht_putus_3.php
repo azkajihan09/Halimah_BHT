@@ -40,18 +40,21 @@ class M_bht_putus_3 extends CI_Model
                 WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 'Dari Pemberitahuan Putusan'
                 ELSE 'Dari Jadwal Sidang'
             END as sumber_pbt,
+            -- Hari sejak PBT ke target BHT (selalu 14 hari)
             CASE 
-                WHEN pp.tanggal_bht IS NOT NULL THEN 
-                    CASE 
-                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATEDIFF(pp.tanggal_bht, pppp.tanggal_pemberitahuan_putusan)
-                        ELSE DATEDIFF(pp.tanggal_bht, pp.tanggal_putusan)
-                    END
+                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
+                    DATEDIFF(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), pppp.tanggal_pemberitahuan_putusan)
                 ELSE 
-                    CASE 
-                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan)
-                        ELSE DATEDIFF(CURDATE(), pp.tanggal_putusan)
-                    END
-            END as hari_sejak_pbt,
+                    DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), pp.tanggal_putusan)
+            END as hari_sejak_pbt_ke_target,
+            
+            -- Sisa hari ke target BHT dari hari ini
+            CASE 
+                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
+                    DATEDIFF(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), CURDATE())
+                ELSE 
+                    DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), CURDATE())
+            END as sisa_hari_ke_target,
             CASE 
                 WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY)
                 ELSE DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY)
@@ -106,18 +109,21 @@ class M_bht_putus_3 extends CI_Model
                 WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 'Dari Pemberitahuan Putusan'
                 ELSE 'Dari Jadwal Sidang'
             END as sumber_pbt,
+            -- Hari sejak PBT ke target BHT (selalu 14 hari)
             CASE 
-                WHEN pp.tanggal_bht IS NOT NULL THEN 
-                    CASE 
-                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATEDIFF(pp.tanggal_bht, pppp.tanggal_pemberitahuan_putusan)
-                        ELSE DATEDIFF(pp.tanggal_bht, pp.tanggal_putusan)
-                    END
+                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
+                    DATEDIFF(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), pppp.tanggal_pemberitahuan_putusan)
                 ELSE 
-                    CASE 
-                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan)
-                        ELSE DATEDIFF(CURDATE(), pp.tanggal_putusan)
-                    END
-            END as hari_sejak_pbt,
+                    DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), pp.tanggal_putusan)
+            END as hari_sejak_pbt_ke_target,
+            
+            -- Sisa hari ke target BHT dari hari ini
+            CASE 
+                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
+                    DATEDIFF(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), CURDATE())
+                ELSE 
+                    DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), CURDATE())
+            END as sisa_hari_ke_target,
             CASE 
                 WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY)
                 ELSE DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY)

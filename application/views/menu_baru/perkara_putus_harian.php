@@ -32,11 +32,12 @@
 						<br><br>
 						<div class="row">
 							<div class="col-md-6">
-								<strong>Logika Perhitungan Hari Sejak PBT:</strong>
+								<strong>Logika Perhitungan Sisa Hari ke Target BHT:</strong>
 								<ul class="mb-0 mt-1">
 									<li>Jika ada data di tabel <code>perkara_putusan_pemberitahuan_putusan</code>, hitung dari tanggal pemberitahuan</li>
 									<li>Jika tidak ada data pemberitahuan, hitung dari tanggal putusan</li>
 									<li>Target BHT dihitung 14 hari dari tanggal PBT yang sebenarnya</li>
+									<li>Sisa hari = Target BHT - Hari ini (menunjukkan waktu tersisa)</li>
 								</ul>
 							</div>
 							<div class="col-md-3">
@@ -218,7 +219,7 @@
 												<th width="8%">Tanggal PBT</th>
 												<th width="8%">Target BHT</th>
 												<th width="10%">Status BHT</th>
-												<th width="8%">Hari Sejak PBT</th>
+												<th width="8%">Sisa Hari ke Target</th>
 												<th width="8%">Tanggal BHT</th>
 												<th width="6%">Sumber PBT</th>
 											</tr>
@@ -292,24 +293,28 @@
 													</td>
 													<td>
 														<?php
-														$hari_pbt = isset($perkara->hari_sejak_pbt_efektif) ? $perkara->hari_sejak_pbt_efektif : $perkara->hari_sejak_putus;
+														$sisa_hari = isset($perkara->sisa_hari_ke_target) ? $perkara->sisa_hari_ke_target : '-';
+														if ($sisa_hari !== '-'):
 														?>
-														<?php if ($hari_pbt > 21): ?>
-															<span class="badge badge-dark">
-																<?= $hari_pbt ?> hari (Critical)
-															</span>
-														<?php elseif ($hari_pbt > 14): ?>
-															<span class="badge badge-danger">
-																<?= $hari_pbt ?> hari (Terlambat)
-															</span>
-														<?php elseif ($hari_pbt > 10): ?>
-															<span class="badge badge-warning">
-																<?= $hari_pbt ?> hari (Urgent)
-															</span>
+															<?php if ($sisa_hari > 0): ?>
+																<span class="badge badge-success">
+																	<?= $sisa_hari ?> hari lagi
+																</span>
+															<?php elseif ($sisa_hari == 0): ?>
+																<span class="badge badge-warning">
+																	Hari ini (Deadline)
+																</span>
+															<?php elseif ($sisa_hari >= -7): ?>
+																<span class="badge badge-danger">
+																	Terlambat <?= abs($sisa_hari) ?> hari
+																</span>
+															<?php else: ?>
+																<span class="badge badge-dark">
+																	Sangat Terlambat <?= abs($sisa_hari) ?> hari
+																</span>
+															<?php endif; ?>
 														<?php else: ?>
-															<span class="badge badge-success">
-																<?= $hari_pbt ?> hari (Normal)
-															</span>
+															<span class="badge badge-secondary">-</span>
 														<?php endif; ?>
 													</td>
 													<td>
