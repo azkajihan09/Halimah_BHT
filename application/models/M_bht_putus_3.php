@@ -63,18 +63,18 @@ class M_bht_putus_3 extends CI_Model
         ORDER BY pp.tanggal_bht DESC, pp.tanggal_putusan DESC, p.nomor_perkara ASC");
 
 		$results = $query->result();
-		
+
 		// Load helper untuk perhitungan hari kerja
 		$this->load->helper('itsbat');
-		
+
 		// Tambahkan perhitungan hari kerja untuk setiap record
 		foreach ($results as $row) {
 			// Hitung target BHT berdasarkan hari kerja (14 hari kerja)
 			$row->target_bht = add_working_days($row->tanggal_pbt_untuk_target, 14);
-			
+
 			// Hitung sisa hari kerja ke target BHT
 			$row->sisa_hari_ke_target = calculate_working_days_between(date('Y-m-d'), $row->target_bht);
-			
+
 			// Hari sejak PBT ke target selalu 14 hari kerja
 			$row->hari_sejak_pbt_ke_target = 14;
 		}
@@ -132,18 +132,18 @@ class M_bht_putus_3 extends CI_Model
         ORDER BY pp.tanggal_bht DESC, pp.tanggal_putusan DESC, p.nomor_perkara ASC");
 
 		$results = $query->result();
-		
+
 		// Load helper untuk perhitungan hari kerja
 		$this->load->helper('itsbat');
-		
+
 		// Tambahkan perhitungan hari kerja untuk setiap record
 		foreach ($results as $row) {
 			// Hitung target BHT berdasarkan hari kerja (14 hari kerja)
 			$row->target_bht = add_working_days($row->tanggal_pbt_untuk_target, 14);
-			
+
 			// Hitung sisa hari kerja ke target BHT
 			$row->sisa_hari_ke_target = calculate_working_days_between(date('Y-m-d'), $row->target_bht);
-			
+
 			// Hari sejak PBT ke target selalu 14 hari kerja
 			$row->hari_sejak_pbt_ke_target = 14;
 		}
