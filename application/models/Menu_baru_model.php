@@ -20,28 +20,71 @@ class Menu_baru_model extends CI_Model
             p.jenis_perkara_nama as jenis_perkara,
             DATE(pp.tanggal_putusan) as tanggal_putus,
             COALESCE(pen.majelis_hakim_nama, '-') as hakim,
+            COALESCE(DATE(pppp.tanggal_pemberitahuan_putusan), DATE(pp.tanggal_putusan)) as tanggal_pbt_efektif,
+            
+            -- Status BHT dengan kekhususan PA
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 'Sudah BHT'
-                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'Critical - Belum BHT'
-                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'Terlambat - Belum BHT'
-                WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 10 THEN 'Urgent - Belum BHT'
-                ELSE 'Belum BHT'
+                WHEN p.jenis_perkara_nama LIKE '%Cerai Talak%' THEN
+                    CASE 
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 21 THEN 'Critical - Menunggu Ikrar Talak'
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 14 THEN 'Terlambat - Menunggu Ikrar Talak'
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 10 THEN 'Urgent - Menunggu Ikrar Talak'
+                        WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'Critical - Menunggu Ikrar Talak'
+                        WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'Terlambat - Menunggu Ikrar Talak'
+                        WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 10 THEN 'Urgent - Menunggu Ikrar Talak'
+                        ELSE 'Belum BHT - Menunggu Ikrar Talak'
+                    END
+                ELSE
+                    CASE 
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 21 THEN 'Critical - Belum BHT'
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 14 THEN 'Terlambat - Belum BHT'
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 10 THEN 'Urgent - Belum BHT'
+                        WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'Critical - Belum BHT'
+                        WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'Terlambat - Belum BHT'
+                        WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 10 THEN 'Urgent - Belum BHT'
+                        ELSE 'Belum BHT'
+                    END
             END as status_bht,
+            
             p.perkara_id,
             pp.tanggal_bht,
-            DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY) as target_bht,
+            
+            CASE 
+                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY)
+                ELSE DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY)
+            END as target_bht,
+            
+            -- Hari sejak putus (untuk backward compatibility)
             DATEDIFF(CURDATE(), pp.tanggal_putusan) as hari_sejak_putus,
+            
+            -- Hari sejak PBT efektif (logika baru)
+            CASE 
+                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan)
+                ELSE DATEDIFF(CURDATE(), pp.tanggal_putusan)
+            END as hari_sejak_pbt_efektif,
+            
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 'SELESAI'
+                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 21 THEN 'CRITICAL'
+                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 14 THEN 'TERLAMBAT'
+                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 10 THEN 'URGENT'
                 WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'CRITICAL'
                 WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'TERLAMBAT'
                 WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 10 THEN 'URGENT'
                 ELSE 'NORMAL'
-            END as kategori_status
+            END as kategori_status,
+            
+            -- Informasi sumber PBT
+            CASE 
+                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 'Dari Pemberitahuan Putusan'
+                ELSE 'Dari Tanggal Putusan'
+            END as sumber_pbt
         ");
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
+		$this->db->join('perkara_putusan_pemberitahuan_putusan pppp', 'p.perkara_id = pppp.perkara_id', 'left');
 		$this->db->where('DATE(pp.tanggal_putusan)', $tanggal);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 
@@ -133,26 +176,34 @@ class Menu_baru_model extends CI_Model
             p.nomor_perkara,
             p.jenis_perkara_nama as jenis_perkara,
             DATE(pp.tanggal_putusan) as tanggal_putusan,
-            DATE(pjs.tanggal_sidang) as tanggal_pbt,
+            COALESCE(DATE(pppp.tanggal_pemberitahuan_putusan), DATE(pjs.tanggal_sidang)) as tanggal_pbt,
             pp.tanggal_bht,
             p.perkara_id,
             COALESCE(pen.majelis_hakim_nama, '-') as hakim,
+            DATE(pppp.tanggal_pemberitahuan_putusan) as tanggal_pemberitahuan_putusan,
             
-            -- Target BHT Calculation (Complex)
             CASE 
+                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY)
                 WHEN pjs.tanggal_sidang IS NOT NULL THEN DATE_ADD(pjs.tanggal_sidang, INTERVAL 14 DAY)
-                WHEN pp.tanggal_putusan IS NOT NULL THEN DATE_ADD(pp.tanggal_putusan, INTERVAL 28 DAY)
+                WHEN pp.tanggal_putusan IS NOT NULL THEN DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY)
                 ELSE NULL
             END as target_bht,
             
-            -- Hari Sejak PBT (Complex Calculation)
             CASE 
-                WHEN pp.tanggal_bht IS NOT NULL THEN DATEDIFF(pp.tanggal_bht, pjs.tanggal_sidang)
-                WHEN pjs.tanggal_sidang IS NOT NULL THEN DATEDIFF(CURDATE(), pjs.tanggal_sidang)
-                ELSE DATEDIFF(CURDATE(), pp.tanggal_putusan)
+                WHEN pp.tanggal_bht IS NOT NULL THEN 
+                    CASE 
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATEDIFF(pp.tanggal_bht, pppp.tanggal_pemberitahuan_putusan)
+                        WHEN pjs.tanggal_sidang IS NOT NULL THEN DATEDIFF(pp.tanggal_bht, pjs.tanggal_sidang)
+                        ELSE DATEDIFF(pp.tanggal_bht, pp.tanggal_putusan)
+                    END
+                ELSE 
+                    CASE 
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan)
+                        WHEN pjs.tanggal_sidang IS NOT NULL THEN DATEDIFF(CURDATE(), pjs.tanggal_sidang)
+                        ELSE DATEDIFF(CURDATE(), pp.tanggal_putusan)
+                    END
             END as hari_sejak_pbt,
             
-            -- Remaining Days to Target BHT
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 0
                 WHEN pjs.tanggal_sidang IS NOT NULL THEN 
@@ -161,7 +212,6 @@ class Menu_baru_model extends CI_Model
                     GREATEST(0, DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 28 DAY), CURDATE()))
             END as sisa_hari_target,
             
-            -- Days Overdue from Target
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 0
                 WHEN pjs.tanggal_sidang IS NOT NULL THEN 
@@ -170,7 +220,6 @@ class Menu_baru_model extends CI_Model
                     GREATEST(0, DATEDIFF(CURDATE(), DATE_ADD(pp.tanggal_putusan, INTERVAL 28 DAY)))
             END as hari_terlambat,
             
-            -- Status (Complex Logic)
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 'Selesai BHT'
                 WHEN pjs.tanggal_sidang IS NULL THEN 
@@ -185,7 +234,6 @@ class Menu_baru_model extends CI_Model
                 ELSE 'Normal - Menunggu BHT'
             END as status,
             
-            -- Priority Level (Complex)
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 'COMPLETED'
                 WHEN pjs.tanggal_sidang IS NULL AND DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'CRITICAL_PBT'
@@ -196,7 +244,6 @@ class Menu_baru_model extends CI_Model
                 ELSE 'LOW'
             END as prioritas,
             
-            -- Progress Percentage
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 100
                 WHEN pjs.tanggal_sidang IS NOT NULL THEN 
@@ -209,7 +256,6 @@ class Menu_baru_model extends CI_Model
                     ))
             END as progress_percentage,
             
-            -- Working Days Calculation (excluding weekends)
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 
                     DATEDIFF(pp.tanggal_bht, pjs.tanggal_sidang) - 
@@ -222,7 +268,6 @@ class Menu_baru_model extends CI_Model
                     (WEEK(CURDATE()) - WEEK(pp.tanggal_putusan)) * 2
             END as hari_kerja_sejak_pbt,
             
-            -- Efficiency Score (0-100)
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL AND pjs.tanggal_sidang IS NOT NULL THEN
                     CASE 
@@ -245,6 +290,7 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
+		$this->db->join('perkara_putusan_pemberitahuan_putusan pppp', 'p.perkara_id = pppp.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 
 		// Show both completed and pending BHT cases for comprehensive view
@@ -467,44 +513,68 @@ class Menu_baru_model extends CI_Model
 		$this->db->select("
             p.nomor_perkara,
             p.jenis_perkara_nama as jenis_perkara,
-            DATE(pjs.tanggal_sidang) as tanggal_pbt,
+            COALESCE(DATE(pppp.tanggal_pemberitahuan_putusan), DATE(pjs.tanggal_sidang)) as tanggal_pbt,
             DATE(pp.tanggal_putusan) as tanggal_putusan,
             COALESCE(pen.majelis_hakim_nama, '-') as hakim,
             DATE(pp.tanggal_bht) as tanggal_bht,
-            -- Status BHT dengan kekhususan Pengadilan Agama
+            DATE(pppp.tanggal_pemberitahuan_putusan) as tanggal_pemberitahuan_putusan,
+            
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 'Sudah BHT'
                 WHEN p.jenis_perkara_nama LIKE '%Cerai Talak%' THEN 'Belum BHT - Menunggu Ikrar Talak'
                 ELSE 'Belum BHT'
             END as status_bht,
             
-            -- Selisih hari PBT ke BHT (14 hari kalender)
             CASE 
-                WHEN pp.tanggal_bht IS NOT NULL THEN DATEDIFF(pp.tanggal_bht, pjs.tanggal_sidang)
-                ELSE DATEDIFF(CURDATE(), pjs.tanggal_sidang)
+                WHEN pp.tanggal_bht IS NOT NULL THEN 
+                    CASE 
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATEDIFF(pp.tanggal_bht, pppp.tanggal_pemberitahuan_putusan)
+                        ELSE DATEDIFF(pp.tanggal_bht, pp.tanggal_putusan)
+                    END
+                ELSE 
+                    CASE 
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan)
+                        ELSE DATEDIFF(CURDATE(), pp.tanggal_putusan)
+                    END
             END as selisih_hari,
             
-            -- Target BHT berdasarkan jenis perkara
             CASE 
                 WHEN p.jenis_perkara_nama LIKE '%Cerai Talak%' THEN 
-                    CONCAT('Target Izin Talak: ', DATE_FORMAT(DATE_ADD(pjs.tanggal_sidang, INTERVAL 14 DAY), '%d/%m/%Y'), 
-                           ' | Max Ikrar: ', DATE_FORMAT(DATE_ADD(pjs.tanggal_sidang, INTERVAL 6 MONTH), '%d/%m/%Y'))
-                ELSE DATE_FORMAT(DATE_ADD(pjs.tanggal_sidang, INTERVAL 14 DAY), '%d/%m/%Y')
+                    CASE 
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN
+                            CONCAT('Target Izin Talak: ', DATE_FORMAT(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), '%d/%m/%Y'), 
+                                   ' | Max Ikrar: ', DATE_FORMAT(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 6 MONTH), '%d/%m/%Y'))
+                        ELSE
+                            CONCAT('Target Izin Talak: ', DATE_FORMAT(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), '%d/%m/%Y'), 
+                                   ' | Max Ikrar: ', DATE_FORMAT(DATE_ADD(pp.tanggal_putusan, INTERVAL 6 MONTH), '%d/%m/%Y'))
+                    END
+                ELSE 
+                    CASE 
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN
+                            DATE_FORMAT(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), '%d/%m/%Y')
+                        ELSE
+                            DATE_FORMAT(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), '%d/%m/%Y')
+                    END
             END as target_bht_info,
             
-            -- Kategori khusus Pengadilan Agama
             CASE 
                 WHEN p.jenis_perkara_nama LIKE '%Cerai Talak%' AND pp.tanggal_bht IS NULL THEN 'CERAI_TALAK_PROSES'
                 WHEN p.jenis_perkara_nama LIKE '%Cerai Gugat%' THEN 'CERAI_GUGAT'
                 WHEN p.jenis_perkara_nama LIKE '%Waris%' THEN 'WARIS'
                 WHEN p.jenis_perkara_nama LIKE '%Isbat%' THEN 'ISBAT_NIKAH'
                 ELSE 'UMUM'
-            END as kategori_pa
+            END as kategori_pa,
+            
+            CASE 
+                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 'Dari Pemberitahuan Putusan'
+                ELSE 'Dari Tanggal Putusan'
+            END as sumber_pbt
         ");
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
 		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
+		$this->db->join('perkara_putusan_pemberitahuan_putusan pppp', 'p.perkara_id = pppp.perkara_id', 'left');
 		$this->db->where('DATE(pjs.tanggal_sidang)', $tanggal);
 		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
 

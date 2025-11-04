@@ -26,10 +26,26 @@
 				<div class="col-md-12">
 					<div class="alert alert-info alert-dismissible">
 						<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-						<h5><i class="icon fas fa-info-circle"></i> Informasi Aturan BHT</h5>
+						<h5><i class="icon fas fa-info-circle"></i> Informasi Aturan BHT & Logika Perhitungan</h5>
 						<strong>Berdasarkan aturan resmi pengadilan agama:</strong> Putusan menjadi BHT dalam <strong>14 hari kalender</strong> setelah PBT disampaikan kepada pihak yang tidak hadir.
 						Jika kedua pihak hadir saat pembacaan putusan, maka putusan langsung BHT.
-						<br><small class="text-muted">* PBT = Pemberitahuan Isi Putusan | BHT = Berkekuatan Hukum Tetap</small>
+						<br><br>
+						<div class="row">
+							<div class="col-md-8">
+								<strong>Logika Perhitungan Hari Sejak PBT:</strong>
+								<ul class="mb-0 mt-1">
+									<li>Jika ada data di tabel <code>perkara_putusan_pemberitahuan_putusan</code>, hitung dari tanggal pemberitahuan</li>
+									<li>Jika tidak ada data pemberitahuan, hitung dari tanggal putusan</li>
+									<li>Target BHT dihitung 14 hari dari tanggal PBT yang sebenarnya</li>
+								</ul>
+							</div>
+							<div class="col-md-4">
+								<strong>Indikator Sumber PBT:</strong><br>
+								<span class="badge badge-primary"><i class="fas fa-bell"></i></span> Dari Pemberitahuan Putusan<br>
+								<span class="badge badge-secondary"><i class="fas fa-gavel"></i></span> Dari Tanggal Putusan
+							</div>
+						</div>
+						<small class="text-muted">* PBT = Pemberitahuan Isi Putusan | BHT = Berkekuatan Hukum Tetap</small>
 					</div>
 				</div>
 			</div>
@@ -190,15 +206,16 @@
 									<table class="table table-bordered table-striped" id="perkara-table">
 										<thead>
 											<tr>
-												<th width="5%">No</th>
-												<th width="15%">Nomor Perkara</th>
-												<th width="20%">Jenis Perkara</th>
-												<th width="15%">Tanggal Putus</th>
-												<th width="15%">Hakim</th>
-												<th width="12%">Target BHT</th>
-												<th width="13%">Status BHT</th>
-												<th width="10%">Hari Sejak Putus</th>
-												<th width="10%">Tanggal BHT</th>
+												<th width="4%">No</th>
+												<th width="14%">Nomor Perkara</th>
+												<th width="18%">Jenis Perkara</th>
+												<th width="10%">Tanggal Putus</th>
+												<th width="12%">Hakim</th>
+												<th width="10%">Target BHT</th>
+												<th width="12%">Status BHT</th>
+												<th width="8%">Hari Sejak PBT</th>
+												<th width="8%">Tanggal BHT</th>
+												<th width="6%">Sumber PBT</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -242,21 +259,24 @@
 														<?php endif; ?>
 													</td>
 													<td>
-														<?php if ($perkara->hari_sejak_putus > 21): ?>
+														<?php
+														$hari_pbt = isset($perkara->hari_sejak_pbt_efektif) ? $perkara->hari_sejak_pbt_efektif : $perkara->hari_sejak_putus;
+														?>
+														<?php if ($hari_pbt > 21): ?>
 															<span class="badge badge-dark">
-																<?= $perkara->hari_sejak_putus ?> hari (Critical)
+																<?= $hari_pbt ?> hari (Critical)
 															</span>
-														<?php elseif ($perkara->hari_sejak_putus > 14): ?>
+														<?php elseif ($hari_pbt > 14): ?>
 															<span class="badge badge-danger">
-																<?= $perkara->hari_sejak_putus ?> hari (Terlambat)
+																<?= $hari_pbt ?> hari (Terlambat)
 															</span>
-														<?php elseif ($perkara->hari_sejak_putus > 10): ?>
+														<?php elseif ($hari_pbt > 10): ?>
 															<span class="badge badge-warning">
-																<?= $perkara->hari_sejak_putus ?> hari (Urgent)
+																<?= $hari_pbt ?> hari (Urgent)
 															</span>
 														<?php else: ?>
 															<span class="badge badge-success">
-																<?= $perkara->hari_sejak_putus ?> hari (Normal)
+																<?= $hari_pbt ?> hari (Normal)
 															</span>
 														<?php endif; ?>
 													</td>
@@ -269,6 +289,23 @@
 														<?php else: ?>
 															<span class="text-muted">
 																<i class="fas fa-minus"></i> Belum BHT
+															</span>
+														<?php endif; ?>
+													</td>
+													<td class="text-center">
+														<?php if (isset($perkara->sumber_pbt)): ?>
+															<?php if (strpos($perkara->sumber_pbt, 'Pemberitahuan') !== false): ?>
+																<span class="badge badge-primary" title="<?= $perkara->sumber_pbt ?>">
+																	<i class="fas fa-bell"></i>
+																</span>
+															<?php else: ?>
+																<span class="badge badge-secondary" title="<?= $perkara->sumber_pbt ?>">
+																	<i class="fas fa-gavel"></i>
+																</span>
+															<?php endif; ?>
+														<?php else: ?>
+															<span class="badge badge-light">
+																<i class="fas fa-question"></i>
 															</span>
 														<?php endif; ?>
 													</td>

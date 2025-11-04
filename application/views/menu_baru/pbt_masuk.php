@@ -56,20 +56,35 @@
 				</div>
 			</div>
 
-			<!-- Penjelasan Aturan 14 Hari -->
+			<!-- Penjelasan Aturan 14 Hari dan Logika Perhitungan PBT -->
 			<div class="row mb-3">
 				<div class="col-md-12">
 					<div class="alert alert-info">
-						<h5><i class="fas fa-info-circle"></i> <strong>Aturan 14 Hari Kalender PBT-BHT</strong></h5>
+						<h5><i class="fas fa-info-circle"></i> <strong>Aturan 14 Hari Kalender PBT-BHT & Logika Perhitungan</strong></h5>
 						<p class="mb-2">Berdasarkan ketentuan hukum acara perdata di Pengadilan Agama:</p>
-						<ul class="mb-2">
-							<li><strong>Kasus Umum (Waris, Wasiat, Hibah, Isbat Nikah):</strong> 14 hari kalender dari PBT → BHT</li>
-							<li><strong>Cerai Gugat (Diajukan Istri):</strong> 14 hari kalender dari PBT → BHT → Akta Cerai</li>
-							<li><strong>Cerai Talak (Diajukan Suami):</strong> 14 hari → BHT Izin Talak → Ikrar Talak (max 6 bulan) → BHT Final</li>
-							<li>Perhitungan menggunakan <strong>hari kalender</strong>, bukan hari kerja</li>
-							<li>Jika hari ke-14 jatuh pada hari libur, diperpanjang sampai hari kerja berikutnya</li>
-						</ul>
 						<div class="row">
+							<div class="col-md-8">
+								<ul class="mb-2">
+									<li><strong>Kasus Umum (Waris, Wasiat, Hibah, Isbat Nikah):</strong> 14 hari kalender dari PBT → BHT</li>
+									<li><strong>Cerai Gugat (Diajukan Istri):</strong> 14 hari kalender dari PBT → BHT → Akta Cerai</li>
+									<li><strong>Cerai Talak (Diajukan Suami):</strong> 14 hari → BHT Izin Talak → Ikrar Talak (max 6 bulan) → BHT Final</li>
+									<li>Perhitungan menggunakan <strong>hari kalender</strong>, bukan hari kerja</li>
+								</ul>
+							</div>
+							<div class="col-md-4">
+								<div class="card card-light">
+									<div class="card-header p-2"><strong>Logika Perhitungan PBT</strong></div>
+									<div class="card-body p-2">
+										<small>
+											<span class="badge badge-primary"><i class="fas fa-bell"></i> PBT</span> = Dari tabel pemberitahuan putusan<br>
+											<span class="badge badge-secondary"><i class="fas fa-gavel"></i> Putus</span> = Dari tanggal putusan<br>
+											<strong>Selisih Hari:</strong> Dihitung dari tanggal PBT jika ada, jika tidak dari tanggal putusan
+										</small>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row mt-2">
 							<div class="col-md-4"><span class="badge badge-success mr-2"></span><strong>1-10 Hari:</strong> Normal/Cepat</div>
 							<div class="col-md-4"><span class="badge badge-warning mr-2"></span><strong>11-14 Hari:</strong> Sesuai Aturan</div>
 							<div class="col-md-4"><span class="badge badge-danger mr-2"></span><strong>> 14 Hari:</strong> Perlu Perhatian</div>
@@ -147,14 +162,15 @@
 										<thead>
 											<tr>
 												<th width="5%">No</th>
-												<th width="20%">Nomor Perkara</th>
-												<th width="20%">Jenis Perkara</th>
-												<th width="12%">Tanggal Putus</th>
+												<th width="18%">Nomor Perkara</th>
+												<th width="18%">Jenis Perkara</th>
+												<th width="10%">Tanggal Putus</th>
 												<th width="12%">Tanggal PBT</th>
-												<th width="12%">Tanggal BHT</th>
+												<th width="10%">Tanggal BHT</th>
 												<th width="8%">Selisih Hari</th>
-												<th width="15%">Target BHT</th>
-												<th width="11%">Status BHT</th>
+												<th width="12%">Target BHT</th>
+												<th width="10%">Status BHT</th>
+												<th width="7%">Sumber PBT</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -191,6 +207,23 @@
 														<?php else: ?>
 															<span class="badge badge-warning">
 																<i class="fas fa-clock"></i> <?= $pbt->status_bht ?>
+															</span>
+														<?php endif; ?>
+													</td>
+													<td class="text-center">
+														<?php if (isset($pbt->sumber_pbt)): ?>
+															<?php if (strpos($pbt->sumber_pbt, 'Pemberitahuan') !== false): ?>
+																<span class="badge badge-primary" title="<?= $pbt->sumber_pbt ?>">
+																	<i class="fas fa-bell"></i> PBT
+																</span>
+															<?php else: ?>
+																<span class="badge badge-secondary" title="<?= $pbt->sumber_pbt ?>">
+																	<i class="fas fa-gavel"></i> Putus
+																</span>
+															<?php endif; ?>
+														<?php else: ?>
+															<span class="badge badge-light">
+																<i class="fas fa-question"></i> -
 															</span>
 														<?php endif; ?>
 													</td>

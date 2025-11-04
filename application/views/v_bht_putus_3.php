@@ -267,6 +267,38 @@
 						</div>
 					<?php endif; ?>
 
+					<!-- Informasi Sistem PBT Terintegrasi -->
+					<div class="row">
+						<div class="col-12">
+							<div class="alert alert-info alert-dismissible">
+								<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+								<h5><i class="icon fas fa-info-circle"></i> Sistem PBT Terintegrasi dengan Tabel Pemberitahuan Putusan</h5>
+								<div class="row">
+									<div class="col-md-6">
+										<strong>Priority Logic PBT:</strong>
+										<ul class="mb-2">
+											<li><span class="badge badge-primary">PP</span> <strong>Prioritas Utama:</strong> Tanggal dari tabel <code>pemberitahuan_putusan</code></li>
+											<li><span class="badge badge-info">JS</span> <strong>Fallback:</strong> Tanggal dari <code>jadwal_sidang</code> jika PP tidak ada</li>
+										</ul>
+									</div>
+									<div class="col-md-6">
+										<strong>Fitur Baru:</strong>
+										<ul class="mb-2">
+											<li><strong>Target BHT:</strong> Dihitung +14 hari dari PBT yang akurat</li>
+											<li><strong>Hari Sejak PBT:</strong> Monitoring real-time berdasarkan PBT efektif</li>
+											<li><strong>Sumber PBT:</strong> Transparansi data (PP/JS) untuk akurasi</li>
+										</ul>
+									</div>
+								</div>
+								<div class="text-center mt-2">
+									<small class="text-muted">
+										<i class="fas fa-calendar-check"></i> <strong>Aturan 14 Hari Kalender:</strong> Target BHT dihitung berdasarkan tanggal PBT efektif + 14 hari kalender sesuai regulasi pengadilan
+									</small>
+								</div>
+							</div>
+						</div>
+					</div>
+
 					<!-- Main Data Table -->
 					<div class="row">
 						<div class="col-12">
@@ -300,16 +332,19 @@
 												<thead>
 													<tr>
 														<th class="text-center" style="width: 3%;">No</th>
-														<th style="width: 10%;">Tanggal Putus</th>
+														<th style="width: 8%;">Tanggal Putus</th>
 														<th style="width: 12%;">Nomor Perkara</th>
-														<th style="width: 10%;">Jenis Perkara</th>
-														<th style="width: 15%;">Panitera Pengganti</th>
-														<th style="width: 15%;">Juru Sita Pengganti</th>
+														<th style="width: 8%;">Jenis Perkara</th>
+														<th style="width: 12%;">Panitera Pengganti</th>
+														<th style="width: 12%;">Juru Sita Pengganti</th>
 														<th style="width: 8%;">PBT</th>
+														<th style="width: 6%;">Sumber PBT</th>
+														<th style="width: 8%;">Target BHT</th>
+														<th style="width: 6%;">Hari Sejak PBT</th>
 														<th style="width: 8%;">BHT</th>
 														<th style="width: 8%;">Ikrar</th>
-														<th style="width: 8%;">Status BHT</th>
-														<th style="width: 8%;">Status</th>
+														<th style="width: 6%;">Status BHT</th>
+														<th style="width: 6%;">Status</th>
 													</tr>
 												</thead>
 												<tbody>
@@ -320,22 +355,53 @@
 														$tanggal_putus = $row->tanggal_putus ? date('d/m/Y', strtotime($row->tanggal_putus)) : '-';
 														$bht = $row->bht ? date('d/m/Y', strtotime($row->bht)) : '-';
 														$ikrar = $row->ikrar ? date('d/m/Y', strtotime($row->ikrar)) : '-';
+														$target_bht = isset($row->target_bht) && $row->target_bht ? date('d/m/Y', strtotime($row->target_bht)) : '-';
 
-														// Pemrosesan PBT yang berisi multiple dates
+														// Pemrosesan PBT dengan priority logic (pemberitahuan putusan > jadwal sidang)
 														$pbt_display = '-';
-														if ($row->pbt) {
+														if (isset($row->tanggal_pemberitahuan_putusan) && $row->tanggal_pemberitahuan_putusan) {
+															// Priority: Gunakan tanggal pemberitahuan putusan
+															$pbt_display = '<span class="badge badge-primary badge-sm" title="Dari Pemberitahuan Putusan">' .
+																date('d/m/Y', strtotime($row->tanggal_pemberitahuan_putusan)) . '</span>';
+														} elseif ($row->pbt) {
+															// Fallback: Gunakan jadwal sidang (multiple dates possible)
 															$pbt_dates = explode('<br>', $row->pbt);
 															if (count($pbt_dates) > 1) {
 																$pbt_display = '<div class="multiple-dates">';
 																foreach ($pbt_dates as $date) {
 																	if (!empty($date)) {
-																		$pbt_display .= '<span class="date-item">' . date('d/m/Y', strtotime($date)) . '</span>';
+																		$pbt_display .= '<span class="date-item badge badge-info badge-sm" title="Dari Jadwal Sidang">' .
+																			date('d/m/Y', strtotime($date)) . '</span><br>';
 																	}
 																}
 																$pbt_display .= '</div>';
 															} else {
-																$pbt_display = date('d/m/Y', strtotime($row->pbt));
+																$pbt_display = '<span class="badge badge-info badge-sm" title="Dari Jadwal Sidang">' .
+																	date('d/m/Y', strtotime($row->pbt)) . '</span>';
 															}
+														}
+
+														// Sumber PBT badge
+														$sumber_pbt_badge = '';
+														if (isset($row->sumber_pbt)) {
+															if ($row->sumber_pbt == 'Dari Pemberitahuan Putusan') {
+																$sumber_pbt_badge = '<span class="badge badge-primary badge-status" title="Data dari tabel pemberitahuan putusan"><i class="fas fa-certificate"></i> PP</span>';
+															} else {
+																$sumber_pbt_badge = '<span class="badge badge-info badge-status" title="Data dari jadwal sidang"><i class="fas fa-calendar-alt"></i> JS</span>';
+															}
+														}
+
+														// Hari sejak PBT dengan kategori warna
+														$hari_sejak_pbt_display = '-';
+														if (isset($row->hari_sejak_pbt)) {
+															$hari = $row->hari_sejak_pbt;
+															$badge_class = 'badge-secondary';
+															if ($hari <= 10) $badge_class = 'badge-success';
+															elseif ($hari <= 14) $badge_class = 'badge-warning';
+															elseif ($hari <= 21) $badge_class = 'badge-danger';
+															else $badge_class = 'badge-dark';
+
+															$hari_sejak_pbt_display = '<span class="badge ' . $badge_class . ' badge-status" title="' . $hari . ' hari sejak PBT">' . $hari . ' hari</span>';
 														}
 
 														// Status badge
@@ -353,6 +419,19 @@
 															<td><?= $row->jurusita_pengganti_nama ?: '-' ?></td>
 															<td class="text-center">
 																<?= $pbt_display ?>
+															</td>
+															<td class="text-center">
+																<?= $sumber_pbt_badge ?>
+															</td>
+															<td class="text-center">
+																<?php if ($target_bht != '-'): ?>
+																	<span class="badge badge-warning badge-sm"><?= $target_bht ?></span>
+																<?php else: ?>
+																	<span class="text-muted">-</span>
+																<?php endif; ?>
+															</td>
+															<td class="text-center">
+																<?= $hari_sejak_pbt_display ?>
 															</td>
 															<td class="text-center">
 																<?php if ($row->bht): ?>
