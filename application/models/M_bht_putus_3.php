@@ -40,21 +40,9 @@ class M_bht_putus_3 extends CI_Model
                 WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 'Dari Pemberitahuan Putusan'
                 ELSE 'Dari Jadwal Sidang'
             END as sumber_pbt,
-            -- Hari sejak PBT ke target BHT (selalu 14 hari)
-            CASE 
-                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
-                    DATEDIFF(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), pppp.tanggal_pemberitahuan_putusan)
-                ELSE 
-                    DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), pp.tanggal_putusan)
-            END as hari_sejak_pbt_ke_target,
-            
-            -- Sisa hari ke target BHT dari hari ini
-            CASE 
-                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
-                    DATEDIFF(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), CURDATE())
-                ELSE 
-                    DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), CURDATE())
-            END as sisa_hari_ke_target,
+            -- Data mentah untuk perhitungan hari kerja di PHP
+            COALESCE(DATE(pppp.tanggal_pemberitahuan_putusan), DATE(pp.tanggal_putusan)) as tanggal_pbt_untuk_target,
+            CURDATE() as hari_ini,
             CASE 
                 WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY)
                 ELSE DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY)
@@ -74,7 +62,24 @@ class M_bht_putus_3 extends CI_Model
                  pppp.tanggal_pemberitahuan_putusan
         ORDER BY pp.tanggal_bht DESC, pp.tanggal_putusan DESC, p.nomor_perkara ASC");
 
-		return $query->result();
+		$results = $query->result();
+		
+		// Load helper untuk perhitungan hari kerja
+		$this->load->helper('itsbat');
+		
+		// Tambahkan perhitungan hari kerja untuk setiap record
+		foreach ($results as $row) {
+			// Hitung target BHT berdasarkan hari kerja (14 hari kerja)
+			$row->target_bht = add_working_days($row->tanggal_pbt_untuk_target, 14);
+			
+			// Hitung sisa hari kerja ke target BHT
+			$row->sisa_hari_ke_target = calculate_working_days_between(date('Y-m-d'), $row->target_bht);
+			
+			// Hari sejak PBT ke target selalu 14 hari kerja
+			$row->hari_sejak_pbt_ke_target = 14;
+		}
+
+		return $results;
 	}
 
 	// Fungsi untuk mendapatkan data BHT berdasarkan range tanggal
@@ -109,25 +114,9 @@ class M_bht_putus_3 extends CI_Model
                 WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 'Dari Pemberitahuan Putusan'
                 ELSE 'Dari Jadwal Sidang'
             END as sumber_pbt,
-            -- Hari sejak PBT ke target BHT (selalu 14 hari)
-            CASE 
-                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
-                    DATEDIFF(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), pppp.tanggal_pemberitahuan_putusan)
-                ELSE 
-                    DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), pp.tanggal_putusan)
-            END as hari_sejak_pbt_ke_target,
-            
-            -- Sisa hari ke target BHT dari hari ini
-            CASE 
-                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
-                    DATEDIFF(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), CURDATE())
-                ELSE 
-                    DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), CURDATE())
-            END as sisa_hari_ke_target,
-            CASE 
-                WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY)
-                ELSE DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY)
-            END as target_bht
+            -- Data mentah untuk perhitungan hari kerja di PHP
+            COALESCE(DATE(pppp.tanggal_pemberitahuan_putusan), DATE(pp.tanggal_putusan)) as tanggal_pbt_untuk_target,
+            CURDATE() as hari_ini
         FROM perkara p
         LEFT JOIN perkara_putusan pp ON p.perkara_id = pp.perkara_id
         LEFT JOIN perkara_penetapan pen ON p.perkara_id = pen.perkara_id
@@ -142,7 +131,24 @@ class M_bht_putus_3 extends CI_Model
                  pppp.tanggal_pemberitahuan_putusan
         ORDER BY pp.tanggal_bht DESC, pp.tanggal_putusan DESC, p.nomor_perkara ASC");
 
-		return $query->result();
+		$results = $query->result();
+		
+		// Load helper untuk perhitungan hari kerja
+		$this->load->helper('itsbat');
+		
+		// Tambahkan perhitungan hari kerja untuk setiap record
+		foreach ($results as $row) {
+			// Hitung target BHT berdasarkan hari kerja (14 hari kerja)
+			$row->target_bht = add_working_days($row->tanggal_pbt_untuk_target, 14);
+			
+			// Hitung sisa hari kerja ke target BHT
+			$row->sisa_hari_ke_target = calculate_working_days_between(date('Y-m-d'), $row->target_bht);
+			
+			// Hari sejak PBT ke target selalu 14 hari kerja
+			$row->hari_sejak_pbt_ke_target = 14;
+		}
+
+		return $results;
 	}
 
 	// Fungsi untuk statistik BHT dengan pencarian nomor perkara

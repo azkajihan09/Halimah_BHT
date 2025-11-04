@@ -27,17 +27,17 @@
 					<div class="alert alert-info alert-dismissible">
 						<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
 						<h5><i class="icon fas fa-info-circle"></i> Informasi Aturan BHT & Logika Perhitungan</h5>
-						<strong>Berdasarkan aturan resmi pengadilan agama:</strong> Putusan menjadi BHT dalam <strong>14 hari kalender</strong> setelah PBT disampaikan kepada pihak yang tidak hadir.
+						<strong>Berdasarkan aturan resmi pengadilan agama:</strong> Putusan menjadi BHT dalam <strong>14 hari kerja</strong> setelah PBT disampaikan kepada pihak yang tidak hadir.
 						Jika kedua pihak hadir saat pembacaan putusan, maka putusan langsung BHT.
 						<br><br>
 						<div class="row">
 							<div class="col-md-6">
-								<strong>Logika Perhitungan Sisa Hari ke Target BHT:</strong>
+								<strong>Logika Perhitungan Hari Kerja ke Target BHT:</strong>
 								<ul class="mb-0 mt-1">
+									<li>Menggunakan <strong>14 hari kerja</strong> (Senin-Jumat, tidak termasuk weekend dan libur nasional)</li>
 									<li>Jika ada data di tabel <code>perkara_putusan_pemberitahuan_putusan</code>, hitung dari tanggal pemberitahuan</li>
 									<li>Jika tidak ada data pemberitahuan, hitung dari tanggal putusan</li>
-									<li>Target BHT dihitung 14 hari dari tanggal PBT yang sebenarnya</li>
-									<li>Sisa hari = Target BHT - Hari ini (menunjukkan waktu tersisa)</li>
+									<li>Sisa hari = Target BHT - Hari ini (menunjukkan sisa hari kerja)</li>
 								</ul>
 							</div>
 							<div class="col-md-3">

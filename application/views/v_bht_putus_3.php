@@ -284,16 +284,17 @@
 									<div class="col-md-6">
 										<strong>Fitur Baru:</strong>
 										<ul class="mb-2">
-											<li><strong>Target BHT:</strong> Dihitung +14 hari dari PBT yang akurat</li>
-											<li><strong>Jangka Waktu:</strong> Periode dari PBT ke target BHT (selalu 14 hari)</li>
-											<li><strong>Sisa Hari:</strong> Monitoring real-time sisa waktu ke target BHT</li>
+											<li><strong>Target BHT:</strong> Dihitung +14 hari kerja dari PBT yang akurat</li>
+											<li><strong>Jangka Waktu:</strong> Periode dari PBT ke target BHT (selalu 14 hari kerja)</li>
+											<li><strong>Sisa Hari:</strong> Monitoring real-time sisa hari kerja ke target BHT</li>
 											<li><strong>Sumber PBT:</strong> Transparansi data (PP/JS) untuk akurasi</li>
+											<li><strong>Hari Kerja:</strong> Senin-Jumat (tidak termasuk weekend & libur nasional)</li>
 										</ul>
 									</div>
 								</div>
 								<div class="text-center mt-2">
 									<small class="text-muted">
-										<i class="fas fa-calendar-check"></i> <strong>Aturan 14 Hari Kalender:</strong> Target BHT dihitung berdasarkan tanggal PBT efektif + 14 hari kalender sesuai regulasi pengadilan
+										<i class="fas fa-calendar-check"></i> <strong>Aturan 14 Hari Kerja:</strong> Target BHT dihitung berdasarkan tanggal PBT efektif + 14 hari kerja (Senin-Jumat, tidak termasuk weekend dan libur nasional)
 									</small>
 								</div>
 							</div>
