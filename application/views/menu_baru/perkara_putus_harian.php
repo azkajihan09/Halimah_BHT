@@ -31,7 +31,7 @@
 						Jika kedua pihak hadir saat pembacaan putusan, maka putusan langsung BHT.
 						<br><br>
 						<div class="row">
-							<div class="col-md-8">
+							<div class="col-md-6">
 								<strong>Logika Perhitungan Hari Sejak PBT:</strong>
 								<ul class="mb-0 mt-1">
 									<li>Jika ada data di tabel <code>perkara_putusan_pemberitahuan_putusan</code>, hitung dari tanggal pemberitahuan</li>
@@ -39,10 +39,14 @@
 									<li>Target BHT dihitung 14 hari dari tanggal PBT yang sebenarnya</li>
 								</ul>
 							</div>
-							<div class="col-md-4">
+							<div class="col-md-3">
 								<strong>Indikator Sumber PBT:</strong><br>
 								<span class="badge badge-primary"><i class="fas fa-bell"></i></span> Dari Pemberitahuan Putusan<br>
 								<span class="badge badge-secondary"><i class="fas fa-gavel"></i></span> Dari Tanggal Putusan
+							</div>
+							<div class="col-md-3">
+								<strong>Kolom Tanggal PBT:</strong><br>
+								<small class="text-muted">Menampilkan tanggal PBT efektif yang digunakan untuk perhitungan target BHT dan monitoring 14 hari</small>
 							</div>
 						</div>
 						<small class="text-muted">* PBT = Pemberitahuan Isi Putusan | BHT = Berkekuatan Hukum Tetap</small>
@@ -207,12 +211,13 @@
 										<thead>
 											<tr>
 												<th width="4%">No</th>
-												<th width="14%">Nomor Perkara</th>
-												<th width="18%">Jenis Perkara</th>
-												<th width="10%">Tanggal Putus</th>
-												<th width="12%">Hakim</th>
-												<th width="10%">Target BHT</th>
-												<th width="12%">Status BHT</th>
+												<th width="12%">Nomor Perkara</th>
+												<th width="16%">Jenis Perkara</th>
+												<th width="8%">Tanggal Putus</th>
+												<th width="10%">Hakim</th>
+												<th width="8%">Tanggal PBT</th>
+												<th width="8%">Target BHT</th>
+												<th width="10%">Status BHT</th>
 												<th width="8%">Hari Sejak PBT</th>
 												<th width="8%">Tanggal BHT</th>
 												<th width="6%">Sumber PBT</th>
@@ -221,6 +226,27 @@
 										<tbody>
 											<?php $no = 1;
 											foreach ($perkara_putus as $perkara): ?>
+												<?php
+												// Logika untuk menentukan tanggal PBT yang ditampilkan
+												$tanggal_pbt_display = '-';
+												$pbt_badge_class = 'badge-secondary';
+												$pbt_icon = 'fas fa-gavel';
+												$pbt_title = 'Dari Tanggal Putusan';
+
+												if (isset($perkara->tanggal_pemberitahuan_putusan) && $perkara->tanggal_pemberitahuan_putusan) {
+													// Priority: Tanggal dari pemberitahuan putusan
+													$tanggal_pbt_display = date('d/m/Y', strtotime($perkara->tanggal_pemberitahuan_putusan));
+													$pbt_badge_class = 'badge-primary';
+													$pbt_icon = 'fas fa-bell';
+													$pbt_title = 'Dari Pemberitahuan Putusan';
+												} else {
+													// Fallback: Tanggal putusan
+													$tanggal_pbt_display = date('d/m/Y', strtotime($perkara->tanggal_putus));
+													$pbt_badge_class = 'badge-secondary';
+													$pbt_icon = 'fas fa-gavel';
+													$pbt_title = 'Dari Tanggal Putusan';
+												}
+												?>
 												<tr class="<?= $perkara->hari_sejak_putus > 21 ? 'table-dark' : ($perkara->hari_sejak_putus > 14 ? 'table-danger' : ($perkara->hari_sejak_putus > 10 ? 'table-warning' : '')) ?>">
 													<td><?= $no++ ?></td>
 													<td><?= htmlspecialchars($perkara->nomor_perkara) ?></td>
@@ -228,12 +254,18 @@
 													<td><?= date('d/m/Y', strtotime($perkara->tanggal_putus)) ?></td>
 													<td><?= htmlspecialchars($perkara->hakim) ?></td>
 													<td class="text-center">
+														<span class="<?= $pbt_badge_class ?> badge-sm" title="<?= $pbt_title ?>">
+															<i class="<?= $pbt_icon ?>"></i>
+															<?= $tanggal_pbt_display ?>
+														</span>
+													</td>
+													<td class="text-center">
 														<small class="text-info">
 															<i class="far fa-calendar-alt"></i>
 															<?= date('d/m/Y', strtotime($perkara->target_bht)) ?>
 														</small>
 														<br>
-														<small class="text-muted">(14 hari dari putus)</small>
+														<small class="text-muted">(+14 hari dari PBT)</small>
 													</td>
 													<td>
 														<?php if ($perkara->status_bht == 'Sudah BHT'): ?>

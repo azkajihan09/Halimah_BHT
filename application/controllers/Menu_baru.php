@@ -261,18 +261,37 @@ class Menu_baru extends CI_Controller
 		$sheet->setCellValue('C4', 'Jenis Perkara');
 		$sheet->setCellValue('D4', 'Tanggal Putus');
 		$sheet->setCellValue('E4', 'Hakim');
-		$sheet->setCellValue('F4', 'Status BHT');
+		$sheet->setCellValue('F4', 'Tanggal PBT');
+		$sheet->setCellValue('G4', 'Target BHT');
+		$sheet->setCellValue('H4', 'Status BHT');
+		$sheet->setCellValue('I4', 'Hari Sejak PBT');
+		$sheet->setCellValue('J4', 'Sumber PBT');
 
 		// Data
 		$row = 5;
 		$no = 1;
 		foreach ($data as $item) {
+			// Logika untuk menentukan tanggal PBT
+			$tanggal_pbt = '';
+			$sumber_pbt = '';
+			if (isset($item->tanggal_pemberitahuan_putusan) && $item->tanggal_pemberitahuan_putusan) {
+				$tanggal_pbt = date('d/m/Y', strtotime($item->tanggal_pemberitahuan_putusan));
+				$sumber_pbt = 'Dari Pemberitahuan Putusan';
+			} else {
+				$tanggal_pbt = isset($item->tanggal_putus) ? date('d/m/Y', strtotime($item->tanggal_putus)) : '';
+				$sumber_pbt = 'Dari Tanggal Putusan';
+			}
+
 			$sheet->setCellValue('A' . $row, $no++);
 			$sheet->setCellValue('B' . $row, isset($item->nomor_perkara) ? $item->nomor_perkara : '');
 			$sheet->setCellValue('C' . $row, isset($item->jenis_perkara) ? $item->jenis_perkara : '');
-			$sheet->setCellValue('D' . $row, isset($item->tanggal_putus) ? $item->tanggal_putus : '');
+			$sheet->setCellValue('D' . $row, isset($item->tanggal_putus) ? date('d/m/Y', strtotime($item->tanggal_putus)) : '');
 			$sheet->setCellValue('E' . $row, isset($item->hakim) ? $item->hakim : '');
-			$sheet->setCellValue('F' . $row, isset($item->status_bht) ? $item->status_bht : '');
+			$sheet->setCellValue('F' . $row, $tanggal_pbt);
+			$sheet->setCellValue('G' . $row, isset($item->target_bht) ? date('d/m/Y', strtotime($item->target_bht)) : '');
+			$sheet->setCellValue('H' . $row, isset($item->status_bht) ? $item->status_bht : '');
+			$sheet->setCellValue('I' . $row, isset($item->hari_sejak_pbt_efektif) ? $item->hari_sejak_pbt_efektif . ' hari' : (isset($item->hari_sejak_putus) ? $item->hari_sejak_putus . ' hari' : ''));
+			$sheet->setCellValue('J' . $row, $sumber_pbt);
 			$row++;
 		}
 	}
