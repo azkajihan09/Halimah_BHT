@@ -133,7 +133,9 @@ class Menu_baru_model extends CI_Model
 		$this->db->from('perkara p');
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
-		$this->db->join('perkara_putusan_pemberitahuan_putusan pppp', 'p.perkara_id = pppp.perkara_id', 'left');
+		$this->db->join('(SELECT pppp.perkara_id, MIN(pppp.tanggal_pemberitahuan_putusan) as tanggal_pemberitahuan_putusan 
+		                  FROM perkara_putusan_pemberitahuan_putusan pppp 
+		                  GROUP BY pppp.perkara_id) pppp', 'p.perkara_id = pppp.perkara_id', 'left');
 		$this->db->join('perkara_akta_cerai pac', 'p.perkara_id = pac.perkara_id', 'left');
 		$this->db->join('perkara_ikrar_talak pit', 'p.perkara_id = pit.perkara_id', 'left');
 
