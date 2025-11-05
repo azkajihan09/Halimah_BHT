@@ -105,8 +105,17 @@ class Menu_baru_model extends CI_Model
                     DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), pp.tanggal_putusan)
             END as hari_sejak_pbt_ke_target,
             
-            -- Sisa hari ke target BHT dari hari ini
+            -- Sisa hari ke target BHT (logika baru)
             CASE 
+                -- Jika sudah ada tanggal BHT (SELESAI), hitung selisih dari perkiraan BHT
+                WHEN pp.tanggal_bht IS NOT NULL THEN 
+                    CASE 
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
+                            DATEDIFF(pp.tanggal_bht, DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY))
+                        ELSE 
+                            DATEDIFF(pp.tanggal_bht, DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY))
+                    END
+                -- Jika belum selesai, hitung sisa hari ke deadline seperti biasa
                 WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
                     DATEDIFF(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), CURDATE())
                 ELSE 
