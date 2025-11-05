@@ -110,9 +110,9 @@
 					<div class="small-box bg-success">
 						<div class="inner">
 							<h3><?= count(array_filter($jadwal_bht, function ($j) {
-									return $j->status == 'Normal';
+									return isset($j->status_pengisian_bht) && ($j->status_pengisian_bht == 'TEPAT WAKTU' || $j->status_pengisian_bht == 'LEBIH CEPAT');
 								})) ?></h3>
-							<p>Normal</p>
+							<p>Selesai Tepat Waktu</p>
 						</div>
 						<div class="icon">
 							<i class="fas fa-check-circle"></i>
@@ -123,9 +123,9 @@
 					<div class="small-box bg-warning">
 						<div class="inner">
 							<h3><?= count(array_filter($jadwal_bht, function ($j) {
-									return $j->status == 'Urgent';
+									return isset($j->status_pengisian_bht) && $j->status_pengisian_bht == 'TOLERANSI 1 HARI';
 								})) ?></h3>
-							<p>Urgent (11-14 hari)</p>
+							<p>Toleransi 1 Hari</p>
 						</div>
 						<div class="icon">
 							<i class="fas fa-exclamation-triangle"></i>
@@ -136,9 +136,9 @@
 					<div class="small-box bg-danger">
 						<div class="inner">
 							<h3><?= count(array_filter($jadwal_bht, function ($j) {
-									return $j->status == 'Terlambat';
+									return isset($j->status_pengisian_bht) && $j->status_pengisian_bht == 'TERLAMBAT INPUT';
 								})) ?></h3>
-							<p>Terlambat (15-21 hari)</p>
+							<p>Terlambat Input</p>
 						</div>
 						<div class="icon">
 							<i class="fas fa-times-circle"></i>
@@ -146,15 +146,15 @@
 					</div>
 				</div>
 				<div class="col-lg-3 col-6">
-					<div class="small-box bg-dark">
+					<div class="small-box bg-secondary">
 						<div class="inner">
 							<h3><?= count(array_filter($jadwal_bht, function ($j) {
-									return $j->prioritas == 'CRITICAL';
+									return isset($j->status_pengisian_bht) && $j->status_pengisian_bht == 'BELUM SELESAI';
 								})) ?></h3>
-							<p>Critical (>21 hari)</p>
+							<p>Belum Selesai</p>
 						</div>
 						<div class="icon">
-							<i class="fas fa-skull-crossbones"></i>
+							<i class="fas fa-hourglass-half"></i>
 						</div>
 					</div>
 				</div>
@@ -187,25 +187,26 @@
 												<th width="15%">Jenis Perkara</th>
 												<th width="8%">Tgl Putusan</th>
 												<th width="8%">Tgl PBT</th>
-												<th width="8%">Target BHT</th>
+												<th width="8%">Perkiraan BHT</th>
 												<th width="8%">Tanggal BHT</th>
-												<th width="6%">Hari Sejak PBT</th>
-												<th width="6%">Sisa/Terlambat</th>
-												<th width="6%">Progress</th>
-												<th width="6%">Efficiency</th>
-												<th width="6%">Prioritas</th>
-												<th width="7%">Status</th>
+												<th width="6%">Sisa Hari</th>
+												<th width="8%">Status Pengisian</th>
+												<th width="10%">Keterangan</th>
+												<th width="6%">JSP</th>
 											</tr>
 										</thead>
 										<tbody>
 											<?php $no = 1;
 											foreach ($jadwal_bht as $jadwal): ?>
 												<tr class="<?php
-															if (strpos($jadwal->prioritas, 'CRITICAL') !== false) echo 'table-dark';
-															elseif (strpos($jadwal->prioritas, 'HIGH') !== false) echo 'table-danger';
-															elseif (strpos($jadwal->prioritas, 'MEDIUM') !== false) echo 'table-warning';
-															elseif ($jadwal->prioritas == 'COMPLETED') echo 'table-success';
-															else echo 'table-info';
+															if (isset($jadwal->status_pengisian_bht)) {
+																if ($jadwal->status_pengisian_bht == 'TEPAT WAKTU' || $jadwal->status_pengisian_bht == 'LEBIH CEPAT') echo 'table-success';
+																elseif ($jadwal->status_pengisian_bht == 'TOLERANSI 1 HARI') echo 'table-warning';
+																elseif ($jadwal->status_pengisian_bht == 'TERLAMBAT INPUT') echo 'table-danger';
+																else echo 'table-info';
+															} else {
+																echo 'table-light';
+															}
 															?>">
 													<td><?= $no++ ?></td>
 													<td>
@@ -218,24 +219,21 @@
 														<small><?= date('d/m/y', strtotime($jadwal->tanggal_putusan)) ?></small>
 													</td>
 													<td>
-														<?php if ($jadwal->tanggal_pbt): ?>
-															<small><?= date('d/m/y', strtotime($jadwal->tanggal_pbt)) ?></small>
-														<?php else: ?>
-															<small class="text-muted">-</small>
-														<?php endif; ?>
+														<small class="text-muted">-</small>
+														<small class="text-info">(PBT Data Simplified)</small>
 													</td>
 													<td>
-														<?php if ($jadwal->target_bht): ?>
+														<?php if (isset($jadwal->perkiraan_bht) && $jadwal->perkiraan_bht): ?>
 															<small class="text-primary">
 																<i class="far fa-calendar"></i>
-																<?= date('d/m/y', strtotime($jadwal->target_bht)) ?>
+																<?= date('d/m/y', strtotime($jadwal->perkiraan_bht)) ?>
 															</small>
 														<?php else: ?>
 															<small class="text-muted">-</small>
 														<?php endif; ?>
 													</td>
 													<td>
-														<?php if ($jadwal->tanggal_bht): ?>
+														<?php if (isset($jadwal->tanggal_bht) && $jadwal->tanggal_bht): ?>
 															<small class="badge badge-success">
 																<i class="fas fa-check"></i>
 																<?= date('d/m/y', strtotime($jadwal->tanggal_bht)) ?>
@@ -245,94 +243,81 @@
 														<?php endif; ?>
 													</td>
 													<td>
-														<span class="badge <?=
-																			$jadwal->hari_sejak_pbt > 21 ? 'badge-dark' : ($jadwal->hari_sejak_pbt > 14 ? 'badge-danger' : ($jadwal->hari_sejak_pbt > 10 ? 'badge-warning' : 'badge-info'))
-																			?>">
-															<?= $jadwal->hari_sejak_pbt ?> hr
-														</span>
-														<br><small class="text-muted"><?= $jadwal->hari_kerja_sejak_pbt ?> hr kerja</small>
-													</td>
-													<td>
-														<?php if ($jadwal->tanggal_bht): ?>
-															<small class="badge badge-success">Selesai</small>
-														<?php elseif ($jadwal->hari_terlambat > 0): ?>
-															<small class="badge badge-danger">
-																<i class="fas fa-exclamation-triangle"></i>
-																+<?= $jadwal->hari_terlambat ?> hr
-															</small>
+														<?php 
+														// Calculate sisa hari berdasarkan perkiraan_bht
+														if (isset($jadwal->perkiraan_bht) && $jadwal->perkiraan_bht): 
+															$target_date = strtotime($jadwal->perkiraan_bht);
+															$today = strtotime(date('Y-m-d'));
+															$sisa_hari = round(($target_date - $today) / (60 * 60 * 24));
+														?>
+															<?php if ($sisa_hari > 0): ?>
+																<span class="badge badge-info">
+																	<i class="fas fa-clock"></i>
+																	<?= $sisa_hari ?> hari
+																</span>
+															<?php elseif ($sisa_hari == 0): ?>
+																<span class="badge badge-warning">
+																	<i class="fas fa-exclamation"></i>
+																	Hari ini
+																</span>
+															<?php else: ?>
+																<span class="badge badge-danger">
+																	<i class="fas fa-exclamation-triangle"></i>
+																	Terlambat <?= abs($sisa_hari) ?> hari
+																</span>
+															<?php endif; ?>
 														<?php else: ?>
-															<small class="badge badge-info">
-																<i class="fas fa-clock"></i>
-																<?= $jadwal->sisa_hari_target ?> hr
-															</small>
+															<small class="text-muted">-</small>
 														<?php endif; ?>
 													</td>
 													<td>
-														<div class="progress" style="height: 15px;">
-															<div class="progress-bar <?=
-																						$jadwal->progress_percentage >= 100 ? 'bg-success' : ($jadwal->progress_percentage >= 75 ? 'bg-warning' : 'bg-info')
-																						?>" role="progressbar"
-																style="width: <?= $jadwal->progress_percentage ?>%">
-																<?= $jadwal->progress_percentage ?>%
-															</div>
-														</div>
-													</td>
-													<td>
-														<span class="badge <?=
-																			$jadwal->efficiency_score >= 80 ? 'badge-success' : ($jadwal->efficiency_score >= 60 ? 'badge-warning' : 'badge-danger')
-																			?>">
-															<?= $jadwal->efficiency_score ?>
-														</span>
-													</td>
-													<td>
-														<?php if (strpos($jadwal->prioritas, 'CRITICAL') !== false): ?>
-															<span class="badge badge-dark">
-																<i class="fas fa-skull-crossbones"></i> CRITICAL
-															</span>
-														<?php elseif (strpos($jadwal->prioritas, 'HIGH') !== false): ?>
-															<span class="badge badge-danger">
-																<i class="fas fa-fire"></i> HIGH
-															</span>
-														<?php elseif (strpos($jadwal->prioritas, 'MEDIUM') !== false): ?>
-															<span class="badge badge-warning">
-																<i class="fas fa-exclamation"></i> MEDIUM
-															</span>
-														<?php elseif ($jadwal->prioritas == 'COMPLETED'): ?>
-															<span class="badge badge-success">
-																<i class="fas fa-check-circle"></i> DONE
-															</span>
+														<?php if (isset($jadwal->status_pengisian_bht)): ?>
+															<?php if ($jadwal->status_pengisian_bht == 'TEPAT WAKTU'): ?>
+																<span class="badge badge-success">
+																	<i class="fas fa-check"></i>
+																	<?= $jadwal->status_pengisian_bht ?>
+																</span>
+															<?php elseif ($jadwal->status_pengisian_bht == 'LEBIH CEPAT'): ?>
+																<span class="badge badge-info">
+																	<i class="fas fa-rocket"></i>
+																	<?= $jadwal->status_pengisian_bht ?>
+																</span>
+															<?php elseif ($jadwal->status_pengisian_bht == 'TOLERANSI 1 HARI'): ?>
+																<span class="badge badge-warning">
+																	<i class="fas fa-exclamation"></i>
+																	<?= $jadwal->status_pengisian_bht ?>
+																</span>
+															<?php elseif ($jadwal->status_pengisian_bht == 'TERLAMBAT INPUT'): ?>
+																<span class="badge badge-danger">
+																	<i class="fas fa-times"></i>
+																	<?= $jadwal->status_pengisian_bht ?>
+																</span>
+															<?php elseif ($jadwal->status_pengisian_bht == 'BELUM SELESAI'): ?>
+																<span class="badge badge-secondary">
+																	<i class="fas fa-hourglass-half"></i>
+																	<?= $jadwal->status_pengisian_bht ?>
+																</span>
+															<?php else: ?>
+																<span class="badge badge-light">
+																	<?= $jadwal->status_pengisian_bht ?>
+																</span>
+															<?php endif; ?>
 														<?php else: ?>
-															<span class="badge badge-info">
-																<i class="fas fa-clock"></i> LOW
-															</span>
+															<small class="text-muted">-</small>
 														<?php endif; ?>
 													</td>
 													<td>
-														<?php if (strpos($jadwal->status, 'Critical') !== false): ?>
-															<span class="badge badge-dark">
-																<i class="fas fa-skull-crossbones"></i>
-																<small><?= str_replace(['Critical - ', 'Critical'], ['', 'CRITICAL'], $jadwal->status) ?></small>
-															</span>
-														<?php elseif (strpos($jadwal->status, 'Terlambat') !== false): ?>
-															<span class="badge badge-danger">
-																<i class="fas fa-exclamation-triangle"></i>
-																<small><?= str_replace('Terlambat ', '', $jadwal->status) ?></small>
-															</span>
-														<?php elseif (strpos($jadwal->status, 'Urgent') !== false): ?>
-															<span class="badge badge-warning">
-																<i class="fas fa-clock"></i>
-																<small><?= str_replace('Urgent ', '', $jadwal->status) ?></small>
-															</span>
-														<?php elseif (strpos($jadwal->status, 'Selesai') !== false): ?>
-															<span class="badge badge-success">
-																<i class="fas fa-check-circle"></i>
-																<small>SELESAI</small>
-															</span>
+														<?php if (isset($jadwal->keterangan_perkara)): ?>
+															<small><?= htmlspecialchars($jadwal->keterangan_perkara) ?></small>
 														<?php else: ?>
-															<span class="badge badge-info">
-																<i class="fas fa-hourglass-half"></i>
-																<small><?= $jadwal->status ?></small>
-															</span>
+															<small class="text-muted">-</small>
+														<?php endif; ?>
+													</td>
+													<td>
+														<?php if (isset($jadwal->jsp)): ?>
+															<small><?= htmlspecialchars($jadwal->jsp) ?></small>
+														<?php else: ?>
+															<small class="text-muted">-</small>
 														<?php endif; ?>
 													</td>
 												</tr>
