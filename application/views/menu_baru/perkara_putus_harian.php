@@ -238,7 +238,7 @@
 												<th width="6%">Tanggal Putus</th>
 												<th width="8%">Hakim</th>
 												<th width="6%">Tanggal PBT</th>
-												<th width="6%">Target BHT</th>
+												<!-- <th width="6%">Target BHT</th> -->
 												<th width="6%">Perkiraan BHT</th>
 												<th width="8%">Status BHT</th>
 												<th width="6%">Sisa Hari</th>
@@ -285,14 +285,14 @@
 															<?= $tanggal_pbt_display ?>
 														</span>
 													</td>
-													<td class="text-center">
+													<!-- <td class="text-center">
 														<small class="text-info">
 															<i class="far fa-calendar-alt"></i>
 															<?= date('d/m/Y', strtotime($perkara->target_bht)) ?>
 														</small>
 														<br>
 														<small class="text-muted">(+14 hari kerja)</small>
-													</td>
+													</td> -->
 													<!-- Kolom Perkiraan BHT -->
 													<td class="text-center">
 														<?php if (isset($perkara->perkiraan_bht)): ?>
@@ -315,6 +315,7 @@
 														<?php else: ?>
 															<span class="text-muted">-</span>
 														<?php endif; ?>
+														<small class="text-muted">(+14 hari kerja)</small>
 													</td>
 													<td>
 														<?php if ($perkara->status_bht == 'Sudah BHT'): ?>
