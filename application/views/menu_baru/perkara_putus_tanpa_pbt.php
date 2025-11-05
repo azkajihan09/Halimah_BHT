@@ -50,6 +50,7 @@
 				<br><strong>🟡 Biaya Sudah, PBT Belum:</strong> Biaya PBT sudah dibayar tapi belum input tanggal PBT di SIPP.
 				<br><strong>🟢 Lengkap:</strong> Biaya PBT sudah ada dan tanggal PBT sudah diinput di SIPP.
 				<br><strong>Target:</strong> Semua perkara harus mencapai status "Lengkap" maksimal 10 hari setelah putusan.
+				<br><strong>📅 Filter Otomatis:</strong> Data hanya menampilkan perkara dari bulan <span class="badge badge-info"><?= date('F Y', strtotime($tanggal)) ?></span> untuk meningkatkan performa.
 			</div>
 
 			<!-- Filter Row -->

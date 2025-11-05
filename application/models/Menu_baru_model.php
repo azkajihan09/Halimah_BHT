@@ -519,6 +519,16 @@ class Menu_baru_model extends CI_Model
 
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 
+		// Filter berdasarkan bulan tanggal putusan untuk meningkatkan performa
+		if ($tanggal) {
+			// Jika tanggal penuh diberikan, filter berdasarkan bulan dari tanggal tersebut
+			$bulan = date('Y-m', strtotime($tanggal));
+			$this->db->where('DATE_FORMAT(pp.tanggal_putusan, "%Y-%m") =', $bulan);
+		} else {
+			// Jika tidak ada tanggal, default ke bulan ini
+			$this->db->where('DATE_FORMAT(pp.tanggal_putusan, "%Y-%m") =', date('Y-m'));
+		}
+
 		// LOGIKA BARU: Tampilkan perkara yang:
 		// 1. Sudah ada biaya PBT tapi belum ada tanggal PBT di SIPP, ATAU
 		// 2. Belum ada biaya PBT sama sekali
@@ -545,6 +555,17 @@ class Menu_baru_model extends CI_Model
 		                  WHERE pihak = "2" 
 		                  GROUP BY perkara_id) pppp_check', 'p.perkara_id = pppp_check.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+
+		// Filter berdasarkan bulan tanggal putusan untuk meningkatkan performa
+		if ($tanggal) {
+			// Jika tanggal penuh diberikan, filter berdasarkan bulan dari tanggal tersebut
+			$bulan = date('Y-m', strtotime($tanggal));
+			$this->db->where('DATE_FORMAT(pp.tanggal_putusan, "%Y-%m") =', $bulan);
+		} else {
+			// Jika tidak ada tanggal, default ke bulan ini
+			$this->db->where('DATE_FORMAT(pp.tanggal_putusan, "%Y-%m") =', date('Y-m'));
+		}
+
 		$this->db->where('(
 		    (pb.tanggal_transaksi IS NOT NULL AND pppp_check.tanggal_pbt IS NULL) OR
 		    (pb.tanggal_transaksi IS NULL AND pppp_check.tanggal_pbt IS NULL)
@@ -569,6 +590,17 @@ class Menu_baru_model extends CI_Model
 		                  WHERE pihak = "2" 
 		                  GROUP BY perkara_id) pppp_check', 'p.perkara_id = pppp_check.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+
+		// Filter berdasarkan bulan tanggal putusan untuk meningkatkan performa
+		if ($tanggal) {
+			// Jika tanggal penuh diberikan, filter berdasarkan bulan dari tanggal tersebut
+			$bulan = date('Y-m', strtotime($tanggal));
+			$this->db->where('DATE_FORMAT(pp.tanggal_putusan, "%Y-%m") =', $bulan);
+		} else {
+			// Jika tidak ada tanggal, default ke bulan ini
+			$this->db->where('DATE_FORMAT(pp.tanggal_putusan, "%Y-%m") =', date('Y-m'));
+		}
+
 		$this->db->where('(
 		    (pb.tanggal_transaksi IS NOT NULL AND pppp_check.tanggal_pbt IS NULL) OR
 		    (pb.tanggal_transaksi IS NULL AND pppp_check.tanggal_pbt IS NULL)
