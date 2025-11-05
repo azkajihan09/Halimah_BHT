@@ -41,13 +41,15 @@
 				</div>
 			<?php endif; ?>
 
-			<!-- Info Alert tentang Aturan 14 Hari -->
+			<!-- Info Alert tentang Logika Baru -->
 			<div class="alert alert-info alert-dismissible">
 				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-				<h5><i class="icon fas fa-info-circle"></i> Informasi Penting</h5>
-				<strong>Perkara Putus Tanpa PBT:</strong> Perkara yang sudah diputus tetapi belum dilakukan PBT (Pemberitahuan Isi Putusan).
-				<br><strong>Dampak:</strong> Tanpa PBT, putusan tidak dapat menjadi BHT (Berkekuatan Hukum Tetap) setelah 14 hari.
-				<br><strong>Target:</strong> PBT harus dilakukan maksimal 10 hari setelah putusan untuk menghindari keterlambatan proses BHT.
+				<h5><i class="icon fas fa-info-circle"></i> Logika Deteksi PBT Terbaru</h5>
+				<strong>Sistem Deteksi Ganda:</strong> Mengecek biaya PBT (kategori 6) dan tanggal PBT di SIPP secara bersamaan.
+				<br><strong>🔴 Biaya & PBT Belum:</strong> Belum ada biaya PBT dan belum ada tanggal PBT di SIPP.
+				<br><strong>🟡 Biaya Sudah, PBT Belum:</strong> Biaya PBT sudah dibayar tapi belum input tanggal PBT di SIPP.
+				<br><strong>🟢 Lengkap:</strong> Biaya PBT sudah ada dan tanggal PBT sudah diinput di SIPP.
+				<br><strong>Target:</strong> Semua perkara harus mencapai status "Lengkap" maksimal 10 hari setelah putusan.
 			</div>
 
 			<!-- Filter Row -->
@@ -212,14 +214,17 @@
 									<table class="table table-bordered table-striped" id="tanpa-pbt-table">
 										<thead>
 											<tr>
-												<th width="5%">No</th>
-												<th width="15%">Nomor Perkara</th>
-												<th width="20%">Jenis Perkara</th>
-												<th width="15%">Tanggal Putus</th>
-												<th width="15%">Hakim</th>
-												<th width="10%">Hari Sejak Putus</th>
-												<th width="10%">Level Peringatan</th>
-												<th width="10%">Aksi</th>
+												<th width="3%">No</th>
+												<th width="12%">Nomor Perkara</th>
+												<th width="15%">Jenis Perkara</th>
+												<th width="10%">Tanggal Putus</th>
+												<th width="12%">Hakim</th>
+												<th width="8%">Hari Sejak Putus</th>
+												<th width="10%">Status PBT</th>
+												<th width="8%">Biaya PBT</th>
+												<th width="8%">Jurusita</th>
+												<th width="8%">Level Peringatan</th>
+												<th width="6%">Aksi</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -259,6 +264,51 @@
 															echo $hari_kerja . " hari kerja";
 															?>
 														</small>
+													</td>
+													<td>
+														<?php
+														$status_pbt = isset($perkara->status_pbt_detail) ? $perkara->status_pbt_detail : 'BELUM DIKETAHUI';
+														if ($status_pbt == 'BIAYA SUDAH, PBT BELUM'): ?>
+															<span class="badge badge-warning">
+																<i class="fas fa-exclamation-triangle"></i> Biaya Sudah, PBT Belum
+															</span>
+														<?php elseif ($status_pbt == 'BIAYA BELUM, PBT BELUM'): ?>
+															<span class="badge badge-danger">
+																<i class="fas fa-times-circle"></i> Biaya & PBT Belum
+															</span>
+														<?php else: ?>
+															<span class="badge badge-success">
+																<i class="fas fa-check-circle"></i> Lengkap
+															</span>
+														<?php endif; ?>
+													</td>
+													<td>
+														<?php if (isset($perkara->tanggal_transaksi_pbt) && $perkara->tanggal_transaksi_pbt): ?>
+															<span class="badge badge-success badge-sm">
+																<i class="fas fa-check"></i> <?= $perkara->tanggal_transaksi_pbt ?>
+															</span>
+															<br><small class="text-muted"><?= htmlspecialchars(substr((isset($perkara->uraian_biaya) ? $perkara->uraian_biaya : ''), 0, 20)) ?>...</small>
+														<?php else: ?>
+															<span class="badge badge-secondary">
+																<i class="fas fa-minus"></i> Belum Ada
+															</span>
+														<?php endif; ?>
+													</td>
+													<td>
+														<?php if (isset($perkara->jurusita_1) && $perkara->jurusita_1): ?>
+															<small class="text-primary">
+																<i class="fas fa-user"></i> <?= htmlspecialchars(substr($perkara->jurusita_1, 0, 15)) ?>
+															</small>
+															<?php if (isset($perkara->jurusita_2) && $perkara->jurusita_2): ?>
+																<br><small class="text-info">
+																	<i class="fas fa-user-plus"></i> <?= htmlspecialchars(substr($perkara->jurusita_2, 0, 15)) ?>
+																</small>
+															<?php endif; ?>
+														<?php else: ?>
+															<span class="badge badge-secondary badge-sm">
+																<i class="fas fa-user-slash"></i> Belum Ada
+															</span>
+														<?php endif; ?>
 													</td>
 													<td>
 														<?php if ($perkara->level_peringatan == 'CRITICAL'): ?>

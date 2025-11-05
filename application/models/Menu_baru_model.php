@@ -468,7 +468,7 @@ class Menu_baru_model extends CI_Model
 	}
 
 	/**
-	 * 4. Get perkara putus tanpa PBT
+	 * 4. Get perkara putus tanpa PBT (LOGIKA BARU - Berdasarkan Biaya PBT)
 	 */
 	public function get_perkara_putus_tanpa_pbt($tanggal)
 	{
@@ -478,6 +478,16 @@ class Menu_baru_model extends CI_Model
             DATE(pp.tanggal_putusan) as tanggal_putus,
             COALESCE(pen.majelis_hakim_nama, '-') as hakim,
             DATEDIFF(CURDATE(), pp.tanggal_putusan) as hari_sejak_putus,
+            DATE_FORMAT(pb.tanggal_transaksi, '%d/%m/%Y') as tanggal_transaksi_pbt,
+            pb.uraian as uraian_biaya,
+            pb.pihak_id,
+            pj.jurusita_1,
+            pj.jurusita_2,
+            CASE 
+                WHEN pb.tanggal_transaksi IS NOT NULL AND pppp_check.tanggal_pbt IS NULL THEN 'BIAYA SUDAH, PBT BELUM'
+                WHEN pb.tanggal_transaksi IS NULL AND pppp_check.tanggal_pbt IS NULL THEN 'BIAYA BELUM, PBT BELUM'
+                ELSE 'SUDAH LENGKAP'
+            END as status_pbt_detail,
             CASE 
                 WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'CRITICAL'
                 WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'KRITIS'
@@ -485,12 +495,37 @@ class Menu_baru_model extends CI_Model
                 ELSE 'NORMAL'
             END as level_peringatan
         ");
+
 		$this->db->from('perkara p');
-		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
-		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
+
+		// JOIN dengan biaya PBT (kategori_id = 6)
+		$this->db->join('perkara_biaya pb', 'p.perkara_id = pb.perkara_id AND pb.kategori_id = 6', 'left');
+
+		// JOIN untuk cek apakah sudah ada tanggal PBT di SIPP
+		$this->db->join('(SELECT perkara_id, MIN(tanggal_pemberitahuan_putusan) as tanggal_pbt 
+		                  FROM perkara_putusan_pemberitahuan_putusan 
+		                  WHERE pihak = "2" 
+		                  GROUP BY perkara_id) pppp_check', 'p.perkara_id = pppp_check.perkara_id', 'left');
+
+		// JOIN untuk data jurusita
+		$this->db->join('(SELECT perkara_id,
+		                         MAX(CASE WHEN urutan = "1" THEN jurusita_nama ELSE NULL END) as jurusita_1,
+		                         MAX(CASE WHEN urutan = "2" THEN jurusita_nama ELSE NULL END) as jurusita_2
+		                  FROM perkara_jurusita 
+		                  WHERE aktif = "Y" AND urutan IN ("1", "2")
+		                  GROUP BY perkara_id) pj', 'p.perkara_id = pj.perkara_id', 'left');
+
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
-		$this->db->where('pjs.tanggal_sidang IS NULL');
+
+		// LOGIKA BARU: Tampilkan perkara yang:
+		// 1. Sudah ada biaya PBT tapi belum ada tanggal PBT di SIPP, ATAU
+		// 2. Belum ada biaya PBT sama sekali
+		$this->db->where('(
+		    (pb.tanggal_transaksi IS NOT NULL AND pppp_check.tanggal_pbt IS NULL) OR
+		    (pb.tanggal_transaksi IS NULL AND pppp_check.tanggal_pbt IS NULL)
+		)', NULL, FALSE);
 
 		// Filter untuk tidak menampilkan perkara yang dicabut
 		$this->_filter_perkara_dicabut();
@@ -503,11 +538,17 @@ class Menu_baru_model extends CI_Model
 	public function count_perkara_putus_tanpa_pbt($tanggal)
 	{
 		$this->db->from('perkara p');
-		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
-		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
-		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
+		$this->db->join('perkara_biaya pb', 'p.perkara_id = pb.perkara_id AND pb.kategori_id = 6', 'left');
+		$this->db->join('(SELECT perkara_id, MIN(tanggal_pemberitahuan_putusan) as tanggal_pbt 
+		                  FROM perkara_putusan_pemberitahuan_putusan 
+		                  WHERE pihak = "2" 
+		                  GROUP BY perkara_id) pppp_check', 'p.perkara_id = pppp_check.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
-		$this->db->where('pjs.tanggal_sidang IS NULL');
+		$this->db->where('(
+		    (pb.tanggal_transaksi IS NOT NULL AND pppp_check.tanggal_pbt IS NULL) OR
+		    (pb.tanggal_transaksi IS NULL AND pppp_check.tanggal_pbt IS NULL)
+		)', NULL, FALSE);
 		$this->_filter_perkara_dicabut();
 		return $this->db->count_all_results();
 	}
@@ -521,11 +562,17 @@ class Menu_baru_model extends CI_Model
             SUM(CASE WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) <= 10 THEN 1 ELSE 0 END) as normal
         ');
 		$this->db->from('perkara p');
-		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
-		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
-		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
+		$this->db->join('perkara_biaya pb', 'p.perkara_id = pb.perkara_id AND pb.kategori_id = 6', 'left');
+		$this->db->join('(SELECT perkara_id, MIN(tanggal_pemberitahuan_putusan) as tanggal_pbt 
+		                  FROM perkara_putusan_pemberitahuan_putusan 
+		                  WHERE pihak = "2" 
+		                  GROUP BY perkara_id) pppp_check', 'p.perkara_id = pppp_check.perkara_id', 'left');
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
-		$this->db->where('pjs.tanggal_sidang IS NULL');
+		$this->db->where('(
+		    (pb.tanggal_transaksi IS NOT NULL AND pppp_check.tanggal_pbt IS NULL) OR
+		    (pb.tanggal_transaksi IS NULL AND pppp_check.tanggal_pbt IS NULL)
+		)', NULL, FALSE);
 		$this->_filter_perkara_dicabut();
 
 		return $this->db->get()->row();
