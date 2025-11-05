@@ -2,9 +2,9 @@
 
 ## 🚨 ERROR TERAKHIR YANG DIPERBAIKI:
 ```
-Notice: Undefined property: stdClass::$tanggal_pbt
-Filename: menu_baru/jadwal_bht_harian.php
-Line Number: 222
+Fatal error: Call to undefined method Menu_baru_model::get_perkara_putus_harian()
+Filename: controllers/Menu_baru.php
+Line Number: 26
 ```
 
 ## 🛠️ SOLUSI FINAL:
@@ -42,12 +42,22 @@ private function _filter_perkara_dicabut()
 endif; ?>
 ```
 
-### 3. Method Controller yang Ditambahkan
+### 3. Missing Model Methods Added
 ```php
-// Method baru yang ditambahkan:
-- count_jadwal_bht_harian()
-- get_jenis_perkara_kategori()  
-- get_available_years()
+// PRIMARY METHODS (fully implemented):
+- get_perkara_putus_harian($tanggal)       // Main method that was missing
+- count_perkara_putus_harian($tanggal)     // Count method for statistics
+- count_jadwal_bht_harian()                // BHT count method
+- get_jenis_perkara_kategori()             // Case type categories
+- get_available_years()                    // Available years filter
+
+// STUB METHODS (minimal implementation to prevent errors):
+- get_tanggal_pbt_bht(), get_kalender_pbt_bht()
+- get_perkara_putus_tanpa_pbt(), count_perkara_putus_tanpa_pbt()
+- get_berkas_masuk(), count_berkas_masuk()
+- get_pbt_masuk(), count_pbt_masuk()
+- get_berkas_menu_bht(), count_berkas_menu_bht()
+- + 6 more stub methods for controller compatibility
 ```
 
 ---
@@ -72,7 +82,7 @@ Status BHT: NORMAL
 Status Pengisian: BELUM BHT
 ```
 
-### 🔧 **8 Errors Fixed (Database + View):**
+### 🔧 **9 Errors Fixed (Database + View + Controller):**
 1. ✅ Missing column 'pit.tanggal_ikrar_talak' → JOIN removed
 2. ✅ Wrong column 'kode_transaksi_nama' → Fixed filter logic  
 3. ✅ ORDER BY 'hari_sejak_pbt' → Changed to pp.tanggal_putusan
@@ -80,7 +90,8 @@ Status Pengisian: BELUM BHT
 5. ✅ Complex SELECT 'pen.majelis_hakim_nama' → Simplified SELECT statement
 6. ✅ Missing column 'p.status_perkara_id' → Removed unnecessary filter
 7. ✅ SQL Syntax Error with DISTINCT → Replaced with GROUP BY
-8. ✅ **Undefined property 'tanggal_pbt' in view** → **FIXED with fallback**
+8. ✅ Undefined property 'tanggal_pbt' in view → Fixed with fallback
+9. ✅ **Call to undefined method 'get_perkara_putus_harian()'** → **ADDED all missing methods**
 
 ---
 

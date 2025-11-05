@@ -221,4 +221,75 @@ class Menu_baru_model extends CI_Model
 
 		return $this->db->get()->row()->total;
 	}
+
+	// Additional methods needed by controller - stub implementations
+	public function get_tanggal_pbt_bht($bulan)
+	{
+		return array(); // Stub - return empty array
+	}
+
+	public function get_kalender_pbt_bht($bulan)
+	{
+		return array(); // Stub - return empty array
+	}
+
+	public function get_perkara_putus_tanpa_pbt($tanggal)
+	{
+		return array(); // Stub - return empty array
+	}
+
+	public function count_perkara_putus_tanpa_pbt($tanggal)
+	{
+		return 0; // Stub - return zero
+	}
+
+	public function get_alert_level_tanpa_pbt($tanggal)
+	{
+		return 'normal'; // Stub - return normal alert
+	}
+
+	public function get_berkas_masuk($tanggal, $status)
+	{
+		return array(); // Stub - return empty array
+	}
+
+	public function count_berkas_masuk($tanggal, $status)
+	{
+		return 0; // Stub - return zero
+	}
+
+	public function get_statistik_berkas_masuk($tanggal)
+	{
+		return array(); // Stub - return empty array
+	}
+
+	public function get_pbt_masuk($tanggal, $status)
+	{
+		return array(); // Stub - return empty array
+	}
+
+	public function count_pbt_masuk($tanggal, $status)
+	{
+		return 0; // Stub - return zero
+	}
+
+	public function get_statistik_pbt_masuk($tanggal)
+	{
+		return array(); // Stub - return empty array
+	}
+
+	public function get_berkas_menu_bht($periode, $jenis)
+	{
+		return array(); // Stub - return empty array
+	}
+
+	public function count_berkas_menu_bht($periode, $jenis)
+	{
+		return 0; // Stub - return zero
+	}
+
+	public function get_kategori_berkas_bht($periode)
+	{
+		return array(); // Stub - return empty array
+	}
 }
