@@ -169,4 +169,56 @@ class Menu_baru_model extends CI_Model
 
 		return $this->db->get()->result();
 	}
+
+	public function get_perkara_putus_harian($tanggal)
+	{
+		$this->db->select("
+            p.nomor_perkara,
+            p.jenis_perkara_nama as jenis_perkara,
+            DATE(pp.tanggal_putusan) as tanggal_putusan,
+            pp.tanggal_bht,
+            CASE 
+                WHEN pp.tanggal_bht IS NOT NULL THEN 'SUDAH BHT'
+                ELSE 'BELUM BHT'
+            END as status_pengisian_bht
+        ");
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->db->where('p.nomor_perkara NOT LIKE', '%/Pdt.P/%');
+
+		// Filter untuk tidak menampilkan perkara yang dicabut
+		$this->_filter_perkara_dicabut();
+
+		// Filter by specific date if provided
+		if ($tanggal) {
+			$this->db->where('DATE(pp.tanggal_putusan)', $tanggal);
+		}
+
+		// Add LIMIT to prevent memory issues
+		$this->db->limit(100);
+
+		$this->db->order_by('pp.tanggal_putusan', 'DESC');
+
+		return $this->db->get()->result();
+	}
+
+	public function count_perkara_putus_harian($tanggal)
+	{
+		$this->db->select('COUNT(*) as total');
+		$this->db->from('perkara p');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
+		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+		$this->db->where('p.nomor_perkara NOT LIKE', '%/Pdt.P/%');
+
+		// Filter untuk tidak menampilkan perkara yang dicabut
+		$this->_filter_perkara_dicabut();
+
+		// Filter by specific date if provided
+		if ($tanggal) {
+			$this->db->where('DATE(pp.tanggal_putusan)', $tanggal);
+		}
+
+		return $this->db->get()->row()->total;
+	}
 }

@@ -243,9 +243,9 @@
 														<?php endif; ?>
 													</td>
 													<td>
-														<?php 
+														<?php
 														// Calculate sisa hari berdasarkan perkiraan_bht
-														if (isset($jadwal->perkiraan_bht) && $jadwal->perkiraan_bht): 
+														if (isset($jadwal->perkiraan_bht) && $jadwal->perkiraan_bht):
 															$target_date = strtotime($jadwal->perkiraan_bht);
 															$today = strtotime(date('Y-m-d'));
 															$sisa_hari = round(($target_date - $today) / (60 * 60 * 24));
