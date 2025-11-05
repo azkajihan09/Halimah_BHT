@@ -31,23 +31,32 @@
 						Jika kedua pihak hadir saat pembacaan putusan, maka putusan langsung BHT.
 						<br><br>
 						<div class="row">
-							<div class="col-md-6">
-								<strong>Logika Perhitungan Sisa Hari ke Target BHT:</strong>
+							<div class="col-md-4">
+								<strong>Logika Perhitungan Hari Kerja ke Target BHT:</strong>
 								<ul class="mb-0 mt-1">
+									<li>Menggunakan <strong>14 hari kerja</strong> (Senin-Jumat, tidak termasuk weekend dan libur nasional)</li>
 									<li>Jika ada data di tabel <code>perkara_putusan_pemberitahuan_putusan</code>, hitung dari tanggal pemberitahuan</li>
 									<li>Jika tidak ada data pemberitahuan, hitung dari tanggal putusan</li>
-									<li>Target BHT dihitung 14 hari dari tanggal PBT yang sebenarnya</li>
-									<li>Sisa hari = Target BHT - Hari ini (menunjukkan waktu tersisa)</li>
+									<li>Sisa hari = Target BHT - Hari ini (menunjukkan sisa hari kerja)</li>
 								</ul>
 							</div>
-							<div class="col-md-3">
-								<strong>Indikator Sumber PBT:</strong><br>
-								<span class="badge badge-primary"><i class="fas fa-bell"></i></span> Dari Pemberitahuan Putusan<br>
-								<span class="badge badge-secondary"><i class="fas fa-gavel"></i></span> Dari Tanggal Putusan
+							<div class="col-md-4">
+								<strong>Perkiraan BHT (Logika Baru):</strong>
+								<ul class="mb-0 mt-1">
+									<li><strong>Upaya Hukum:</strong> Jika ada banding/kasasi/verzet</li>
+									<li><strong>Tunggu PIP:</strong> Ada transaksi PIP tapi belum ada tanggal pemberitahuan</li>
+									<li><strong>Tanggal:</strong> Tanggal pemberitahuan + 15 hari (jika ada PIP)</li>
+									<li><strong>Default:</strong> Tanggal putusan + 15 hari (jika tidak ada PIP)</li>
+								</ul>
 							</div>
-							<div class="col-md-3">
-								<strong>Kolom Tanggal PBT:</strong><br>
-								<small class="text-muted">Menampilkan tanggal PBT efektif yang digunakan untuk perhitungan target BHT dan monitoring 14 hari</small>
+							<div class="col-md-4">
+								<strong>Keterangan & Indikator:</strong><br>
+								<span class="badge badge-primary"><i class="fas fa-bell"></i></span> Dari Pemberitahuan Putusan<br>
+								<span class="badge badge-secondary"><i class="fas fa-gavel"></i></span> Dari Tanggal Putusan<br>
+								<span class="badge badge-dark"><i class="fas fa-university"></i></span> Kasasi<br>
+								<span class="badge badge-warning"><i class="fas fa-balance-scale"></i></span> Banding<br>
+								<span class="badge badge-info"><i class="fas fa-redo"></i></span> Verzet<br>
+								<span class="badge badge-success"><i class="fas fa-check"></i></span> Normal
 							</div>
 						</div>
 						<small class="text-muted">* PBT = Pemberitahuan Isi Putusan | BHT = Berkekuatan Hukum Tetap</small>
@@ -211,17 +220,20 @@
 									<table class="table table-bordered table-striped" id="perkara-table">
 										<thead>
 											<tr>
-												<th width="4%">No</th>
-												<th width="12%">Nomor Perkara</th>
-												<th width="16%">Jenis Perkara</th>
-												<th width="8%">Tanggal Putus</th>
-												<th width="10%">Hakim</th>
-												<th width="8%">Tanggal PBT</th>
-												<th width="8%">Target BHT</th>
-												<th width="10%">Status BHT</th>
-												<th width="8%">Sisa Hari ke Target</th>
-												<th width="8%">Tanggal BHT</th>
-												<th width="6%">Sumber PBT</th>
+												<th width="3%">No</th>
+												<th width="10%">Nomor Perkara</th>
+												<th width="12%">Jenis Perkara</th>
+												<th width="6%">Tanggal Putus</th>
+												<th width="8%">Hakim</th>
+												<th width="6%">Tanggal PBT</th>
+												<th width="6%">Target BHT</th>
+												<th width="6%">Perkiraan BHT</th>
+												<th width="8%">Status BHT</th>
+												<th width="6%">Sisa Hari</th>
+												<th width="6%">Tanggal BHT</th>
+												<th width="6%">Keterangan</th>
+												<th width="4%">Sumber PBT</th>
+												<th width="4%">JSP</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -266,7 +278,30 @@
 															<?= date('d/m/Y', strtotime($perkara->target_bht)) ?>
 														</small>
 														<br>
-														<small class="text-muted">(+14 hari dari PBT)</small>
+														<small class="text-muted">(+14 hari kerja)</small>
+													</td>
+													<!-- Kolom Perkiraan BHT -->
+													<td class="text-center">
+														<?php if (isset($perkara->perkiraan_bht)): ?>
+															<?php if ($perkara->perkiraan_bht == 'Cek Data Upaya Hukum'): ?>
+																<span class="badge badge-warning badge-sm">
+																	<i class="fas fa-balance-scale"></i>
+																	Upaya Hukum
+																</span>
+															<?php elseif ($perkara->perkiraan_bht == 'TGL PIP belum ada'): ?>
+																<span class="badge badge-info badge-sm">
+																	<i class="fas fa-clock"></i>
+																	Tunggu PIP
+																</span>
+															<?php else: ?>
+																<small class="text-success">
+																	<i class="far fa-calendar-check"></i>
+																	<?= date('d/m/Y', strtotime($perkara->perkiraan_bht)) ?>
+																</small>
+															<?php endif; ?>
+														<?php else: ?>
+															<span class="text-muted">-</span>
+														<?php endif; ?>
 													</td>
 													<td>
 														<?php if ($perkara->status_bht == 'Sudah BHT'): ?>
@@ -329,6 +364,30 @@
 															</span>
 														<?php endif; ?>
 													</td>
+													<!-- Kolom Keterangan Perkara -->
+													<td class="text-center">
+														<?php if (isset($perkara->keterangan_perkara)): ?>
+															<?php if ($perkara->keterangan_perkara == 'Kasasi'): ?>
+																<span class="badge badge-dark badge-sm">
+																	<i class="fas fa-university"></i> Kasasi
+																</span>
+															<?php elseif ($perkara->keterangan_perkara == 'Banding'): ?>
+																<span class="badge badge-warning badge-sm">
+																	<i class="fas fa-balance-scale"></i> Banding
+																</span>
+															<?php elseif ($perkara->keterangan_perkara == 'Verzet'): ?>
+																<span class="badge badge-info badge-sm">
+																	<i class="fas fa-redo"></i> Verzet
+																</span>
+															<?php else: ?>
+																<span class="badge badge-success badge-sm">
+																	<i class="fas fa-check"></i> Normal
+																</span>
+															<?php endif; ?>
+														<?php else: ?>
+															<span class="text-muted">-</span>
+														<?php endif; ?>
+													</td>
 													<td class="text-center">
 														<?php if (isset($perkara->sumber_pbt)): ?>
 															<?php if (strpos($perkara->sumber_pbt, 'Pemberitahuan') !== false): ?>
@@ -344,6 +403,17 @@
 															<span class="badge badge-light">
 																<i class="fas fa-question"></i>
 															</span>
+														<?php endif; ?>
+													</td>
+													<!-- Kolom JSP (Juru Sita Pengganti) -->
+													<td class="text-center">
+														<?php if (isset($perkara->jsp) && $perkara->jsp != '-'): ?>
+															<span class="badge badge-info badge-sm" title="Juru Sita Pengganti">
+																<i class="fas fa-user-tie"></i>
+																<?= htmlspecialchars(trim($perkara->jsp)) ?>
+															</span>
+														<?php else: ?>
+															<span class="text-muted">-</span>
 														<?php endif; ?>
 													</td>
 												</tr>

@@ -17,11 +17,49 @@ class Menu_baru_model extends CI_Model
 	{
 		$this->db->select("
             p.nomor_perkara,
+            p.perkara_id,
+            p.jenis_perkara_id,
             p.jenis_perkara_nama as jenis_perkara,
             DATE(pp.tanggal_putusan) as tanggal_putus,
-            COALESCE(pen.majelis_hakim_nama, '-') as hakim,
+            pp.putusan_verstek,
+            SUBSTRING_INDEX(pen.majelis_hakim_nama, '</br>', 3) as hakim,
             DATE(pppp.tanggal_pemberitahuan_putusan) as tanggal_pemberitahuan_putusan,
             COALESCE(DATE(pppp.tanggal_pemberitahuan_putusan), DATE(pp.tanggal_putusan)) as tanggal_pbt_efektif,
+            
+            -- Keterangan Perkara berdasarkan tahapan terakhir (dari SQL yang diberikan)
+            CASE
+                WHEN p.tahapan_terakhir_id >= 30 THEN 'Kasasi'
+                WHEN p.tahapan_terakhir_id >= 20 THEN 'Banding'
+                WHEN p.tahapan_terakhir_id = 16 THEN 'Verzet'
+                ELSE 'Normal'
+            END as keterangan_perkara,
+            
+            -- Data untuk ikrar talak (khusus cerai talak)
+            CASE
+                WHEN p.jenis_perkara_id = 346 THEN pit.penetapan_majelis_hakim
+                ELSE '-'
+            END as pmh_ikrar,
+            
+            -- Tanggal transaksi PIP (biaya 29/30) 
+            pb_pip.tanggal_transaksi as trans_pip,
+            
+            -- Perkiraan BHT yang lebih akurat (dari SQL yang diberikan)
+            CASE
+                WHEN p.tahapan_terakhir_id >= 20 OR p.tahapan_terakhir_id = 16 THEN 'Cek Data Upaya Hukum'
+                ELSE CASE
+                    WHEN pb_pip.tanggal_transaksi IS NULL THEN DATE_ADD(pp.tanggal_putusan, INTERVAL 15 DAY)
+                    ELSE CASE
+                        WHEN pppp.tanggal_pemberitahuan_putusan IS NULL THEN 'TGL PIP belum ada'
+                        ELSE DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 15 DAY)
+                    END
+                END
+            END as perkiraan_bht,
+            
+            -- JSP (Juru Sita Pengganti) hanya jika ada transaksi PIP
+            CASE
+                WHEN pb_pip.tanggal_transaksi IS NULL THEN '-'
+                ELSE REPLACE(pen.jurusita_text, 'Juru Sita Pengganti', '')
+            END as jsp,
             
             -- Status BHT dengan kekhususan PA
             CASE 
@@ -96,6 +134,14 @@ class Menu_baru_model extends CI_Model
 		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
 		$this->db->join('perkara_putusan_pemberitahuan_putusan pppp', 'p.perkara_id = pppp.perkara_id', 'left');
+		$this->db->join('perkara_akta_cerai pac', 'p.perkara_id = pac.perkara_id', 'left');
+		$this->db->join('perkara_ikrar_talak pit', 'p.perkara_id = pit.perkara_id', 'left');
+
+		// JOIN untuk mendapatkan tanggal transaksi PIP (biaya jenis 29/30)
+		$this->db->join('(SELECT perkara_id, MIN(tanggal_transaksi) as tanggal_transaksi 
+		                  FROM perkara_biaya 
+		                  WHERE jenis_biaya_id IN (29, 30) 
+		                  GROUP BY perkara_id) pb_pip', 'p.perkara_id = pb_pip.perkara_id', 'left');
 		$this->db->where('DATE(pp.tanggal_putusan)', $tanggal);
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 
