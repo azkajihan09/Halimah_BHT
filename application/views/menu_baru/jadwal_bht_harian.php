@@ -109,10 +109,12 @@
 				<div class="col-lg-3 col-6">
 					<div class="small-box bg-success">
 						<div class="inner">
-							<h3><?= count(array_filter($jadwal_bht, function ($j) {
-									return $j->status == 'Normal';
-								})) ?></h3>
-							<p>Normal</p>
+							<?php $normal = 0;
+							foreach ($jadwal_bht as $j) {
+								if ($j->status == 'Normal' || $j->status == 'Selesai') $normal++;
+							} ?>
+							<h3><?= $normal ?></h3>
+							<p>Normal/Selesai</p>
 						</div>
 						<div class="icon">
 							<i class="fas fa-check-circle"></i>
@@ -122,9 +124,11 @@
 				<div class="col-lg-3 col-6">
 					<div class="small-box bg-warning">
 						<div class="inner">
-							<h3><?= count(array_filter($jadwal_bht, function ($j) {
-									return $j->status == 'Urgent';
-								})) ?></h3>
+							<?php $urgent = 0;
+							foreach ($jadwal_bht as $j) {
+								if ($j->status == 'Urgent' || $j->prioritas == 'MEDIUM') $urgent++;
+							} ?>
+							<h3><?= $urgent ?></h3>
 							<p>Urgent (11-14 hari)</p>
 						</div>
 						<div class="icon">
@@ -135,9 +139,11 @@
 				<div class="col-lg-3 col-6">
 					<div class="small-box bg-danger">
 						<div class="inner">
-							<h3><?= count(array_filter($jadwal_bht, function ($j) {
-									return $j->status == 'Terlambat';
-								})) ?></h3>
+							<?php $terlambat = 0;
+							foreach ($jadwal_bht as $j) {
+								if ($j->status == 'Terlambat' || $j->prioritas == 'HIGH') $terlambat++;
+							} ?>
+							<h3><?= $terlambat ?></h3>
 							<p>Terlambat (15-21 hari)</p>
 						</div>
 						<div class="icon">
@@ -148,9 +154,11 @@
 				<div class="col-lg-3 col-6">
 					<div class="small-box bg-dark">
 						<div class="inner">
-							<h3><?= count(array_filter($jadwal_bht, function ($j) {
-									return $j->prioritas == 'CRITICAL';
-								})) ?></h3>
+							<?php $critical = 0;
+							foreach ($jadwal_bht as $j) {
+								if ($j->status == 'Critical' || $j->prioritas == 'CRITICAL') $critical++;
+							} ?>
+							<h3><?= $critical ?></h3>
 							<p>Critical (>21 hari)</p>
 						</div>
 						<div class="icon">
@@ -183,65 +191,52 @@
 										<thead>
 											<tr>
 												<th width="4%">No</th>
-												<th width="12%">Nomor Perkara</th>
-												<th width="15%">Jenis Perkara</th>
-												<th width="8%">Tgl Putusan</th>
-												<th width="8%">Tgl PBT</th>
-												<th width="8%">Target BHT</th>
-												<th width="8%">Tanggal BHT</th>
-												<th width="6%">Hari Sejak PBT</th>
-												<th width="6%">Sisa/Terlambat</th>
-												<th width="6%">Progress</th>
-												<th width="6%">Efficiency</th>
-												<th width="6%">Prioritas</th>
-												<th width="7%">Status</th>
+												<th width="15%">Nomor Perkara</th>
+												<th width="18%">Jenis Perkara</th>
+												<th width="10%">Tgl Putusan</th>
+												<th width="10%">Tgl PBT</th>
+												<th width="10%">Target BHT</th>
+												<th width="8%">Hari Sejak PBT</th>
+												<th width="8%">Sisa Hari</th>
+												<th width="8%">Prioritas</th>
+												<th width="9%">Status</th>
 											</tr>
 										</thead>
 										<tbody>
 											<?php $no = 1;
-											foreach ($jadwal_bht as $jadwal): ?>
+											foreach ($jadwal_bht as $jadwal):
+												// Hitung sisa hari dinamis jika tidak ada dari query
+												$sisa_hari = isset($jadwal->sisa_hari_target) ? $jadwal->sisa_hari_target : (isset($jadwal->perkiraan_bht) && $jadwal->perkiraan_bht != 'Cek Data Upaya Hukum' && $jadwal->perkiraan_bht != 'TGL PIP belum ada'
+														? ceil((strtotime($jadwal->perkiraan_bht) - time()) / (60 * 60 * 24)) : '-');
+											?>
 												<tr class="<?php
-															if (strpos($jadwal->prioritas, 'CRITICAL') !== false) echo 'table-dark';
-															elseif (strpos($jadwal->prioritas, 'HIGH') !== false) echo 'table-danger';
-															elseif (strpos($jadwal->prioritas, 'MEDIUM') !== false) echo 'table-warning';
+															// Simplified table row coloring
+															if ($jadwal->prioritas == 'CRITICAL') echo 'table-dark';
+															elseif ($jadwal->prioritas == 'HIGH') echo 'table-danger';
+															elseif ($jadwal->prioritas == 'MEDIUM') echo 'table-warning';
 															elseif ($jadwal->prioritas == 'COMPLETED') echo 'table-success';
 															else echo 'table-info';
 															?>">
 													<td><?= $no++ ?></td>
+													<td><?= htmlspecialchars($jadwal->nomor_perkara) ?></td>
+													<td><?= htmlspecialchars($jadwal->jenis_perkara) ?></td>
+													<td><?= date('d/m/y', strtotime($jadwal->tanggal_putusan)) ?></td>
 													<td>
-														<small><?= htmlspecialchars($jadwal->nomor_perkara) ?></small>
+														<?= $jadwal->tanggal_pbt ? date('d/m/y', strtotime($jadwal->tanggal_pbt)) : '<span class="text-muted">-</span>' ?>
 													</td>
 													<td>
-														<small><?= htmlspecialchars($jadwal->jenis_perkara) ?></small>
-													</td>
-													<td>
-														<small><?= date('d/m/y', strtotime($jadwal->tanggal_putusan)) ?></small>
-													</td>
-													<td>
-														<?php if ($jadwal->tanggal_pbt): ?>
-															<small><?= date('d/m/y', strtotime($jadwal->tanggal_pbt)) ?></small>
+														<?php if (isset($jadwal->perkiraan_bht)): ?>
+															<?php if ($jadwal->perkiraan_bht == 'Cek Data Upaya Hukum'): ?>
+																<span class="badge badge-warning badge-sm">Upaya Hukum</span>
+															<?php elseif ($jadwal->perkiraan_bht == 'TGL PIP belum ada'): ?>
+																<span class="badge badge-info badge-sm">Tunggu PIP</span>
+															<?php else: ?>
+																<?= date('d/m/y', strtotime($jadwal->perkiraan_bht)) ?>
+															<?php endif; ?>
+														<?php elseif (isset($jadwal->target_bht)): ?>
+															<?= date('d/m/y', strtotime($jadwal->target_bht)) ?>
 														<?php else: ?>
-															<small class="text-muted">-</small>
-														<?php endif; ?>
-													</td>
-													<td>
-														<?php if ($jadwal->target_bht): ?>
-															<small class="text-primary">
-																<i class="far fa-calendar"></i>
-																<?= date('d/m/y', strtotime($jadwal->target_bht)) ?>
-															</small>
-														<?php else: ?>
-															<small class="text-muted">-</small>
-														<?php endif; ?>
-													</td>
-													<td>
-														<?php if ($jadwal->tanggal_bht): ?>
-															<small class="badge badge-success">
-																<i class="fas fa-check"></i>
-																<?= date('d/m/y', strtotime($jadwal->tanggal_bht)) ?>
-															</small>
-														<?php else: ?>
-															<small class="text-muted">Belum BHT</small>
+															<span class="text-muted">-</span>
 														<?php endif; ?>
 													</td>
 													<td>
@@ -250,90 +245,35 @@
 																			?>">
 															<?= $jadwal->hari_sejak_pbt ?> hr
 														</span>
-														<br><small class="text-muted"><?= $jadwal->hari_kerja_sejak_pbt ?> hr kerja</small>
 													</td>
 													<td>
-														<?php if ($jadwal->tanggal_bht): ?>
-															<small class="badge badge-success">Selesai</small>
-														<?php elseif ($jadwal->hari_terlambat > 0): ?>
-															<small class="badge badge-danger">
-																<i class="fas fa-exclamation-triangle"></i>
-																+<?= $jadwal->hari_terlambat ?> hr
-															</small>
+														<?php if (isset($jadwal->tanggal_bht) && $jadwal->tanggal_bht): ?>
+															<span class="badge badge-success">Selesai</span>
+														<?php elseif ($sisa_hari !== '-'): ?>
+															<?php if ($sisa_hari > 0): ?>
+																<span class="badge badge-success"><?= $sisa_hari ?> hari</span>
+															<?php elseif ($sisa_hari == 0): ?>
+																<span class="badge badge-warning">Deadline</span>
+															<?php else: ?>
+																<span class="badge badge-danger">+<?= abs($sisa_hari) ?> hr</span>
+															<?php endif; ?>
 														<?php else: ?>
-															<small class="badge badge-info">
-																<i class="fas fa-clock"></i>
-																<?= $jadwal->sisa_hari_target ?> hr
-															</small>
+															<span class="badge badge-secondary">-</span>
 														<?php endif; ?>
-													</td>
-													<td>
-														<div class="progress" style="height: 15px;">
-															<div class="progress-bar <?=
-																						$jadwal->progress_percentage >= 100 ? 'bg-success' : ($jadwal->progress_percentage >= 75 ? 'bg-warning' : 'bg-info')
-																						?>" role="progressbar"
-																style="width: <?= $jadwal->progress_percentage ?>%">
-																<?= $jadwal->progress_percentage ?>%
-															</div>
-														</div>
 													</td>
 													<td>
 														<span class="badge <?=
-																			$jadwal->efficiency_score >= 80 ? 'badge-success' : ($jadwal->efficiency_score >= 60 ? 'badge-warning' : 'badge-danger')
+																			$jadwal->prioritas == 'CRITICAL' ? 'badge-dark' : ($jadwal->prioritas == 'HIGH' ? 'badge-danger' : ($jadwal->prioritas == 'MEDIUM' ? 'badge-warning' : ($jadwal->prioritas == 'COMPLETED' ? 'badge-success' : 'badge-info')))
 																			?>">
-															<?= $jadwal->efficiency_score ?>
+															<?= $jadwal->prioritas ?>
 														</span>
 													</td>
 													<td>
-														<?php if (strpos($jadwal->prioritas, 'CRITICAL') !== false): ?>
-															<span class="badge badge-dark">
-																<i class="fas fa-skull-crossbones"></i> CRITICAL
-															</span>
-														<?php elseif (strpos($jadwal->prioritas, 'HIGH') !== false): ?>
-															<span class="badge badge-danger">
-																<i class="fas fa-fire"></i> HIGH
-															</span>
-														<?php elseif (strpos($jadwal->prioritas, 'MEDIUM') !== false): ?>
-															<span class="badge badge-warning">
-																<i class="fas fa-exclamation"></i> MEDIUM
-															</span>
-														<?php elseif ($jadwal->prioritas == 'COMPLETED'): ?>
-															<span class="badge badge-success">
-																<i class="fas fa-check-circle"></i> DONE
-															</span>
-														<?php else: ?>
-															<span class="badge badge-info">
-																<i class="fas fa-clock"></i> LOW
-															</span>
-														<?php endif; ?>
-													</td>
-													<td>
-														<?php if (strpos($jadwal->status, 'Critical') !== false): ?>
-															<span class="badge badge-dark">
-																<i class="fas fa-skull-crossbones"></i>
-																<small><?= str_replace(['Critical - ', 'Critical'], ['', 'CRITICAL'], $jadwal->status) ?></small>
-															</span>
-														<?php elseif (strpos($jadwal->status, 'Terlambat') !== false): ?>
-															<span class="badge badge-danger">
-																<i class="fas fa-exclamation-triangle"></i>
-																<small><?= str_replace('Terlambat ', '', $jadwal->status) ?></small>
-															</span>
-														<?php elseif (strpos($jadwal->status, 'Urgent') !== false): ?>
-															<span class="badge badge-warning">
-																<i class="fas fa-clock"></i>
-																<small><?= str_replace('Urgent ', '', $jadwal->status) ?></small>
-															</span>
-														<?php elseif (strpos($jadwal->status, 'Selesai') !== false): ?>
-															<span class="badge badge-success">
-																<i class="fas fa-check-circle"></i>
-																<small>SELESAI</small>
-															</span>
-														<?php else: ?>
-															<span class="badge badge-info">
-																<i class="fas fa-hourglass-half"></i>
-																<small><?= $jadwal->status ?></small>
-															</span>
-														<?php endif; ?>
+														<span class="badge <?=
+																			$jadwal->status == 'Critical' ? 'badge-dark' : ($jadwal->status == 'Terlambat' ? 'badge-danger' : ($jadwal->status == 'Urgent' ? 'badge-warning' : ($jadwal->status == 'Selesai' ? 'badge-success' : 'badge-info')))
+																			?>">
+															<?= $jadwal->status ?>
+														</span>
 													</td>
 												</tr>
 											<?php endforeach; ?>
@@ -357,10 +297,12 @@
 
 <script>
 	$(document).ready(function() {
+		// Simplified DataTable initialization
 		$('#jadwal-table').DataTable({
-			"responsive": true,
+			"responsive": false, // Disable responsive for better performance
 			"lengthChange": false,
 			"autoWidth": false,
+			"pageLength": 50, // Show more rows by default
 			"order": [
 				[6, "desc"]
 			], // Sort by hari sejak PBT desc
@@ -370,16 +312,18 @@
 			"columnDefs": [{
 				"targets": [6], // Hari sejak PBT column
 				"type": "num"
-			}]
+			}],
+			"deferRender": true, // Improve performance for large datasets
+			"processing": true
 		});
 
-		// Auto refresh every 2 minutes
+		// Reduced auto refresh to every 5 minutes to reduce server load
 		setInterval(function() {
 			refreshData();
-		}, 2 * 60 * 1000);
+		}, 5 * 60 * 1000);
 
-		// Check for urgent alerts every 30 seconds
-		setInterval(checkUrgentAlerts, 30 * 1000);
+		// Check for urgent alerts every 2 minutes instead of 30 seconds
+		setInterval(checkUrgentAlerts, 2 * 60 * 1000);
 	});
 
 	function refreshData() {
