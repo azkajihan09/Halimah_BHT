@@ -31,28 +31,40 @@
 						Jika kedua pihak hadir saat pembacaan putusan, maka putusan langsung BHT.
 						<br><br>
 						<div class="row">
-							<div class="col-md-4">
-								<strong>Logika Perhitungan Hari Kerja ke Target BHT:</strong>
+							<div class="col-md-3">
+								<strong>Logika Perhitungan Hari Kerja:</strong>
 								<ul class="mb-0 mt-1">
-									<li>Menggunakan <strong>14 hari kerja</strong> (Senin-Jumat, tidak termasuk weekend dan libur nasional)</li>
-									<li>Jika ada data di tabel <code>perkara_putusan_pemberitahuan_putusan</code>, hitung dari tanggal pemberitahuan</li>
-									<li>Jika tidak ada data pemberitahuan, hitung dari tanggal putusan</li>
-									<li>Sisa hari = Target BHT - Hari ini (menunjukkan sisa hari kerja)</li>
+									<li>Menggunakan <strong>14 hari kerja</strong></li>
+									<li>Dari tanggal pemberitahuan (prioritas)</li>
+									<li>Atau dari tanggal putusan (backup)</li>
+									<li><strong>Sisa Hari (Logika Baru):</strong></li>
+									<li>- Jika SELESAI: Tanggal BHT - Perkiraan BHT</li>
+									<li>- Jika BELUM: Perkiraan BHT - Hari ini</li>
 								</ul>
 							</div>
-							<div class="col-md-4">
-								<strong>Perkiraan BHT (Logika Baru):</strong>
+							<div class="col-md-3">
+								<strong>Status Pengisian BHT:</strong>
 								<ul class="mb-0 mt-1">
-									<li><strong>Upaya Hukum:</strong> Jika ada banding/kasasi/verzet</li>
-									<li><strong>Tunggu PIP:</strong> Ada transaksi PIP tapi belum ada tanggal pemberitahuan</li>
-									<li><strong>Tanggal:</strong> Tanggal pemberitahuan + 15 hari (jika ada PIP)</li>
-									<li><strong>Default:</strong> Tanggal putusan + 15 hari (jika tidak ada PIP)</li>
+									<li><span class="badge badge-primary badge-sm"><i class="fas fa-rocket"></i></span> <strong>Lebih Cepat:</strong> Input sebelum deadline</li>
+									<li><span class="badge badge-success badge-sm"><i class="fas fa-bullseye"></i></span> <strong>Tepat Waktu:</strong> Input pada deadline</li>
+									<li><span class="badge badge-warning badge-sm"><i class="fas fa-clock"></i></span> <strong>Toleransi 1 Hari:</strong> Input 1 hari setelah deadline</li>
+									<li><span class="badge badge-danger badge-sm"><i class="fas fa-exclamation-circle"></i></span> <strong>Terlambat Input:</strong> Input >1 hari setelah deadline</li>
+									<li><span class="badge badge-secondary badge-sm"><i class="fas fa-hourglass-half"></i></span> <strong>Belum Selesai:</strong> Belum ada input BHT</li>
 								</ul>
 							</div>
-							<div class="col-md-4">
-								<strong>Keterangan & Indikator:</strong><br>
-								<span class="badge badge-primary"><i class="fas fa-bell"></i></span> Dari Pemberitahuan Putusan<br>
-								<span class="badge badge-secondary"><i class="fas fa-gavel"></i></span> Dari Tanggal Putusan<br>
+							<div class="col-md-3">
+								<strong>Perkiraan BHT:</strong>
+								<ul class="mb-0 mt-1">
+									<li><strong>Upaya Hukum:</strong> Ada banding/kasasi/verzet</li>
+									<li><strong>Tunggu PIP:</strong> Ada PIP belum pemberitahuan</li>
+									<li><strong>Tanggal:</strong> Pemberitahuan + 15 hari</li>
+									<li><strong>Default:</strong> Putusan + 15 hari</li>
+								</ul>
+							</div>
+							<div class="col-md-3">
+								<strong>Indikator & Keterangan:</strong><br>
+								<span class="badge badge-primary badge-sm"><i class="fas fa-bell"></i></span> Dari Pemberitahuan<br>
+								<span class="badge badge-secondary badge-sm"><i class="fas fa-gavel"></i></span> Dari Putusan<br>
 								<span class="badge badge-dark"><i class="fas fa-university"></i></span> Kasasi<br>
 								<span class="badge badge-warning"><i class="fas fa-balance-scale"></i></span> Banding<br>
 								<span class="badge badge-info"><i class="fas fa-redo"></i></span> Verzet<br>
@@ -230,6 +242,7 @@
 												<th width="6%">Perkiraan BHT</th>
 												<th width="8%">Status BHT</th>
 												<th width="6%">Sisa Hari</th>
+												<th width="8%">Status Pengisian</th>
 												<th width="6%">Tanggal BHT</th>
 												<th width="6%">Keterangan</th>
 												<th width="4%">Sumber PBT</th>
@@ -350,6 +363,31 @@
 															<?php endif; ?>
 														<?php else: ?>
 															<span class="badge badge-secondary">-</span>
+														<?php endif; ?>
+													</td>
+													<td>
+														<?php
+														$status_pengisian = isset($perkara->status_pengisian_bht) ? $perkara->status_pengisian_bht : 'BELUM SELESAI';
+														if ($status_pengisian == 'TEPAT WAKTU'): ?>
+															<span class="badge badge-success">
+																<i class="fas fa-bullseye"></i> Tepat Waktu
+															</span>
+														<?php elseif ($status_pengisian == 'LEBIH CEPAT'): ?>
+															<span class="badge badge-primary">
+																<i class="fas fa-rocket"></i> Lebih Cepat
+															</span>
+														<?php elseif ($status_pengisian == 'TOLERANSI 1 HARI'): ?>
+															<span class="badge badge-warning">
+																<i class="fas fa-clock"></i> Toleransi 1 Hari
+															</span>
+														<?php elseif ($status_pengisian == 'TERLAMBAT INPUT'): ?>
+															<span class="badge badge-danger">
+																<i class="fas fa-exclamation-circle"></i> Terlambat Input
+															</span>
+														<?php else: ?>
+															<span class="badge badge-secondary">
+																<i class="fas fa-hourglass-half"></i> Belum Selesai
+															</span>
 														<?php endif; ?>
 													</td>
 													<td>

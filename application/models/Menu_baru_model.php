@@ -105,9 +105,9 @@ class Menu_baru_model extends CI_Model
                     DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), pp.tanggal_putusan)
             END as hari_sejak_pbt_ke_target,
             
-            -- Sisa hari ke target BHT (logika baru)
+            -- Sisa hari ke target BHT (logika kompleks)
             CASE 
-                -- Jika sudah ada tanggal BHT (SELESAI), hitung selisih dari perkiraan BHT
+                -- Jika sudah ada tanggal BHT (SELESAI), hitung selisih keterlambatan pengisian
                 WHEN pp.tanggal_bht IS NOT NULL THEN 
                     CASE 
                         WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
@@ -115,12 +115,41 @@ class Menu_baru_model extends CI_Model
                         ELSE 
                             DATEDIFF(pp.tanggal_bht, DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY))
                     END
-                -- Jika belum selesai, hitung sisa hari ke deadline seperti biasa
+                -- Jika belum selesai, hitung sisa hari ke deadline
                 WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
                     DATEDIFF(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), CURDATE())
                 ELSE 
                     DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), CURDATE())
             END as sisa_hari_ke_target,
+            
+            -- Status keterlambatan pengisian BHT (logika kompleks)
+            CASE 
+                WHEN pp.tanggal_bht IS NOT NULL THEN 
+                    CASE 
+                        -- Jika tanggal BHT sama dengan perkiraan BHT
+                        WHEN (pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND 
+                              pp.tanggal_bht = DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY)) OR
+                             (pppp.tanggal_pemberitahuan_putusan IS NULL AND 
+                              pp.tanggal_bht = DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY)) THEN 'TEPAT WAKTU'
+                        -- Jika tanggal BHT lebih cepat dari perkiraan BHT
+                        WHEN (pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND 
+                              pp.tanggal_bht < DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY)) OR
+                             (pppp.tanggal_pemberitahuan_putusan IS NULL AND 
+                              pp.tanggal_bht < DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY)) THEN 'LEBIH CEPAT'
+                        -- Jika tanggal BHT terlambat 1 hari (masih toleransi)
+                        WHEN (pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND 
+                              pp.tanggal_bht = DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 15 DAY)) OR
+                             (pppp.tanggal_pemberitahuan_putusan IS NULL AND 
+                              pp.tanggal_bht = DATE_ADD(pp.tanggal_putusan, INTERVAL 15 DAY)) THEN 'TOLERANSI 1 HARI'
+                        -- Jika tanggal BHT lebih lambat dari perkiraan BHT (lebih dari 1 hari)
+                        WHEN (pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND 
+                              pp.tanggal_bht > DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 15 DAY)) OR
+                             (pppp.tanggal_pemberitahuan_putusan IS NULL AND 
+                              pp.tanggal_bht > DATE_ADD(pp.tanggal_putusan, INTERVAL 15 DAY)) THEN 'TERLAMBAT INPUT'
+                        ELSE 'SELESAI'
+                    END
+                ELSE 'BELUM SELESAI'
+            END as status_pengisian_bht,
             
             CASE 
                 WHEN pp.tanggal_bht IS NOT NULL THEN 'SELESAI'
