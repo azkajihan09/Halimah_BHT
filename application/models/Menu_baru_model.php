@@ -396,19 +396,35 @@ class Menu_baru_model extends CI_Model
 		// WHERE conditions - fokus pada perkara yang perlu diperhatikan jadwal BHT-nya
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
 
-		// Menampilkan perkara yang belum BHT atau sudah BHT tapi dalam rentang waktu tertentu
-		$this->db->group_start();
-		// Belum BHT dan dalam rentang perhatian (max 30 hari sejak putusan)
-		$this->db->group_start();
-		$this->db->where('pp.tanggal_bht IS NULL');
-		$this->db->where('DATEDIFF(CURDATE(), pp.tanggal_putusan) <=', 30);
-		$this->db->group_end();
-		// Atau sudah BHT tapi baru-baru ini (untuk monitoring)
-		$this->db->or_group_start();
-		$this->db->where('pp.tanggal_bht IS NOT NULL');
-		$this->db->where('DATE(pp.tanggal_bht) >=', date('Y-m-d', strtotime('-7 days')));
-		$this->db->group_end();
-		$this->db->group_end();
+		// FILTER TANGGAL: Menampilkan perkara berdasarkan tanggal parameter
+		if ($tanggal) {
+			// Jika tanggal spesifik diberikan, filter berdasarkan:
+			// 1. Tanggal putusan yang sama dengan parameter tanggal, ATAU
+			// 2. Perkara yang PBT-nya pada tanggal tersebut, ATAU  
+			// 3. Perkara yang target BHT-nya pada tanggal tersebut
+			$this->db->group_start();
+			// Perkara yang diputus pada tanggal tersebut
+			$this->db->or_where('DATE(pp.tanggal_putusan)', $tanggal);
+			// Perkara yang PBT pada tanggal tersebut
+			$this->db->or_where('DATE(pppp.tanggal_pemberitahuan_putusan)', $tanggal);
+			// Perkara yang target BHT pada tanggal tersebut
+			$this->db->or_where('DATE(DATE_ADD(COALESCE(pppp.tanggal_pemberitahuan_putusan, pp.tanggal_putusan), INTERVAL 15 DAY)) =', $tanggal);
+			$this->db->group_end();
+		} else {
+			// Jika tidak ada filter tanggal, tampilkan berdasarkan logika lama
+			$this->db->group_start();
+			// Belum BHT dan dalam rentang perhatian (max 30 hari sejak putusan)
+			$this->db->group_start();
+			$this->db->where('pp.tanggal_bht IS NULL');
+			$this->db->where('DATEDIFF(CURDATE(), pp.tanggal_putusan) <=', 30);
+			$this->db->group_end();
+			// Atau sudah BHT tapi baru-baru ini (untuk monitoring)
+			$this->db->or_group_start();
+			$this->db->where('pp.tanggal_bht IS NOT NULL');
+			$this->db->where('DATE(pp.tanggal_bht) >=', date('Y-m-d', strtotime('-7 days')));
+			$this->db->group_end();
+			$this->db->group_end();
+		}
 
 		// Filter untuk tidak menampilkan perkara yang dicabut
 		$this->_filter_perkara_dicabut();
@@ -464,12 +480,34 @@ class Menu_baru_model extends CI_Model
 	public function count_jadwal_bht_harian($tanggal, $jenis = 'semua', $tahun_filter = '2025')
 	{
 		$this->db->from('perkara p');
-		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
-		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
 		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
+		$this->db->join('(SELECT pppp.perkara_id, MIN(pppp.tanggal_pemberitahuan_putusan) as tanggal_pemberitahuan_putusan 
+		                  FROM perkara_putusan_pemberitahuan_putusan pppp 
+		                  WHERE pppp.tanggal_pemberitahuan_putusan IS NOT NULL 
+		                  GROUP BY pppp.perkara_id) pppp', 'p.perkara_id = pppp.perkara_id', 'left');
+
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
-		$this->db->where('pjs.tanggal_sidang IS NOT NULL');
-		$this->db->where('pp.tanggal_bht IS NULL');
+
+		// FILTER TANGGAL: Sama dengan get_jadwal_bht_harian()
+		if ($tanggal) {
+			$this->db->group_start();
+			$this->db->or_where('DATE(pp.tanggal_putusan)', $tanggal);
+			$this->db->or_where('DATE(pppp.tanggal_pemberitahuan_putusan)', $tanggal);
+			$this->db->or_where('DATE(DATE_ADD(COALESCE(pppp.tanggal_pemberitahuan_putusan, pp.tanggal_putusan), INTERVAL 15 DAY)) =', $tanggal);
+			$this->db->group_end();
+		} else {
+			$this->db->group_start();
+			$this->db->group_start();
+			$this->db->where('pp.tanggal_bht IS NULL');
+			$this->db->where('DATEDIFF(CURDATE(), pp.tanggal_putusan) <=', 30);
+			$this->db->group_end();
+			$this->db->or_group_start();
+			$this->db->where('pp.tanggal_bht IS NOT NULL');
+			$this->db->where('DATE(pp.tanggal_bht) >=', date('Y-m-d', strtotime('-7 days')));
+			$this->db->group_end();
+			$this->db->group_end();
+		}
 
 		// Filter untuk tidak menampilkan perkara yang dicabut
 		$this->_filter_perkara_dicabut();
