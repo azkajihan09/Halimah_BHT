@@ -129,10 +129,38 @@ class Reminder_model extends CI_Model
     }
 
     /**
+     * Get perkara by ID
+     */
+    public function get_perkara_by_id($id)
+    {
+        $this->reminder_db->select('
+            pr.*,
+            pt.status_pbt,
+            pt.tanggal_bayar_pbt,
+            pt.tanggal_pemberitahuan_putusan,
+            pt.jumlah_biaya,
+            pt.uraian_biaya
+        ');
+
+        $this->reminder_db->from('perkara_reminder pr');
+        $this->reminder_db->join('pbt_tracking pt', 'pr.id = pt.perkara_reminder_id', 'left');
+        $this->reminder_db->where('pr.id', $id);
+
+        return $this->reminder_db->get()->row();
+    }
+
+    /**
      * Insert perkara reminder baru
      */
     public function insert_perkara_reminder($data)
     {
+        // Check if perkara already exists
+        $existing = $this->reminder_db->get_where('perkara_reminder', array('nomor_perkara' => $data['nomor_perkara']))->row();
+        if ($existing) {
+            // If exists, just return existing ID (skip insert)
+            return $existing->id;
+        }
+
         // Insert ke tabel perkara_reminder
         $reminder_data = array(
             'nomor_perkara' => $data['nomor_perkara'],
@@ -264,16 +292,12 @@ class Reminder_model extends CI_Model
                 GROUP BY perkara_id
             ) pj ON p.perkara_id = pj.perkara_id
             WHERE pp.tanggal_putusan IS NOT NULL
+            AND pp.tanggal_cabut IS NULL
             AND YEAR(pp.tanggal_putusan) >= 2024
             AND (
                 (pb.tanggal_transaksi IS NOT NULL AND pppp_check.tanggal_pbt IS NULL) OR
                 (pb.tanggal_transaksi IS NULL AND pppp_check.tanggal_pbt IS NULL) OR
                 (pppp_check.tanggal_pbt IS NOT NULL AND pp.tanggal_bht IS NULL)
-            )
-            AND p.perkara_id NOT IN (
-                SELECT DISTINCT perkara_id 
-                FROM perkara_putusan_pencabutan 
-                WHERE aktif = 'Y'
             )
             AND p.nomor_perkara NOT IN (
                 SELECT nomor_perkara FROM bht_reminder_system.perkara_reminder
@@ -464,12 +488,11 @@ class Reminder_model extends CI_Model
     {
         $log_data = array(
             'perkara_reminder_id' => $perkara_reminder_id,
-            'nomor_perkara' => $nomor_perkara,
             'activity_type' => $activity_type,
-            'old_status' => $old_status,
-            'new_status' => $new_status,
             'description' => $description,
-            'user_id' => 'SYSTEM'
+            'old_value' => $old_status,
+            'new_value' => $new_status,
+            'user_name' => 'SYSTEM'
         );
 
         $this->reminder_db->insert('reminder_log', $log_data);

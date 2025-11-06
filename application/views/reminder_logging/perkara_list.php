@@ -149,7 +149,7 @@
 						</div>
 						<div class="col-sm-6">
 							<ol class="breadcrumb float-sm-right">
-								<li class="breadcrumb-item"><a href="<?= base_url('reminder_logging') ?>">Dashboard</a></li>
+								<li class="breadcrumb-item"><a href="<?= base_url('index.php/reminder_logging') ?>">Dashboard</a></li>
 								<li class="breadcrumb-item active">Daftar Perkara</li>
 							</ol>
 						</div>
@@ -220,7 +220,7 @@
 							</div>
 						</div>
 						<div class="card-body">
-							<form method="GET" action="<?= base_url('reminder_logging/perkara_list') ?>">
+							<form method="GET" action="<?= base_url('index.php/reminder_logging/perkara_list') ?>">
 								<div class="row">
 									<div class="col-md-3">
 										<div class="form-group">
@@ -260,7 +260,7 @@
 												<button type="submit" class="btn btn-primary">
 													<i class="fas fa-search"></i> Filter
 												</button>
-												<a href="<?= base_url('reminder_logging/perkara_list') ?>" class="btn btn-secondary">
+												<a href="<?= base_url('index.php/reminder_logging/perkara_list') ?>" class="btn btn-secondary">
 													<i class="fas fa-times"></i> Reset
 												</a>
 											</div>
@@ -276,10 +276,10 @@
 						<div class="card-header">
 							<h3 class="card-title">📊 Data Perkara (<?= isset($total_records) ? $total_records : 0 ?> records)</h3>
 							<div class="card-tools">
-								<a href="<?= base_url('reminder_logging/export_excel') ?>" class="btn btn-success btn-sm">
+								<a href="<?= base_url('index.php/reminder_logging/export_excel') ?>" class="btn btn-success btn-sm">
 									<i class="fas fa-file-excel"></i> Export Excel
 								</a>
-								<a href="<?= base_url('reminder_logging/sync_manual') ?>" class="btn btn-primary btn-sm">
+								<a href="<?= base_url('index.php/reminder_logging/sync_manual') ?>" class="btn btn-primary btn-sm">
 									<i class="fas fa-sync"></i> Sync Manual
 								</a>
 							</div>
@@ -307,7 +307,7 @@
 												<tr>
 													<td><?= $no++ ?></td>
 													<td>
-														<a href="<?= base_url('reminder_logging/perkara_detail/' . urlencode($perkara->nomor_perkara)) ?>"
+														<a href="<?= base_url('index.php/reminder_logging/perkara_detail/' . $perkara->id) ?>"
 															class="text-primary">
 															<?= htmlspecialchars($perkara->nomor_perkara) ?>
 														</a>
@@ -342,11 +342,11 @@
 													</td>
 													<td>
 														<div class="btn-group">
-															<a href="<?= base_url('reminder_logging/perkara_detail/' . urlencode($perkara->nomor_perkara)) ?>"
+															<a href="<?= base_url('index.php/reminder_logging/perkara_detail/' . $perkara->id) ?>"
 																class="btn btn-info btn-sm" title="Detail">
 																<i class="fas fa-eye"></i>
 															</a>
-															<a href="<?= base_url('reminder_logging/perkara_edit/' . $perkara->id) ?>"
+															<a href="<?= base_url('index.php/reminder_logging/perkara_edit/' . $perkara->id) ?>"
 																class="btn btn-warning btn-sm" title="Edit">
 																<i class="fas fa-edit"></i>
 															</a>
@@ -360,7 +360,7 @@
 													<div class="alert alert-info">
 														<i class="fas fa-info-circle"></i>
 														Tidak ada data perkara reminder.
-														<a href="<?= base_url('reminder_logging/sync_manual') ?>" class="btn btn-primary btn-sm ml-2">
+														<a href="<?= base_url('index.php/reminder_logging/sync_manual') ?>" class="btn btn-primary btn-sm ml-2">
 															<i class="fas fa-sync"></i> Sync Sekarang
 														</a>
 													</div>

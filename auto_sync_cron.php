@@ -20,12 +20,12 @@ set_time_limit(300); // 5 menit
 define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : 'development');
 
 if (defined('ENVIRONMENT')) {
-    $file_path = rtrim($_SERVER['DOCUMENT_ROOT'], '/') . '/Halimah_BHT/index.php';
-    if (file_exists($file_path)) {
-        $_SERVER['REQUEST_URI'] = '/Halimah_BHT/index.php/reminder_logging/auto_sync';
-        include $file_path;
-        exit;
-    }
+	$file_path = rtrim($_SERVER['DOCUMENT_ROOT'], '/') . '/Halimah_BHT/index.php';
+	if (file_exists($file_path)) {
+		$_SERVER['REQUEST_URI'] = '/Halimah_BHT/index.php/reminder_logging/auto_sync';
+		include $file_path;
+		exit;
+	}
 }
 
 // Fallback: Direct database access jika CodeIgniter tidak tersedia
@@ -36,41 +36,41 @@ echo "Started at: " . date('Y-m-d H:i:s') . "\n";
 echo "==================================\n";
 
 try {
-    // Connect to databases
-    $sipp_host = $db['default']['hostname'];
-    $sipp_user = $db['default']['username'];
-    $sipp_pass = $db['default']['password'];
-    $sipp_db = $db['default']['database'];
+	// Connect to databases
+	$sipp_host = $db['default']['hostname'];
+	$sipp_user = $db['default']['username'];
+	$sipp_pass = $db['default']['password'];
+	$sipp_db = $db['default']['database'];
 
-    $reminder_host = $db['reminder_db']['hostname'];
-    $reminder_user = $db['reminder_db']['username'];
-    $reminder_pass = $db['reminder_db']['password'];
-    $reminder_db = $db['reminder_db']['database'];
+	$reminder_host = $db['reminder_db']['hostname'];
+	$reminder_user = $db['reminder_db']['username'];
+	$reminder_pass = $db['reminder_db']['password'];
+	$reminder_db = $db['reminder_db']['database'];
 
-    $pdo_sipp = new PDO("mysql:host=$sipp_host;dbname=$sipp_db;charset=utf8", $sipp_user, $sipp_pass);
-    $pdo_reminder = new PDO("mysql:host=$reminder_host;dbname=$reminder_db;charset=utf8", $reminder_user, $reminder_pass);
+	$pdo_sipp = new PDO("mysql:host=$sipp_host;dbname=$sipp_db;charset=utf8", $sipp_user, $sipp_pass);
+	$pdo_reminder = new PDO("mysql:host=$reminder_host;dbname=$reminder_db;charset=utf8", $reminder_user, $reminder_pass);
 
-    $pdo_sipp->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo_reminder->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	$pdo_sipp->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	$pdo_reminder->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    echo "✓ Database connections established\n";
+	echo "✓ Database connections established\n";
 
-    // Check if auto sync is enabled
-    $stmt = $pdo_reminder->prepare("SELECT config_value FROM reminder_config WHERE config_key = 'auto_sync_enabled'");
-    $stmt->execute();
-    $auto_sync_enabled = $stmt->fetchColumn();
+	// Check if auto sync is enabled
+	$stmt = $pdo_reminder->prepare("SELECT config_value FROM reminder_config WHERE config_key = 'auto_sync_enabled'");
+	$stmt->execute();
+	$auto_sync_enabled = $stmt->fetchColumn();
 
-    if (!$auto_sync_enabled || $auto_sync_enabled == '0') {
-        echo "! Auto sync is disabled. Exiting.\n";
-        exit(0);
-    }
+	if (!$auto_sync_enabled || $auto_sync_enabled == '0') {
+		echo "! Auto sync is disabled. Exiting.\n";
+		exit(0);
+	}
 
-    echo "✓ Auto sync is enabled\n";
+	echo "✓ Auto sync is enabled\n";
 
-    // 1. Sync new cases from SIPP
-    echo "\n1. Syncing new cases from SIPP...\n";
+	// 1. Sync new cases from SIPP
+	echo "\n1. Syncing new cases from SIPP...\n";
 
-    $sync_query = "
+	$sync_query = "
         SELECT 
             p.perkara_id,
             p.nomor_perkara,
@@ -110,16 +110,12 @@ try {
             GROUP BY perkara_id
         ) pj ON p.perkara_id = pj.perkara_id
         WHERE pp.tanggal_putusan IS NOT NULL
+        AND pp.tanggal_cabut IS NULL
         AND YEAR(pp.tanggal_putusan) >= 2024
         AND (
             (pb.tanggal_transaksi IS NOT NULL AND pppp_check.tanggal_pbt IS NULL) OR
             (pb.tanggal_transaksi IS NULL AND pppp_check.tanggal_pbt IS NULL) OR
             (pppp_check.tanggal_pbt IS NOT NULL AND pp.tanggal_bht IS NULL)
-        )
-        AND p.perkara_id NOT IN (
-            SELECT DISTINCT perkara_id 
-            FROM perkara_putusan_pencabutan 
-            WHERE aktif = 'Y'
         )
         AND p.nomor_perkara NOT IN (
             SELECT nomor_perkara FROM $reminder_db.perkara_reminder
@@ -128,28 +124,28 @@ try {
         LIMIT 50
     ";
 
-    $stmt = $pdo_sipp->prepare($sync_query);
-    $stmt->execute();
-    $new_cases = $stmt->fetchAll(PDO::FETCH_OBJ);
+	$stmt = $pdo_sipp->prepare($sync_query);
+	$stmt->execute();
+	$new_cases = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-    $synced_count = 0;
-    $errors = array();
+	$synced_count = 0;
+	$errors = array();
 
-    foreach ($new_cases as $case) {
-        try {
-            // Calculate priority and days
-            $days_since = (new DateTime())->diff(new DateTime($case->tanggal_putusan))->days;
-            $priority = 'NORMAL';
-            if ($days_since > 21) $priority = 'CRITICAL';
-            elseif ($days_since > 14) $priority = 'KRITIS';
-            elseif ($days_since > 10) $priority = 'PERINGATAN';
+	foreach ($new_cases as $case) {
+		try {
+			// Calculate priority and days
+			$days_since = (new DateTime())->diff(new DateTime($case->tanggal_putusan))->days;
+			$priority = 'NORMAL';
+			if ($days_since > 21) $priority = 'CRITICAL';
+			elseif ($days_since > 14) $priority = 'KRITIS';
+			elseif ($days_since > 10) $priority = 'PERINGATAN';
 
-            $status_reminder = 'BELUM_PBT';
-            if ($case->status_pbt_sipp == 'SUDAH_PBT') $status_reminder = 'SUDAH_PBT_BELUM_BHT';
-            elseif ($case->status_pbt_sipp == 'SELESAI') $status_reminder = 'SELESAI';
+			$status_reminder = 'BELUM_PBT';
+			if ($case->status_pbt_sipp == 'SUDAH_PBT') $status_reminder = 'SUDAH_PBT_BELUM_BHT';
+			elseif ($case->status_pbt_sipp == 'SELESAI') $status_reminder = 'SELESAI';
 
-            // Insert into perkara_reminder
-            $stmt = $pdo_reminder->prepare("
+			// Insert into perkara_reminder
+			$stmt = $pdo_reminder->prepare("
                 INSERT INTO perkara_reminder (
                     nomor_perkara, perkara_id_sipp, jenis_perkara, tanggal_putusan, 
                     tanggal_registrasi, status_reminder, level_prioritas, hari_sejak_putusan,
@@ -157,68 +153,68 @@ try {
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
             ");
 
-            $stmt->execute([
-                $case->nomor_perkara,
-                $case->perkara_id,
-                $case->jenis_perkara,
-                $case->tanggal_putusan,
-                $case->tanggal_registrasi,
-                $status_reminder,
-                $priority,
-                $days_since,
-                $case->majelis_hakim,
-                $case->jurusita_1,
-                $case->jurusita_2
-            ]);
+			$stmt->execute([
+				$case->nomor_perkara,
+				$case->perkara_id,
+				$case->jenis_perkara,
+				$case->tanggal_putusan,
+				$case->tanggal_registrasi,
+				$status_reminder,
+				$priority,
+				$days_since,
+				$case->majelis_hakim,
+				$case->jurusita_1,
+				$case->jurusita_2
+			]);
 
-            $perkara_reminder_id = $pdo_reminder->lastInsertId();
+			$perkara_reminder_id = $pdo_reminder->lastInsertId();
 
-            // Insert into pbt_tracking
-            $stmt = $pdo_reminder->prepare("
+			// Insert into pbt_tracking
+			$stmt = $pdo_reminder->prepare("
                 INSERT INTO pbt_tracking (
                     perkara_reminder_id, nomor_perkara, tanggal_bayar_pbt, jumlah_biaya,
                     uraian_biaya, pihak_id, tanggal_pemberitahuan_putusan, status_pbt
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
-            $stmt->execute([
-                $perkara_reminder_id,
-                $case->nomor_perkara,
-                $case->tanggal_bayar_pbt,
-                $case->jumlah_biaya,
-                $case->uraian_biaya,
-                $case->pihak_id,
-                $case->tanggal_pemberitahuan_putusan,
-                $case->status_pbt_sipp
-            ]);
+			$stmt->execute([
+				$perkara_reminder_id,
+				$case->nomor_perkara,
+				$case->tanggal_bayar_pbt,
+				$case->jumlah_biaya,
+				$case->uraian_biaya,
+				$case->pihak_id,
+				$case->tanggal_pemberitahuan_putusan,
+				$case->status_pbt_sipp
+			]);
 
-            // Log activity
-            $stmt = $pdo_reminder->prepare("
+			// Log activity
+			$stmt = $pdo_reminder->prepare("
                 INSERT INTO reminder_log (
                     perkara_reminder_id, nomor_perkara, activity_type, description, user_id
                 ) VALUES (?, ?, 'CREATED', 'Auto sync from SIPP', 'CRON_JOB')
             ");
 
-            $stmt->execute([$perkara_reminder_id, $case->nomor_perkara]);
+			$stmt->execute([$perkara_reminder_id, $case->nomor_perkara]);
 
-            $synced_count++;
-        } catch (Exception $e) {
-            $errors[] = "Error sync {$case->nomor_perkara}: " . $e->getMessage();
-        }
-    }
+			$synced_count++;
+		} catch (Exception $e) {
+			$errors[] = "Error sync {$case->nomor_perkara}: " . $e->getMessage();
+		}
+	}
 
-    echo "  ✓ Synced $synced_count new cases\n";
-    if (!empty($errors)) {
-        echo "  ! Errors: " . count($errors) . "\n";
-        foreach ($errors as $error) {
-            echo "    - $error\n";
-        }
-    }
+	echo "  ✓ Synced $synced_count new cases\n";
+	if (!empty($errors)) {
+		echo "  ! Errors: " . count($errors) . "\n";
+		foreach ($errors as $error) {
+			echo "    - $error\n";
+		}
+	}
 
-    // 2. Update existing cases
-    echo "\n2. Updating existing cases...\n";
+	// 2. Update existing cases
+	echo "\n2. Updating existing cases...\n";
 
-    $update_query = "
+	$update_query = "
         SELECT 
             p.perkara_id,
             p.nomor_perkara,
@@ -247,22 +243,22 @@ try {
         )
     ";
 
-    $stmt = $pdo_sipp->prepare($update_query);
-    $stmt->execute();
-    $update_cases = $stmt->fetchAll(PDO::FETCH_OBJ);
+	$stmt = $pdo_sipp->prepare($update_query);
+	$stmt->execute();
+	$update_cases = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-    $updated_count = 0;
+	$updated_count = 0;
 
-    foreach ($update_cases as $case) {
-        try {
-            $days_since = (new DateTime())->diff(new DateTime($case->tanggal_putusan))->days;
-            $priority = 'NORMAL';
-            if ($days_since > 21) $priority = 'CRITICAL';
-            elseif ($days_since > 14) $priority = 'KRITIS';
-            elseif ($days_since > 10) $priority = 'PERINGATAN';
+	foreach ($update_cases as $case) {
+		try {
+			$days_since = (new DateTime())->diff(new DateTime($case->tanggal_putusan))->days;
+			$priority = 'NORMAL';
+			if ($days_since > 21) $priority = 'CRITICAL';
+			elseif ($days_since > 14) $priority = 'KRITIS';
+			elseif ($days_since > 10) $priority = 'PERINGATAN';
 
-            // Update perkara_reminder
-            $stmt = $pdo_reminder->prepare("
+			// Update perkara_reminder
+			$stmt = $pdo_reminder->prepare("
                 UPDATE perkara_reminder SET
                     status_reminder = ?,
                     level_prioritas = ?,
@@ -271,10 +267,10 @@ try {
                 WHERE nomor_perkara = ?
             ");
 
-            $stmt->execute([$case->new_status, $priority, $days_since, $case->nomor_perkara]);
+			$stmt->execute([$case->new_status, $priority, $days_since, $case->nomor_perkara]);
 
-            // Update pbt_tracking
-            $stmt = $pdo_reminder->prepare("
+			// Update pbt_tracking
+			$stmt = $pdo_reminder->prepare("
                 UPDATE pbt_tracking SET
                     tanggal_bayar_pbt = ?,
                     tanggal_pemberitahuan_putusan = ?,
@@ -283,31 +279,31 @@ try {
                 WHERE nomor_perkara = ?
             ");
 
-            $pbt_status = 'BELUM_BAYAR';
-            if ($case->new_status == 'SUDAH_PBT_BELUM_BHT') $pbt_status = 'SUDAH_PBT';
-            elseif ($case->new_status == 'SELESAI') $pbt_status = 'SUDAH_PBT';
+			$pbt_status = 'BELUM_BAYAR';
+			if ($case->new_status == 'SUDAH_PBT_BELUM_BHT') $pbt_status = 'SUDAH_PBT';
+			elseif ($case->new_status == 'SELESAI') $pbt_status = 'SUDAH_PBT';
 
-            $stmt->execute([$case->tanggal_bayar_pbt, $case->tanggal_pemberitahuan_putusan, $pbt_status, $case->nomor_perkara]);
+			$stmt->execute([$case->tanggal_bayar_pbt, $case->tanggal_pemberitahuan_putusan, $pbt_status, $case->nomor_perkara]);
 
-            $updated_count++;
-        } catch (Exception $e) {
-            // Log error but continue
-            error_log("Error updating {$case->nomor_perkara}: " . $e->getMessage());
-        }
-    }
+			$updated_count++;
+		} catch (Exception $e) {
+			// Log error but continue
+			error_log("Error updating {$case->nomor_perkara}: " . $e->getMessage());
+		}
+	}
 
-    echo "  ✓ Updated $updated_count existing cases\n";
+	echo "  ✓ Updated $updated_count existing cases\n";
 
-    // 3. Update configuration
-    $stmt = $pdo_reminder->prepare("
+	// 3. Update configuration
+	$stmt = $pdo_reminder->prepare("
         UPDATE reminder_config SET config_value = NOW() WHERE config_key = 'last_sync_timestamp'
     ");
-    $stmt->execute();
+	$stmt->execute();
 
-    // 4. Generate daily statistics
-    echo "\n3. Generating daily statistics...\n";
+	// 4. Generate daily statistics
+	echo "\n3. Generating daily statistics...\n";
 
-    $stats_query = "
+	$stats_query = "
         INSERT INTO reminder_statistics (
             tanggal_laporan, 
             total_perkara_reminder,
@@ -339,23 +335,23 @@ try {
             total_critical = VALUES(total_critical)
     ";
 
-    $pdo_reminder->exec($stats_query);
-    echo "  ✓ Daily statistics updated\n";
+	$pdo_reminder->exec($stats_query);
+	echo "  ✓ Daily statistics updated\n";
 
-    echo "\n==================================\n";
-    echo "AUTO SYNC COMPLETED SUCCESSFULLY\n";
-    echo "New cases synced: $synced_count\n";
-    echo "Existing cases updated: $updated_count\n";
-    echo "Completed at: " . date('Y-m-d H:i:s') . "\n";
-    echo "==================================\n";
+	echo "\n==================================\n";
+	echo "AUTO SYNC COMPLETED SUCCESSFULLY\n";
+	echo "New cases synced: $synced_count\n";
+	echo "Existing cases updated: $updated_count\n";
+	echo "Completed at: " . date('Y-m-d H:i:s') . "\n";
+	echo "==================================\n";
 } catch (Exception $e) {
-    echo "\n=== ERROR ===\n";
-    echo "Auto sync failed: " . $e->getMessage() . "\n";
-    echo "Time: " . date('Y-m-d H:i:s') . "\n";
-    echo "=============\n";
+	echo "\n=== ERROR ===\n";
+	echo "Auto sync failed: " . $e->getMessage() . "\n";
+	echo "Time: " . date('Y-m-d H:i:s') . "\n";
+	echo "=============\n";
 
-    // Log error to file
-    error_log("[" . date('Y-m-d H:i:s') . "] Auto sync error: " . $e->getMessage(), 3, __DIR__ . '/logs/auto_sync_error.log');
+	// Log error to file
+	error_log("[" . date('Y-m-d H:i:s') . "] Auto sync error: " . $e->getMessage(), 3, __DIR__ . '/logs/auto_sync_error.log');
 
-    exit(1);
+	exit(1);
 }

@@ -64,15 +64,15 @@ class Reminder_logging extends CI_Controller
 
         // Get filters from GET/POST
         $filters = array(
-            'status_reminder' => $this->input->get('status') ? $this->input->get('status') : '',
-            'level_prioritas' => $this->input->get('prioritas') ? $this->input->get('prioritas') : '',
-            'jenis_perkara' => $this->input->get('jenis') ? $this->input->get('jenis') : '',
+            'status_reminder' => $this->input->get('status_reminder') ? $this->input->get('status_reminder') : '',
+            'level_prioritas' => $this->input->get('level_prioritas') ? $this->input->get('level_prioritas') : '',
+            'jenis_perkara' => $this->input->get('jenis_perkara') ? $this->input->get('jenis_perkara') : '',
             'tanggal_dari' => $this->input->get('tanggal_dari') ? $this->input->get('tanggal_dari') : '',
             'tanggal_sampai' => $this->input->get('tanggal_sampai') ? $this->input->get('tanggal_sampai') : ''
         );
 
         // Pagination setup
-        $config['base_url'] = base_url('reminder_logging/perkara_list');
+        $config['base_url'] = base_url('index.php/reminder_logging/perkara_list');
         $config['total_rows'] = $this->Reminder_model->count_perkara_reminder($filters);
         $config['per_page'] = 20;
         $config['page_query_string'] = TRUE;
@@ -118,24 +118,38 @@ class Reminder_logging extends CI_Controller
 
     /**
      * Detail perkara reminder
+     * Parameter bisa berupa nomor_perkara (URL encoded) atau ID numerik
      */
-    public function perkara_detail($nomor_perkara)
+    public function perkara_detail($param)
     {
-        $nomor_perkara = urldecode($nomor_perkara);
-
         $data['title'] = 'Detail Perkara Reminder';
-        $data['perkara'] = $this->Reminder_model->get_perkara_by_nomor($nomor_perkara);
+
+        // Cek apakah parameter adalah ID numerik
+        if (is_numeric($param)) {
+            $data['perkara'] = $this->Reminder_model->get_perkara_by_id($param);
+        } else {
+            // Decode URL untuk nomor perkara
+            $nomor_perkara = urldecode($param);
+            $data['perkara'] = $this->Reminder_model->get_perkara_by_nomor($nomor_perkara);
+        }
 
         if (!$data['perkara']) {
             show_404();
             return;
         }
 
-        // Get activity log for this perkara
-        $data['activities'] = $this->get_perkara_activities($nomor_perkara);
+        // Get nomor perkara dari data yang sudah diambil
+        $nomor_perkara = $data['perkara']->nomor_perkara;
 
-        // Get data terbaru dari SIPP untuk comparison
-        $data['sipp_data'] = $this->Menu_baru_model->get_perkara_detail_by_nomor($nomor_perkara);
+        // Get activity log for this perkara (jika method ada)
+        if (method_exists($this, 'get_perkara_activities')) {
+            $data['activities'] = $this->get_perkara_activities($nomor_perkara);
+        } else {
+            $data['activities'] = array(); // Empty array untuk sementara
+        }
+
+        // Set data SIPP kosong untuk sementara (akan diimplementasi nanti)
+        $data['sipp_data'] = null;
 
         $this->load->view('reminder_logging/perkara_detail', $data);
     }
@@ -167,8 +181,10 @@ class Reminder_logging extends CI_Controller
             header('Content-Type: application/json');
             echo json_encode($response);
         } else {
-            $this->session->set_flashdata('success', $response['message']);
-            redirect('reminder_logging');
+            echo "<h2>Manual Sync Result</h2>";
+            echo "<p>Success: " . ($response['success'] ? 'Yes' : 'No') . "</p>";
+            echo "<p>Message: " . htmlspecialchars($response['message']) . "</p>";
+            echo "<p><a href='" . base_url('index.php/reminder_logging') . "'>← Back to Dashboard</a></p>";
         }
     }
 
