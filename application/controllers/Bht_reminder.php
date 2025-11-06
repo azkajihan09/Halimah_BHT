@@ -55,25 +55,35 @@ class Bht_reminder extends CI_Controller
 	private function get_urgent_reminders($tanggal, $tahun_filter = '2024')
 	{
 		// Get cases that are overdue or need immediate attention
+		// Menggunakan standar level peringatan yang konsisten
 		$urgent = array();
 
-		// Cases without PBT after more than 7 days
-		$overdue_pbt = $this->Menu_baru_model->get_overdue_pbt_cases(7, $tahun_filter);
+		// Cases without PBT after more than 10 days (PERINGATAN level)
+		// Sesuai dengan sistem level peringatan: >10 hari = PERINGATAN+KRITIS+CRITICAL
+		$overdue_pbt = $this->Menu_baru_model->get_overdue_pbt_cases(10, $tahun_filter);
 		foreach ($overdue_pbt as $case) {
+			$priority = 'medium';
+			if ($case->hari_tertunda > 21) $priority = 'critical';
+			elseif ($case->hari_tertunda > 14) $priority = 'high';
+
 			$urgent[] = array(
 				'type' => 'overdue_pbt',
-				'priority' => 'high',
+				'priority' => $priority,
 				'message' => 'Perkara ' . $case->nomor_perkara . ' belum PBT selama ' . $case->hari_tertunda . ' hari',
 				'data' => $case
 			);
 		}
 
-		// Cases with PBT but no BHT after more than 14 days
+		// Cases with PBT but no BHT after more than 14 days (KRITIS level)
 		$overdue_bht = $this->Menu_baru_model->get_overdue_bht_cases(14, $tahun_filter);
 		foreach ($overdue_bht as $case) {
+			$priority = 'medium';
+			if ($case->hari_tertunda > 21) $priority = 'critical';
+			elseif ($case->hari_tertunda > 14) $priority = 'high';
+
 			$urgent[] = array(
 				'type' => 'overdue_bht',
-				'priority' => 'medium',
+				'priority' => $priority,
 				'message' => 'Perkara ' . $case->nomor_perkara . ' belum BHT selama ' . $case->hari_tertunda . ' hari setelah PBT',
 				'data' => $case
 			);

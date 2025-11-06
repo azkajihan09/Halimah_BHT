@@ -450,22 +450,35 @@ class Menu_baru_model extends CI_Model
 
 	public function get_pengingat_urgent($tanggal, $jenis = 'semua', $tahun_filter = '2025')
 	{
+		// Count perkara yang memerlukan peringatan urgent (>10 hari sejak putusan)
+		// berdasarkan sistem level peringatan yang sudah established
+
 		$this->db->select('COUNT(*) as total');
 		$this->db->from('perkara p');
-		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'left');
-		$this->db->join('perkara_jadwal_sidang pjs', 'p.perkara_id = pjs.perkara_id', 'left');
-		$this->db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
+		$this->db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
+		$this->db->join('perkara_biaya pb', 'p.perkara_id = pb.perkara_id AND pb.kategori_id = 6', 'left');
+		$this->db->join('(SELECT perkara_id, MIN(tanggal_pemberitahuan_putusan) as tanggal_pbt 
+		                  FROM perkara_putusan_pemberitahuan_putusan 
+		                  WHERE pihak = "2" 
+		                  GROUP BY perkara_id) pppp_check', 'p.perkara_id = pppp_check.perkara_id', 'left');
+
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
-		$this->db->where('pjs.tanggal_sidang IS NULL');
-		$this->db->where('pp.tanggal_bht IS NULL');
-		$this->db->where('DATEDIFF(CURDATE(), pjs.tanggal_sidang) > 10');
+
+		// Kriteria URGENT: perkara yang sudah >10 hari sejak putusan (PERINGATAN+KRITIS+CRITICAL)
+		$this->db->where('DATEDIFF(CURDATE(), pp.tanggal_putusan) > 10');
+
+		// Dan belum selesai proses PBT-nya
+		$this->db->where('(
+		    (pb.tanggal_transaksi IS NOT NULL AND pppp_check.tanggal_pbt IS NULL) OR
+		    (pb.tanggal_transaksi IS NULL AND pppp_check.tanggal_pbt IS NULL)
+		)', NULL, FALSE);
 
 		// Filter untuk tidak menampilkan perkara yang dicabut
 		$this->_filter_perkara_dicabut();
 
 		// Add year filter
 		if ($tahun_filter) {
-			$this->db->where('YEAR(pp.tanggal_putusan) >=', $tahun_filter);
+			$this->db->where('YEAR(pp.tanggal_putusan)', $tahun_filter);
 		}
 
 		// Add case type filter
@@ -528,7 +541,7 @@ class Menu_baru_model extends CI_Model
 	/**
 	 * 4. Get perkara putus tanpa PBT (LOGIKA BARU - Berdasarkan Biaya PBT)
 	 */
-	public function get_perkara_putus_tanpa_pbt($tanggal)
+	public function get_perkara_putus_tanpa_pbt($tanggal, $jenis = null, $tahun_filter = null)
 	{
 		$this->db->select("
             p.nomor_perkara,
@@ -576,6 +589,16 @@ class Menu_baru_model extends CI_Model
 		                  GROUP BY perkara_id) pj', 'p.perkara_id = pj.perkara_id', 'left');
 
 		$this->db->where('pp.tanggal_putusan IS NOT NULL');
+
+		// Filter berdasarkan tahun jika diberikan
+		if ($tahun_filter) {
+			$this->db->where('YEAR(pp.tanggal_putusan)', $tahun_filter);
+		}
+
+		// Filter berdasarkan jenis perkara jika diberikan
+		if ($jenis && $jenis !== 'semua') {
+			$this->db->where('p.jenis_perkara_nama', $jenis);
+		}
 
 		// Filter berdasarkan bulan tanggal putusan untuk meningkatkan performa
 		if ($tanggal) {
