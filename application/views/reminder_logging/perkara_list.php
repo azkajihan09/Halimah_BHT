@@ -20,28 +20,51 @@
             font-size: 0.8em;
             padding: 0.25rem 0.5rem;
         }
-        .priority-CRITICAL { background-color: #dc3545 !important; }
-        .priority-KRITIS { background-color: #fd7e14 !important; }
-        .priority-PERINGATAN { background-color: #ffc107 !important; color: #000; }
-        .priority-NORMAL { background-color: #28a745 !important; }
-        
+
+        .priority-CRITICAL {
+            background-color: #dc3545 !important;
+        }
+
+        .priority-KRITIS {
+            background-color: #fd7e14 !important;
+        }
+
+        .priority-PERINGATAN {
+            background-color: #ffc107 !important;
+            color: #000;
+        }
+
+        .priority-NORMAL {
+            background-color: #28a745 !important;
+        }
+
         .status-badge {
             font-size: 0.8em;
             padding: 0.25rem 0.5rem;
         }
-        .status-BELUM_PBT { background-color: #dc3545 !important; }
-        .status-SUDAH_PBT_BELUM_BHT { background-color: #ffc107 !important; color: #000; }
-        .status-SELESAI { background-color: #28a745 !important; }
-        
+
+        .status-BELUM_PBT {
+            background-color: #dc3545 !important;
+        }
+
+        .status-SUDAH_PBT_BELUM_BHT {
+            background-color: #ffc107 !important;
+            color: #000;
+        }
+
+        .status-SELESAI {
+            background-color: #28a745 !important;
+        }
+
         .table-responsive {
             font-size: 0.9em;
         }
-        
+
         .btn-sm {
             padding: 0.25rem 0.5rem;
             font-size: 0.8rem;
         }
-        
+
         .filters-section {
             background-color: #f8f9fa;
             padding: 1rem;
@@ -76,7 +99,7 @@
             <!-- Main content -->
             <section class="content">
                 <div class="container-fluid">
-                    
+
                     <!-- Summary Cards -->
                     <div class="row mb-3">
                         <div class="col-md-3">
@@ -164,9 +187,9 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Jenis Perkara:</label>
-                                            <input type="text" name="jenis_perkara" class="form-control" 
-                                                   placeholder="Cari jenis perkara..." 
-                                                   value="<?= $this->input->get('jenis_perkara') ?>">
+                                            <input type="text" name="jenis_perkara" class="form-control"
+                                                placeholder="Cari jenis perkara..."
+                                                value="<?= $this->input->get('jenis_perkara') ?>">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
@@ -218,12 +241,13 @@
                                     </thead>
                                     <tbody>
                                         <?php if (!empty($perkara_list) && is_array($perkara_list)): ?>
-                                            <?php $no = 1; foreach ($perkara_list as $perkara): ?>
+                                            <?php $no = 1;
+                                            foreach ($perkara_list as $perkara): ?>
                                                 <tr>
                                                     <td><?= $no++ ?></td>
                                                     <td>
-                                                        <a href="<?= base_url('reminder_logging/perkara_detail/' . urlencode($perkara->nomor_perkara)) ?>" 
-                                                           class="text-primary">
+                                                        <a href="<?= base_url('reminder_logging/perkara_detail/' . urlencode($perkara->nomor_perkara)) ?>"
+                                                            class="text-primary">
                                                             <?= htmlspecialchars($perkara->nomor_perkara) ?>
                                                         </a>
                                                     </td>
@@ -257,12 +281,12 @@
                                                     </td>
                                                     <td>
                                                         <div class="btn-group">
-                                                            <a href="<?= base_url('reminder_logging/perkara_detail/' . urlencode($perkara->nomor_perkara)) ?>" 
-                                                               class="btn btn-info btn-sm" title="Detail">
+                                                            <a href="<?= base_url('reminder_logging/perkara_detail/' . urlencode($perkara->nomor_perkara)) ?>"
+                                                                class="btn btn-info btn-sm" title="Detail">
                                                                 <i class="fas fa-eye"></i>
                                                             </a>
-                                                            <a href="<?= base_url('reminder_logging/perkara_edit/' . $perkara->id) ?>" 
-                                                               class="btn btn-warning btn-sm" title="Edit">
+                                                            <a href="<?= base_url('reminder_logging/perkara_edit/' . $perkara->id) ?>"
+                                                                class="btn btn-warning btn-sm" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
                                                         </div>
@@ -273,8 +297,8 @@
                                             <tr>
                                                 <td colspan="9" class="text-center">
                                                     <div class="alert alert-info">
-                                                        <i class="fas fa-info-circle"></i> 
-                                                        Tidak ada data perkara reminder. 
+                                                        <i class="fas fa-info-circle"></i>
+                                                        Tidak ada data perkara reminder.
                                                         <a href="<?= base_url('reminder_logging/sync_manual') ?>" class="btn btn-primary btn-sm ml-2">
                                                             <i class="fas fa-sync"></i> Sync Sekarang
                                                         </a>
@@ -306,7 +330,7 @@
     <script src="<?= base_url('assets/plugins/jquery/jquery.min.js') ?>"></script>
     <script src="<?= base_url('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
     <script src="<?= base_url('assets/dist/js/adminlte.min.js') ?>"></script>
-    
+
     <!-- DataTables Scripts -->
     <script src="<?= base_url('assets/plugins/datatables/jquery.dataTables.min.js') ?>"></script>
     <script src="<?= base_url('assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>"></script>
@@ -317,7 +341,7 @@
         $(document).ready(function() {
             // Initialize tooltips
             $('[title]').tooltip();
-            
+
             // Auto-refresh every 5 minutes
             setTimeout(function() {
                 location.reload();
@@ -325,4 +349,5 @@
         });
     </script>
 </body>
+
 </html>
