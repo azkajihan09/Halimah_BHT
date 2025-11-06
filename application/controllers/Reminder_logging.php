@@ -107,6 +107,11 @@ class Reminder_logging extends CI_Controller
         $data['pagination'] = $this->pagination->create_links();
         $data['filters'] = $filters;
         $data['total_rows'] = $config['total_rows'];
+        $data['total_records'] = $config['total_rows'];
+
+        // Get summary stats for the cards
+        $stats = $this->Reminder_model->get_dashboard_stats();
+        $data['summary'] = $stats['summary'];
 
         $this->load->view('reminder_logging/perkara_list', $data);
     }
