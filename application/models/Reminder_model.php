@@ -357,9 +357,26 @@ class Reminder_model extends CI_Model
      */
     public function update_from_sipp($nomor_perkara = null)
     {
-        // Query untuk update data yang sudah ada
-        $where_clause = $nomor_perkara ? "AND p.nomor_perkara = ?" : "";
-        $params = $nomor_perkara ? array($nomor_perkara) : array();
+        // Approach yang lebih sederhana: get list perkara dari reminder DB dulu
+        $reminder_where = $nomor_perkara ? "nomor_perkara = ?" : "status_reminder != 'SELESAI'";
+        $reminder_params = $nomor_perkara ? array($nomor_perkara) : array();
+
+        $reminder_perkara = $this->reminder_db->query(
+            "SELECT nomor_perkara FROM perkara_reminder WHERE {$reminder_where} LIMIT 50",
+            $reminder_params
+        )->result();
+
+        if (empty($reminder_perkara)) {
+            return 0;
+        }
+
+        // Build IN clause untuk query SIPP
+        $nomor_list = array();
+        foreach ($reminder_perkara as $row) {
+            $nomor_list[] = $row->nomor_perkara;
+        }
+
+        $in_placeholders = str_repeat('?,', count($nomor_list) - 1) . '?';
 
         $query = "
             SELECT 
@@ -384,14 +401,10 @@ class Reminder_model extends CI_Model
                 WHERE pihak = '2' 
                 GROUP BY perkara_id
             ) pppp_check ON p.perkara_id = pppp_check.perkara_id
-            WHERE p.nomor_perkara IN (
-                SELECT nomor_perkara FROM bht_reminder_system.perkara_reminder 
-                WHERE status_reminder != 'SELESAI'
-            )
-            {$where_clause}
+            WHERE p.nomor_perkara IN ({$in_placeholders})
         ";
 
-        $sipp_updates = $this->sipp_db->query($query, $params)->result();
+        $sipp_updates = $this->sipp_db->query($query, $nomor_list)->result();
 
         $updated_count = 0;
 

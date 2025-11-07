@@ -193,25 +193,37 @@ class Reminder_logging extends CI_Controller
      */
     public function update_from_sipp()
     {
-        $nomor_perkara = $this->input->post('nomor_perkara');
+        try {
+            $nomor_perkara = $this->input->post('nomor_perkara');
 
-        $updated_count = $this->Reminder_model->update_from_sipp($nomor_perkara);
+            $updated_count = $this->Reminder_model->update_from_sipp($nomor_perkara);
 
-        $message = $nomor_perkara ?
-            "Data perkara {$nomor_perkara} berhasil diupdate dari SIPP" :
-            "Berhasil update {$updated_count} perkara dari SIPP";
+            $message = $nomor_perkara ?
+                "Data perkara {$nomor_perkara} berhasil diupdate dari SIPP" :
+                "Berhasil update {$updated_count} perkara dari SIPP";
 
-        $response = array(
-            'success' => true,
-            'message' => $message,
-            'updated_count' => $updated_count
-        );
+            $response = array(
+                'success' => true,
+                'message' => $message,
+                'updated_count' => $updated_count
+            );
+        } catch (Exception $e) {
+            $response = array(
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+                'error_detail' => $e->getFile() . ':' . $e->getLine()
+            );
+        }
 
         if ($this->input->is_ajax_request()) {
             header('Content-Type: application/json');
             echo json_encode($response);
         } else {
-            $this->session->set_flashdata('success', $message);
+            if ($response['success']) {
+                $this->session->set_flashdata('success', $response['message']);
+            } else {
+                $this->session->set_flashdata('error', $response['message']);
+            }
             redirect('reminder_logging/perkara_list');
         }
     }
@@ -486,6 +498,10 @@ class Reminder_logging extends CI_Controller
         // Get current configs
         $data['title'] = 'Konfigurasi Sistem Reminder';
         $data['config'] = array();
+
+        // Pass flash messages as data
+        $data['flash_success'] = $this->session->flashdata('success');
+        $data['flash_error'] = $this->session->flashdata('error');
 
         $config_keys = array(
             'auto_sync_enabled',

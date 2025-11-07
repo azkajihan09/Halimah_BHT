@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Config Page - Explanation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .explanation {
+            background: #f0f8ff;
+            padding: 15px;
+            border-left: 4px solid #0066cc;
+            margin: 10px 0;
+        }
+
+        .feature {
+            background: #f9f9f9;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+        }
+
+        .code {
+            background: #f5f5f5;
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-family: monospace;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+
+        .link {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .config-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        .config-table th,
+        .config-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .config-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>📋 Penjelasan Halaman Config - Sistem Reminder BHT</h1>
+
+    <div class="explanation">
+        <h2>🎯 Fungsi URL: <code>http://localhost/Halimah_BHT/index.php/reminder_logging/config</code></h2>
+        <p><strong>Halaman Konfigurasi Sistem Reminder BHT</strong> - Untuk mengatur parameter operasional sistem
+            reminder agar sesuai dengan kebutuhan pengadilan.</p>
+    </div>
+
+    <div class="explanation">
+        <h3>⚙️ Parameter yang Dapat Dikonfigurasi:</h3>
+
+        <div class="feature">
+            <h4>1. 🔄 Pengaturan Sinkronisasi</h4>
+            <table class="config-table">
+                <tr>
+                    <th>Parameter</th>
+                    <th>Fungsi</th>
+                    <th>Default</th>
+                </tr>
+                <tr>
+                    <td><strong>Auto Sync Enabled</strong></td>
+                    <td>Aktifkan/nonaktifkan sinkronisasi otomatis dari SIPP</td>
+                    <td>Disabled</td>
+                </tr>
+                <tr>
+                    <td><strong>Sync Interval Minutes</strong></td>
+                    <td>Interval waktu sinkronisasi otomatis (5-1440 menit)</td>
+                    <td>60 menit</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="feature">
+            <h4>2. ⚠️ Threshold Level Prioritas</h4>
+            <table class="config-table">
+                <tr>
+                    <th>Level</th>
+                    <th>Parameter</th>
+                    <th>Default</th>
+                    <th>Fungsi</th>
+                </tr>
+                <tr>
+                    <td><span style="background: #dc3545; color: white; padding: 2px 6px;">CRITICAL</span></td>
+                    <td>Critical Days Threshold</td>
+                    <td>21 hari</td>
+                    <td>Perkara ≥ 21 hari sejak putusan</td>
+                </tr>
+                <tr>
+                    <td><span style="background: #fd7e14; color: white; padding: 2px 6px;">KRITIS</span></td>
+                    <td>Kritis Days Threshold</td>
+                    <td>14 hari</td>
+                    <td>Perkara ≥ 14 hari sejak putusan</td>
+                </tr>
+                <tr>
+                    <td><span style="background: #ffc107; color: black; padding: 2px 6px;">PERINGATAN</span></td>
+                    <td>Peringatan Days Threshold</td>
+                    <td>7 hari</td>
+                    <td>Perkara ≥ 7 hari sejak putusan</td>
+                </tr>
+                <tr>
+                    <td><span style="background: #28a745; color: white; padding: 2px 6px;">NORMAL</span></td>
+                    <td>-</td>
+                    <td>
+                        < 7 hari</td>
+                    <td>Perkara < 7 hari sejak putusan</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="feature">
+            <h4>3. 📧 Notifikasi Email</h4>
+            <table class="config-table">
+                <tr>
+                    <th>Parameter</th>
+                    <th>Fungsi</th>
+                    <th>Default</th>
+                </tr>
+                <tr>
+                    <td><strong>Enable Email Notification</strong></td>
+                    <td>Aktifkan notifikasi email untuk reminder penting</td>
+                    <td>Disabled</td>
+                </tr>
+                <tr>
+                    <td><strong>Admin Email</strong></td>
+                    <td>Alamat email admin untuk menerima notifikasi</td>
+                    <td>Kosong</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>🔧 Cara Kerja Sistem:</h3>
+        <ol>
+            <li><strong>Priority Calculation:</strong> Sistem menghitung hari sejak putusan</li>
+            <li><strong>Threshold Matching:</strong> Sistem membandingkan dengan threshold yang dikonfigurasi</li>
+            <li><strong>Status Assignment:</strong> Sistem memberikan level prioritas sesuai threshold</li>
+            <li><strong>Auto Sync:</strong> Jika diaktifkan, sistem akan sync otomatis sesuai interval</li>
+            <li><strong>Email Alert:</strong> Jika diaktifkan, sistem kirim email untuk priority tinggi</li>
+        </ol>
+    </div>
+
+    <div class="explanation">
+        <h3>📊 Logika Priority:</h3>
+        <div class="code">
+            if (hari_sejak_putusan >= critical_threshold) {
+            priority = "CRITICAL";
+            } else if (hari_sejak_putusan >= kritis_threshold) {
+            priority = "KRITIS";
+            } else if (hari_sejak_putusan >= peringatan_threshold) {
+            priority = "PERINGATAN";
+            } else {
+            priority = "NORMAL";
+            }
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>🔗 Links untuk Testing:</h3>
+        <ul>
+            <li><a href="http://localhost/Halimah_BHT/index.php/reminder_logging/config" class="link">Halaman
+                    Konfigurasi</a></li>
+            <li><a href="http://localhost/Halimah_BHT/index.php/reminder_logging" class="link">Dashboard Reminder</a>
+            </li>
+            <li><a href="http://localhost/Halimah_BHT/index.php/reminder_logging/perkara_list" class="link">Daftar
+                    Perkara</a></li>
+        </ul>
+    </div>
+
+    <div class="explanation">
+        <h3>💡 Kegunaan untuk Pengadilan:</h3>
+        <ul>
+            <li><strong>Fleksibilitas:</strong> Sesuaikan threshold sesuai kebijakan pengadilan</li>
+            <li><strong>Automasi:</strong> Atur sinkronisasi otomatis untuk efisiensi</li>
+            <li><strong>Monitoring:</strong> Notifikasi email untuk kasus urgent</li>
+            <li><strong>Customization:</strong> Adaptasi sistem sesuai workflow pengadilan</li>
+        </ul>
+    </div>
+
+    <div class="success">
+        ✅ Status: Halaman Konfigurasi berhasil dibuat dan dapat diakses!
+    </div>
+
+</body>
+
+</html>

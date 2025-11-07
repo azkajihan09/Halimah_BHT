@@ -122,6 +122,12 @@
 							</a>
 						</li>
 						<li class="nav-item">
+							<a href="<?= base_url('index.php/reminder_logging/config') ?>" class="nav-link">
+								<i class="nav-icon fas fa-cogs"></i>
+								<p>Konfigurasi</p>
+							</a>
+						</li>
+						<li class="nav-item">
 							<a href="<?= base_url('index.php/reminder_logging/export_excel') ?>" class="nav-link">
 								<i class="nav-icon fas fa-file-excel"></i>
 								<p>Export Excel</p>

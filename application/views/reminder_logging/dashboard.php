@@ -346,7 +346,7 @@
 															</td>
 															<td><?= $alert->status_reminder ?></td>
 															<td>
-																<a href="<?= base_url('reminder_logging/perkara_detail/' . urlencode($alert->nomor_perkara)) ?>"
+																<a href="<?= base_url('index.php/reminder_logging/perkara_detail/' . urlencode($alert->nomor_perkara)) ?>"
 																	class="btn btn-sm btn-primary">
 																	<i class="fas fa-eye"></i> Detail
 																</a>
@@ -357,7 +357,7 @@
 											</table>
 										</div>
 										<div class="mt-3">
-											<a href="<?= base_url('reminder_logging/perkara_list?prioritas=CRITICAL') ?>"
+											<a href="<?= base_url('index.php/reminder_logging/perkara_list?prioritas=CRITICAL') ?>"
 												class="btn btn-danger">
 												<i class="fas fa-list"></i> Lihat Semua Perkara Critical
 											</a>
