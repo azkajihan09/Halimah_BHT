@@ -82,3 +82,26 @@ $route['export/bht-putus-4/excel'] = 'bht_putus_4/export_excel';
 // Route untuk Testing (hanya untuk development)
 $route['test/bht'] = 'bht_reminder_test/index';
 $route['test/bht/template'] = 'bht_reminder_test/test_with_template';
+
+// ========== ROUTES UNTUK SISTEM NOTELEN (BERKAS MASUK) ==========
+
+// Route untuk Notelen System  
+$route['notelen'] = 'notelen/index';
+$route['notelen/berkas-masuk'] = 'notelen/index';
+$route['notelen/(:any)'] = 'notelen/$1';
+
+// Route untuk API Notelen
+$route['api/notelen/berkas'] = 'notelen/ajax_get_berkas';
+$route['api/notelen/berkas/add'] = 'notelen/ajax_insert_berkas';
+$route['api/notelen/berkas/update-status'] = 'notelen/ajax_update_status';
+$route['api/notelen/inventaris/add'] = 'notelen/ajax_add_inventaris';
+$route['api/notelen/inventaris/delete'] = 'notelen/ajax_delete_inventaris';
+$route['api/notelen/master-barang'] = 'notelen/ajax_get_master_barang';
+$route['api/notelen/master-barang/add'] = 'notelen/ajax_add_master_barang';
+$route['api/notelen/sync-sipp'] = 'notelen/ajax_sync_sipp';
+$route['api/notelen/stats'] = 'notelen/ajax_get_stats';
+
+// Route untuk Export Notelen
+$route['notelen/export/(:any)'] = 'notelen/export';
+$route['export/notelen/excel'] = 'notelen/export?format=excel';
+$route['export/notelen/pdf'] = 'notelen/export?format=pdf';
