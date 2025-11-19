@@ -331,7 +331,7 @@ class Notelen_model extends CI_Model
             INNER JOIN perkara_putusan pp ON p.perkara_id = pp.perkara_id
             LEFT JOIN perkara_penetapan pen ON p.perkara_id = pen.perkara_id
             WHERE pp.tanggal_putusan IS NOT NULL
-            AND YEAR(pp.tanggal_putusan) >= 2023
+            AND YEAR(pp.tanggal_putusan) >= 2024
         ";
 
 		if (!empty($search)) {

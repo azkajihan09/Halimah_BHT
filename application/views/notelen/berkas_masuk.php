@@ -424,7 +424,7 @@
 				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal">&times;</button>
 					<h4 class="modal-title">
-						<i class="fa fa-plus"></i> Tambah Berkas Masuk Baru
+						<i class="fa fa-plus"></i> Tambah Berkas Masuk Perkara
 					</h4>
 				</div>
 				<form id="newBerkasForm" class="popup-form">
