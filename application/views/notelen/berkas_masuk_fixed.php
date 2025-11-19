@@ -361,43 +361,38 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label>Nomor Perkara *</label>
-                            <input type="text" name="nomor_perkara" class="form-control"
-                                placeholder="Contoh: 123/Pdt.G/2024/PA.Smg" required>
+                            <select name="nomor_perkara" id="nomorPerkaraSelect" class="form-control" required>
+                                <option value="">Pilih Nomor Perkara...</option>
+                            </select>
+                            <small class="help-block">Pilih dari daftar perkara yang sudah putus</small>
                         </div>
 
                         <div class="form-group">
                             <label>Tanggal Putusan *</label>
-                            <input type="date" name="tanggal_putusan" class="form-control" required>
+                            <input type="date" name="tanggal_putusan" id="tanggalPutusan" class="form-control" readonly required>
+                            <small class="help-block">Otomatis terisi dari data SIPP</small>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Jenis Perkara</label>
-                                    <select name="jenis_perkara" class="form-control">
-                                        <option value="">Pilih Jenis Perkara</option>
-                                        <option value="Cerai Gugat">Cerai Gugat</option>
-                                        <option value="Cerai Talak">Cerai Talak</option>
-                                        <option value="Isbat Nikah">Isbat Nikah</option>
-                                        <option value="Waris">Waris</option>
-                                        <option value="Wakaf">Wakaf</option>
-                                        <option value="Ekonomi Syariah">Ekonomi Syariah</option>
-                                        <option value="Lainnya">Lainnya</option>
-                                    </select>
+                                    <input type="text" name="jenis_perkara" id="jenisPerkara" class="form-control" readonly>
+                                    <small class="help-block">Otomatis terisi dari data SIPP</small>
                                 </div>
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label>Majelis Hakim</label>
-                            <input type="text" name="majelis_hakim" class="form-control"
-                                placeholder="Nama majelis hakim">
+                            <input type="text" name="majelis_hakim" id="majelisHakim" class="form-control" readonly>
+                            <small class="help-block">Otomatis terisi dari data SIPP</small>
                         </div>
 
                         <div class="form-group">
                             <label>Panitera Pengganti</label>
-                            <input type="text" name="panitera_pengganti" class="form-control"
-                                placeholder="Nama panitera pengganti">
+                            <input type="text" name="panitera_pengganti" id="paniteraPengganti" class="form-control" readonly>
+                            <small class="help-block">Otomatis terisi dari data SIPP</small>
                         </div>
 
                         <div class="form-group">
@@ -430,7 +425,60 @@
         function openNewBerkasModal() {
             $('#newBerkasModal').modal('show');
             $('#newBerkasForm')[0].reset();
+
+            // Load dropdown perkara
+            loadPerkaraDropdown();
         }
+
+        // Load data perkara untuk dropdown
+        function loadPerkaraDropdown() {
+            $.ajax({
+                url: '<?= base_url("notelen/ajax_get_perkara_dropdown") ?>',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        var select = $('#nomorPerkaraSelect');
+                        select.empty().append('<option value="">Pilih Nomor Perkara...</option>');
+
+                        $.each(response.data, function(index, item) {
+                            var option = $('<option></option>')
+                                .attr('value', item.nomor_perkara)
+                                .text(item.nomor_perkara + ' - ' + item.jenis_perkara)
+                                .data('detail', item);
+                            select.append(option);
+                        });
+                    }
+                },
+                error: function() {
+                    console.log('Error loading perkara dropdown');
+                }
+            });
+        }
+
+        // Auto-fill ketika nomor perkara dipilih
+        $(document).on('change', '#nomorPerkaraSelect', function() {
+            var selectedOption = $(this).find('option:selected');
+            var detail = selectedOption.data('detail');
+
+            if (detail) {
+                // Format tanggal dari YYYY-MM-DD
+                var tanggal = detail.tanggal_putusan;
+                if (tanggal) {
+                    $('#tanggalPutusan').val(tanggal);
+                }
+
+                $('#jenisPerkara').val(detail.jenis_perkara || '-');
+                $('#majelisHakim').val(detail.majelis_hakim || '-');
+                $('#paniteraPengganti').val(detail.panitera_pengganti || '-');
+            } else {
+                // Clear fields if no selection
+                $('#tanggalPutusan').val('');
+                $('#jenisPerkara').val('');
+                $('#majelisHakim').val('');
+                $('#paniteraPengganti').val('');
+            }
+        });
 
         $('#newBerkasForm').submit(function(e) {
             e.preventDefault();

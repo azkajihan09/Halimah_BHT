@@ -529,4 +529,63 @@ class Notelen extends CI_Controller
         $writer = PHPExcel_IOFactory::createWriter($excel, 'Excel5');
         $writer->save('php://output');
     }
+
+    /**
+     * AJAX: Get perkara putus for dropdown
+     */
+    public function ajax_get_perkara_dropdown()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        try {
+            $search = $this->input->get('search') ?: '';
+            $perkara_list = $this->notelen->get_perkara_putus_dropdown($search, 50);
+
+            $response = array(
+                'success' => true,
+                'data' => $perkara_list
+            );
+        } catch (Exception $e) {
+            $response = array(
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            );
+        }
+
+        echo json_encode($response);
+    }
+
+    /**
+     * AJAX: Get perkara detail by nomor
+     */
+    public function ajax_get_perkara_detail()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        try {
+            $nomor_perkara = $this->input->post('nomor_perkara');
+
+            if (empty($nomor_perkara)) {
+                throw new Exception('Nomor perkara tidak boleh kosong');
+            }
+
+            $detail = $this->notelen->get_perkara_detail_by_nomor($nomor_perkara);
+
+            if (!$detail) {
+                throw new Exception('Data perkara tidak ditemukan');
+            }
+
+            $response = array(
+                'success' => true,
+                'data' => $detail
+            );
+        } catch (Exception $e) {
+            $response = array(
+                'success' => false,
+                'message' => $e->getMessage()
+            );
+        }
+
+        echo json_encode($response);
+    }
 }
