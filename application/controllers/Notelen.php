@@ -539,7 +539,7 @@ class Notelen extends CI_Controller
 
         try {
             $search = $this->input->get('search') ?: '';
-            $perkara_list = $this->notelen->get_perkara_putus_dropdown($search, 50);
+            $perkara_list = $this->notelen->get_perkara_putus_dropdown($search, 1000);
 
             $response = array(
                 'success' => true,

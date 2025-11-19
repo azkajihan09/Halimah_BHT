@@ -132,8 +132,8 @@
         <!-- Header -->
         <div class="row">
             <div class="col-md-12">
-                <h1><i class="fa fa-folder-open"></i> <?= isset($page_title) ? $page_title : 'Berkas Masuk Notelen' ?></h1>
-                <p class="text-muted">Sistem inventaris berkas perkara putus</p>
+                <h1><i class="fa fa-folder-open"></i> <?= isset($page_title) ? $page_title : 'Berkas Masuk Notelen Harian' ?></h1>
+                <p class="text-muted">Sistem inventaris berkas perkara putus harian</p>
                 <hr>
             </div>
         </div>
@@ -224,7 +224,7 @@
                 <div class="panel panel-default">
                     <div class="panel-header" style="padding: 15px;">
                         <h4>
-                            <i class="fa fa-list"></i> Daftar Berkas Masuk Notelen
+                            <i class="fa fa-list"></i> Daftar Berkas Masuk Notelen Harian
                             <small>(<?= isset($total_berkas) ? number_format($total_berkas) : 0 ?> berkas)</small>
                             <div class="pull-right">
                                 <a href="<?= base_url('notelen/export?format=excel') ?>" class="btn btn-success btn-sm">
@@ -354,7 +354,7 @@
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">
-                        <i class="fa fa-plus"></i> Tambah Berkas Masuk Baru
+                        <i class="fa fa-plus"></i> Tambah Berkas Masuk Perkara
                     </h4>
                 </div>
                 <form id="newBerkasForm">

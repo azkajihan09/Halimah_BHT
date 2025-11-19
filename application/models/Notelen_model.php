@@ -315,9 +315,9 @@ class Notelen_model extends CI_Model
     // ===============================================
 
 	/**
-	 * Get perkara putus untuk dropdown
+	 * Get perkara putus untuk dropdown - SEMUA data dari SIPP
 	 */
-	public function get_perkara_putus_dropdown($search = '', $limit = 500)
+	public function get_perkara_putus_dropdown($search = '', $limit = 1000)
 	{
 		$query = "
             SELECT 
@@ -388,14 +388,13 @@ class Notelen_model extends CI_Model
             INNER JOIN perkara_putusan pp ON p.perkara_id = pp.perkara_id
             LEFT JOIN perkara_penetapan pen ON p.perkara_id = pen.perkara_id
             WHERE pp.tanggal_putusan IS NOT NULL
-            AND YEAR(pp.tanggal_putusan) >= 2024
+            AND YEAR(pp.tanggal_putusan) >= 2023
             AND p.nomor_perkara NOT IN (
                 SELECT nomor_perkara FROM notelen_system.berkas_masuk
             )
             ORDER BY pp.tanggal_putusan DESC
             LIMIT ?
         ";
-
 		$sipp_data = $this->sipp_db->query($query, array((int)$limit))->result();
 
 		$synced_count = 0;
