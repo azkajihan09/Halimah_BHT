@@ -190,6 +190,67 @@ class Notelen extends CI_Controller
 		}
 	}
 
+	/**
+	 * Berkas Template - Menggunakan template system
+	 */
+	public function berkas_template()
+	{
+		try {
+			// Get filters from session or request
+			$filters = array(
+				'status_berkas' => $this->input->get('status') ?: $this->session->userdata('notelen_filter_status') ?: '',
+				'nomor_perkara' => $this->input->get('nomor') ?: $this->session->userdata('notelen_filter_nomor') ?: '',
+				'tanggal_dari' => $this->input->get('dari') ?: $this->session->userdata('notelen_filter_dari') ?: '',
+				'tanggal_sampai' => $this->input->get('sampai') ?: $this->session->userdata('notelen_filter_sampai') ?: ''
+			);
+
+			// Save filters to session
+			$this->session->set_userdata('notelen_filter_status', $filters['status_berkas']);
+			$this->session->set_userdata('notelen_filter_nomor', $filters['nomor_perkara']);
+			$this->session->set_userdata('notelen_filter_dari', $filters['tanggal_dari']);
+			$this->session->set_userdata('notelen_filter_sampai', $filters['tanggal_sampai']);
+
+			// Pagination
+			$page = $this->input->get('page') ?: 1;
+			$limit = 20;
+			$offset = ($page - 1) * $limit;
+
+			// Get data
+			$berkas_list = $this->notelen->get_berkas_masuk($limit, $offset, $filters);
+			$total_berkas = $this->notelen->count_berkas_masuk($filters);
+
+			// Dashboard stats
+			$stats = $this->notelen->get_dashboard_stats();
+
+			// Master barang untuk popup
+			$master_barang = $this->notelen->get_master_barang();
+
+			$data = array(
+				'title' => 'Berkas Masuk Notelen - Template',
+				'page_title' => 'Berkas Masuk Notelen - Template System',
+				'berkas_list' => $berkas_list,
+				'total_berkas' => $total_berkas,
+				'current_page' => $page,
+				'total_pages' => ceil($total_berkas / $limit),
+				'limit' => $limit,
+				'filters' => $filters,
+				'stats' => $stats,
+				'master_barang' => $master_barang,
+				'sidebar_active' => 'notelen',
+				'submenu_active' => 'berkas_template'
+			);
+
+			$this->load->view('notelen/berkas_masuk_template', $data);
+		} catch (Exception $e) {
+			echo "<div style='padding: 20px; background: #f8f9fa; border: 1px solid #ddd;'>";
+			echo "<h3>Error Loading Notelen System</h3>";
+			echo "<p><strong>Error Message:</strong> " . $e->getMessage() . "</p>";
+			echo "<p><strong>File:</strong> " . $e->getFile() . " (Line " . $e->getLine() . ")</p>";
+			echo "<p>Please check database connection and model files.</p>";
+			echo "</div>";
+		}
+	}
+
     // ===============================================
     // AJAX ENDPOINTS
     // ===============================================
@@ -327,7 +388,84 @@ class Notelen extends CI_Controller
 		}
 	}
 
-    // ===============================================
+	/**
+	 * Delete berkas via AJAX
+	 */
+	public function ajax_delete_berkas()
+	{
+		// Set JSON header
+		header('Content-Type: application/json; charset=utf-8');
+
+		// Handle both GET and POST
+		$id = $this->input->post('id') ?: $this->input->get('id');
+		$redirect = $this->input->get('redirect');
+
+		if (!$id) {
+			if ($redirect) {
+				redirect('notelen/berkas_template');
+				return;
+			}
+			echo json_encode(array('success' => false, 'message' => 'ID tidak valid'));
+			return;
+		}
+
+		try {
+			// Get berkas info before delete
+			$berkas = $this->notelen->get_berkas_by_id($id);
+			if (!$berkas) {
+				if ($redirect) {
+					$this->session->set_flashdata('error', 'Berkas tidak ditemukan');
+					redirect('notelen/berkas_template');
+					return;
+				}
+				echo json_encode(array('success' => false, 'message' => 'Berkas tidak ditemukan'));
+				return;
+			}
+
+			// Enable CI database debug for better error messages
+			$this->notelen->notelen_db->db_debug = TRUE;
+
+			$result = $this->notelen->delete_berkas_masuk($id);
+
+			if ($result) {
+				if ($redirect) {
+					$this->session->set_flashdata('success', 'Berkas ' . $berkas->nomor_perkara . ' berhasil dihapus');
+					redirect('notelen/berkas_template');
+					return;
+				}
+				echo json_encode(array(
+					'success' => true,
+					'message' => 'Berkas ' . $berkas->nomor_perkara . ' berhasil dihapus'
+				));
+			} else {
+				// Check database error
+				$db_error = $this->notelen->notelen_db->error();
+				$error_message = 'Gagal menghapus berkas';
+				if (!empty($db_error['message'])) {
+					$error_message = 'Database Error: ' . $db_error['message'];
+				}
+
+				if ($redirect) {
+					$this->session->set_flashdata('error', $error_message);
+					redirect('notelen/berkas_template');
+					return;
+				}
+				echo json_encode(array('success' => false, 'message' => $error_message));
+			}
+		} catch (Exception $e) {
+			$error_message = 'Error: ' . $e->getMessage();
+
+			if ($redirect) {
+				$this->session->set_flashdata('error', $error_message);
+				redirect('notelen/berkas_template');
+				return;
+			}
+			echo json_encode(array(
+				'success' => false,
+				'message' => $error_message
+			));
+		}
+	}    // ===============================================
     // INVENTARIS MANAGEMENT
     // ===============================================
 

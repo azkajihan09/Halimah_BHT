@@ -170,6 +170,40 @@ class Notelen_model extends CI_Model
 		return $result;
 	}
 
+	/**
+	 * Delete berkas masuk
+	 */
+	public function delete_berkas_masuk($id)
+	{
+		$berkas = $this->get_berkas_by_id($id);
+		if (!$berkas) {
+			return false;
+		}
+
+		// Start transaction
+		$this->notelen_db->trans_start();
+
+		// Log activity before delete (while foreign key still exists)
+		$this->log_notelen_activity($id, 'BERKAS_DELETE', 'Berkas akan dihapus: ' . $berkas->nomor_perkara, null, null);
+
+		// Delete related inventaris first
+		$this->notelen_db->where('berkas_masuk_id', $id);
+		$this->notelen_db->delete('berkas_inventaris');
+
+		// Delete related logs
+		$this->notelen_db->where('berkas_masuk_id', $id);
+		$this->notelen_db->delete('notelen_log');
+
+		// Delete berkas
+		$this->notelen_db->where('id', $id);
+		$result = $this->notelen_db->delete('berkas_masuk');
+
+		// Complete transaction
+		$this->notelen_db->trans_complete();
+
+		return $this->notelen_db->trans_status();
+	}
+
     // ===============================================
     // MASTER DATA BARANG
     // ===============================================

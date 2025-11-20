@@ -105,6 +105,38 @@
 					</ul>
 				</li>
 
+				<!-- Notelen System -->
+				<li class="nav-item">
+					<a href="#" class="nav-link">
+						<i class="nav-icon fas fa-file-archive text-warning"></i>
+						<p>
+							Sistem Notelen
+							<i class="fas fa-angle-left right"></i>
+						</p>
+					</a>
+					<ul class="nav nav-treeview">
+						<li class="nav-item">
+							<a href="<?php echo site_url('notelen') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == '' ? 'active' : '' ?>">
+								<i class="fas fa-folder-open nav-icon text-success"></i>
+								<p>Berkas Masuk Notelen</p>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('notelen/berkas_masuk2') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'berkas_masuk2' ? 'active' : '' ?>">
+								<i class="fas fa-table nav-icon text-primary"></i>
+								<p>Berkas Masuk 2 (Table)</p>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('notelen/berkas_template') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'berkas_template' ? 'active' : '' ?>">
+								<i class="fas fa-layout-template nav-icon text-info"></i>
+								<p>Berkas Template</p>
+								<span class="badge badge-success right">NEW</span>
+							</a>
+						</li>
+					</ul>
+				</li>
+
 				<!-- Menu Baru - Kalender & Tanggal -->
 				<li class="nav-item">
 					<a href="<?php echo site_url('Menu_baru/tanggal_pbt_bht') ?>" class="nav-link <?= $this->uri->segment(2) == 'tanggal_pbt_bht' ? 'active' : '' ?>">
