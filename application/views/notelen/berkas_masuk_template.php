@@ -93,7 +93,7 @@
                             <h3 class="card-title"><i class="fas fa-filter"></i> Filter Data</h3>
                         </div>
                         <div class="card-body">
-                            <form method="GET" class="row">
+                            <form method="GET" action="<?= base_url('notelen/berkas_template') ?>" class="row">
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label>Status Berkas:</label>
@@ -119,7 +119,7 @@
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-search"></i> Filter
                                         </button>
-                                        <a href="<?= base_url('notelen/berkas_masuk2') ?>" class="btn btn-secondary">
+                                        <a href="<?= base_url('notelen/reset_filters') ?>" class="btn btn-secondary">
                                             <i class="fas fa-refresh"></i> Reset
                                         </a>
                                     </div>
@@ -229,18 +229,54 @@
                             <!-- Pagination -->
                             <?php if (isset($total_pages) && $total_pages > 1): ?>
                                 <div class="card-footer">
-                                    <div class="d-flex justify-content-center">
-                                        <nav>
-                                            <ul class="pagination">
-                                                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                                                    <li class="page-item <?= (isset($current_page) && $i == $current_page) ? 'active' : '' ?>">
-                                                        <a class="page-link" href="?page=<?= $i ?><?= isset($filters['status_berkas']) && $filters['status_berkas'] ? '&status=' . $filters['status_berkas'] : '' ?><?= isset($filters['nomor_perkara']) && $filters['nomor_perkara'] ? '&nomor=' . $filters['nomor_perkara'] : '' ?>">
-                                                            <?= $i ?>
-                                                        </a>
-                                                    </li>
-                                                <?php endfor; ?>
-                                            </ul>
-                                        </nav>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="text-muted mb-0">
+                                                Menampilkan <?= isset($berkas_list) ? count($berkas_list) : 0 ?> dari <?= isset($total_berkas) ? $total_berkas : 0 ?> data berkas
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-end">
+                                                <nav>
+                                                    <ul class="pagination pagination-sm mb-0">
+                                                        <!-- Previous Button -->
+                                                        <?php if (isset($current_page) && $current_page > 1): ?>
+                                                            <li class="page-item">
+                                                                <a class="page-link" href="<?= base_url('notelen/berkas_template') ?>?page=<?= $current_page - 1 ?><?= isset($filters['status_berkas']) && $filters['status_berkas'] ? '&status=' . $filters['status_berkas'] : '' ?><?= isset($filters['nomor_perkara']) && $filters['nomor_perkara'] ? '&nomor=' . $filters['nomor_perkara'] : '' ?>">
+                                                                    <i class="fas fa-angle-left"></i>
+                                                                </a>
+                                                            </li>
+                                                        <?php endif; ?>
+
+                                                        <!-- Page Numbers -->
+                                                        <?php
+                                                        $start_page = max(1, (isset($current_page) ? $current_page : 1) - 2);
+                                                        $end_page = min($total_pages, $start_page + 4);
+                                                        if ($end_page - $start_page < 4) {
+                                                            $start_page = max(1, $end_page - 4);
+                                                        }
+                                                        ?>
+
+                                                        <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+                                                            <li class="page-item <?= (isset($current_page) && $i == $current_page) ? 'active' : '' ?>">
+                                                                <a class="page-link" href="<?= base_url('notelen/berkas_template') ?>?page=<?= $i ?><?= isset($filters['status_berkas']) && $filters['status_berkas'] ? '&status=' . $filters['status_berkas'] : '' ?><?= isset($filters['nomor_perkara']) && $filters['nomor_perkara'] ? '&nomor=' . $filters['nomor_perkara'] : '' ?>">
+                                                                    <?= $i ?>
+                                                                </a>
+                                                            </li>
+                                                        <?php endfor; ?>
+
+                                                        <!-- Next Button -->
+                                                        <?php if (isset($current_page) && $current_page < $total_pages): ?>
+                                                            <li class="page-item">
+                                                                <a class="page-link" href="<?= base_url('notelen/berkas_template') ?>?page=<?= $current_page + 1 ?><?= isset($filters['status_berkas']) && $filters['status_berkas'] ? '&status=' . $filters['status_berkas'] : '' ?><?= isset($filters['nomor_perkara']) && $filters['nomor_perkara'] ? '&nomor=' . $filters['nomor_perkara'] : '' ?>">
+                                                                    <i class="fas fa-angle-right"></i>
+                                                                </a>
+                                                            </li>
+                                                        <?php endif; ?>
+                                                    </ul>
+                                                </nav>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             <?php endif; ?>

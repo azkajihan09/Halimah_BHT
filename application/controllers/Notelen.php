@@ -787,4 +787,22 @@ class Notelen extends CI_Controller
 
 		echo json_encode($response);
 	}
+
+	/**
+	 * Reset filters untuk berkas template
+	 */
+	public function reset_filters()
+	{
+		// Clear session filters
+		$this->session->unset_userdata('notelen_filter_status');
+		$this->session->unset_userdata('notelen_filter_nomor');
+		$this->session->unset_userdata('notelen_filter_dari');
+		$this->session->unset_userdata('notelen_filter_sampai');
+		
+		// Set success message
+		$this->session->set_flashdata('success', 'Filter berhasil direset');
+		
+		// Redirect back to berkas template
+		redirect('notelen/berkas_template');
+	}
 }
