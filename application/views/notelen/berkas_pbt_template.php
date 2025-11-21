@@ -321,9 +321,9 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="jenisPerkaraPbt">Jenis Perkara
-                                    <small class="text-muted">(Auto-fill dari SIPP)</small>
+                                    <small class="text-muted" id="jenisHelp">(Manual input atau auto-fill dari SIPP)</small>
                                 </label>
-                                <input type="text" class="form-control" id="jenisPerkaraPbt" name="jenis_perkara" readonly>
+                                <input type="text" class="form-control" id="jenisPerkaraPbt" name="jenis_perkara">
                             </div>
                         </div>
                     </div>
@@ -331,9 +331,9 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="tanggalPutusan">Tanggal Putusan *
-                                    <small class="text-muted">(Auto-fill dari SIPP)</small>
+                                    <small class="text-muted" id="tanggalHelp">(Manual input atau auto-fill dari SIPP)</small>
                                 </label>
-                                <input type="date" class="form-control" id="tanggalPutusan" name="tanggal_putusan" required readonly>
+                                <input type="date" class="form-control" id="tanggalPutusan" name="tanggal_putusan" required>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -353,17 +353,17 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="majelisHakim">Majelis Hakim
-                                    <small class="text-muted">(Auto-fill dari SIPP)</small>
+                                    <small class="text-muted" id="majelisHelp">(Manual input atau auto-fill dari SIPP)</small>
                                 </label>
-                                <textarea class="form-control" id="majelisHakim" name="majelis_hakim" rows="2" readonly></textarea>
+                                <textarea class="form-control" id="majelisHakim" name="majelis_hakim" rows="2"></textarea>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="paniteraPengganti">Panitera Pengganti
-                                    <small class="text-muted">(Auto-fill dari SIPP)</small>
+                                    <small class="text-muted" id="paniteraHelp">(Manual input atau auto-fill dari SIPP)</small>
                                 </label>
-                                <input type="text" class="form-control" id="paniteraPengganti" name="panitera_pengganti" readonly>
+                                <input type="text" class="form-control" id="paniteraPengganti" name="panitera_pengganti">
                             </div>
                         </div>
                     </div>
@@ -486,6 +486,9 @@
             // Mark as selected from SIPP
             $('#nomorPerkaraPbt').data('selected-from-sipp', true);
 
+            // Update visual indicators to show auto-filled
+            updateFieldLabels(true);
+
             // Hide suggestions
             $('#perkaraSuggestions').hide();
 
@@ -508,26 +511,59 @@
             $('#majelisHakim').val('');
             $('#paniteraPengganti').val('');
             $('#perkaraSuggestions').hide();
+
+            // Update visual indicators to show manual input
+            updateFieldLabels(false);
+
             $('#nomorPerkaraPbt').focus();
         });
 
-        // Manual typing validation
+        // Function to update field labels based on source
+        function updateFieldLabels(fromSipp) {
+            if (fromSipp) {
+                $('#jenisHelp').text('(Auto-filled dari SIPP)').removeClass('text-muted').addClass('text-success');
+                $('#tanggalHelp').text('(Auto-filled dari SIPP)').removeClass('text-muted').addClass('text-success');
+                $('#majelisHelp').text('(Auto-filled dari SIPP)').removeClass('text-muted').addClass('text-success');
+                $('#paniteraHelp').text('(Auto-filled dari SIPP)').removeClass('text-muted').addClass('text-success');
+
+                // Add success icons
+                $('#jenisPerkaraPbt, #tanggalPutusan, #majelisHakim, #paniteraPengganti')
+                    .addClass('border-success');
+            } else {
+                $('#jenisHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
+                $('#tanggalHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
+                $('#majelisHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
+                $('#paniteraHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
+
+                // Remove success styling
+                $('#jenisPerkaraPbt, #tanggalPutusan, #majelisHakim, #paniteraPengganti')
+                    .removeClass('border-success');
+            }
+        }
+
+        // Manual typing validation - simplified
         $('#nomorPerkaraPbt').on('blur', function() {
             const search = $(this).val();
             const selectedFromSipp = $(this).data('selected-from-sipp');
 
             if (search && !selectedFromSipp) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Peringatan!',
-                    text: 'Disarankan untuk memilih nomor perkara dari daftar SIPP yang tersedia',
-                    showConfirmButton: true,
-                    confirmButtonText: 'OK'
-                });
-            }
-        });
+                // Remove success styling if manually typed
+                updateFieldLabels(false);
 
-        // Hide suggestions when click outside
+                // Optional: Show info toast instead of warning
+                if (search.length > 5) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Input Manual',
+                        text: 'Anda dapat melengkapi data lainnya secara manual atau cari dari SIPP',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+            }
+        }); // Hide suggestions when click outside
         $(document).click(function(e) {
             if (!$(e.target).closest('#nomorPerkaraPbt, #perkaraSuggestions').length) {
                 $('#perkaraSuggestions').hide();
@@ -544,12 +580,14 @@
         $('#nomorPerkaraPbt').data('selected-from-sipp', false);
         $('#perkaraIdSipp').val('');
 
+        // Reset visual indicators
+        updateFieldLabels(false);
+
         // Focus ke nomor perkara
         setTimeout(function() {
             $('#nomorPerkaraPbt').focus();
         }, 500);
     }
-
     $('#newPbtForm').submit(function(e) {
         e.preventDefault();
 
