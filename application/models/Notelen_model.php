@@ -36,14 +36,8 @@ class Notelen_model extends CI_Model
 	 */
 	public function get_berkas_masuk($limit = null, $offset = 0, $filters = array())
 	{
-		$this->notelen_db->select('
-            bm.*,
-            COUNT(bi.id) as total_inventaris,
-            SUM(bi.jumlah) as total_barang
-        ');
-
+		$this->notelen_db->select('bm.*');
 		$this->notelen_db->from('berkas_masuk bm');
-		$this->notelen_db->join('berkas_inventaris bi', 'bm.id = bi.berkas_masuk_id', 'left');
 
 		// Apply filters
 		if (!empty($filters['status_berkas'])) {
@@ -183,18 +177,7 @@ class Notelen_model extends CI_Model
 		// Start transaction
 		$this->notelen_db->trans_start();
 
-		// Log activity before delete (while foreign key still exists)
-		$this->log_notelen_activity($id, 'BERKAS_DELETE', 'Berkas akan dihapus: ' . $berkas->nomor_perkara, null, null);
-
-		// Delete related inventaris first
-		$this->notelen_db->where('berkas_masuk_id', $id);
-		$this->notelen_db->delete('berkas_inventaris');
-
-		// Delete related logs
-		$this->notelen_db->where('berkas_masuk_id', $id);
-		$this->notelen_db->delete('notelen_log');
-
-		// Delete berkas
+		// Delete berkas directly (no more related tables)
 		$this->notelen_db->where('id', $id);
 		$result = $this->notelen_db->delete('berkas_masuk');
 
@@ -202,146 +185,6 @@ class Notelen_model extends CI_Model
 		$this->notelen_db->trans_complete();
 
 		return $this->notelen_db->trans_status();
-	}
-
-    // ===============================================
-    // MASTER DATA BARANG
-    // ===============================================
-
-	/**
-	 * Get all master barang
-	 */
-	public function get_master_barang($limit = null)
-	{
-		$this->notelen_db->order_by('nama_barang', 'ASC');
-
-		if ($limit) {
-			$this->notelen_db->limit($limit);
-		}
-
-		return $this->notelen_db->get('master_barang')->result();
-	}
-
-	/**
-	 * Get master barang by ID
-	 */
-	public function get_master_barang_by_id($id)
-	{
-		return $this->notelen_db->get_where('master_barang', array('id' => $id))->row();
-	}
-
-	/**
-	 * Insert master barang
-	 */
-	public function insert_master_barang($data)
-	{
-		$barang_data = array(
-			'nama_barang' => $data['nama_barang'],
-			'barcode' => isset($data['barcode']) ? $data['barcode'] : null,
-			'satuan_barang' => $data['satuan_barang'],
-			'peringatan_stok' => isset($data['peringatan_stok']) ? $data['peringatan_stok'] : 10
-		);
-
-		return $this->notelen_db->insert('master_barang', $barang_data);
-	}
-
-	/**
-	 * Update master barang
-	 */
-	public function update_master_barang($id, $data)
-	{
-		$this->notelen_db->where('id', $id);
-		return $this->notelen_db->update('master_barang', $data);
-	}
-
-	/**
-	 * Delete master barang
-	 */
-	public function delete_master_barang($id)
-	{
-		$this->notelen_db->where('id', $id);
-		return $this->notelen_db->delete('master_barang');
-	}
-
-    // ===============================================
-    // INVENTARIS BARANG
-    // ===============================================
-
-	/**
-	 * Get inventaris by berkas ID
-	 */
-	public function get_inventaris_by_berkas($berkas_id)
-	{
-		$this->notelen_db->select('
-            bi.*,
-            mb.nama_barang,
-            mb.satuan_barang
-        ');
-		$this->notelen_db->from('berkas_inventaris bi');
-		$this->notelen_db->join('master_barang mb', 'bi.master_barang_id = mb.id');
-		$this->notelen_db->where('bi.berkas_masuk_id', $berkas_id);
-		$this->notelen_db->order_by('mb.nama_barang', 'ASC');
-
-		return $this->notelen_db->get()->result();
-	}
-
-	/**
-	 * Insert inventaris barang
-	 */
-	public function insert_inventaris($data)
-	{
-		$inventaris_data = array(
-			'berkas_masuk_id' => $data['berkas_masuk_id'],
-			'master_barang_id' => $data['master_barang_id'],
-			'jumlah' => $data['jumlah'],
-			'kondisi_barang' => isset($data['kondisi_barang']) ? $data['kondisi_barang'] : 'BAIK',
-			'keterangan' => isset($data['keterangan']) ? $data['keterangan'] : null,
-			'tanggal_masuk' => isset($data['tanggal_masuk']) ? $data['tanggal_masuk'] : date('Y-m-d')
-		);
-
-		$result = $this->notelen_db->insert('berkas_inventaris', $inventaris_data);
-
-		if ($result) {
-			$this->log_notelen_activity(
-				$data['berkas_masuk_id'],
-				'INVENTARIS_ADD',
-				'Barang ditambahkan ke inventaris',
-				null,
-				$data['jumlah'] . ' ' . $this->get_master_barang_by_id($data['master_barang_id'])->nama_barang
-			);
-		}
-
-		return $result;
-	}
-
-	/**
-	 * Update inventaris
-	 */
-	public function update_inventaris($id, $data)
-	{
-		$this->notelen_db->where('id', $id);
-		return $this->notelen_db->update('berkas_inventaris', $data);
-	}
-
-	/**
-	 * Delete inventaris
-	 */
-	public function delete_inventaris($id)
-	{
-		$inventaris = $this->notelen_db->get_where('berkas_inventaris', array('id' => $id))->row();
-
-		$this->notelen_db->where('id', $id);
-		$result = $this->notelen_db->delete('berkas_inventaris');
-
-		if ($result && $inventaris) {
-			$this->log_notelen_activity(
-				$inventaris->berkas_masuk_id,
-				'INVENTARIS_DELETE',
-				'Barang dihapus dari inventaris'
-			);
-		}
-
-		return $result;
 	}
 
     // ===============================================
@@ -470,35 +313,24 @@ class Notelen_model extends CI_Model
 	public function get_dashboard_stats()
 	{
 		try {
-			// Create views if not exists
-			$this->create_views_if_not_exists();
-
-			// Stats dari view
-			$dashboard_query = $this->notelen_db->get('v_berkas_dashboard');
+			// Stats dari view v_dashboard_summary yang baru
+			$dashboard_query = $this->notelen_db->get('v_dashboard_summary');
 			$dashboard = $dashboard_query ? $dashboard_query->row() : null;
 
 			// Jika view tidak ada atau tidak ada data, hitung manual
-			if (!$dashboard || !isset($dashboard->total_berkas)) {
+			if (!$dashboard || !isset($dashboard->total_berkas_masuk)) {
 				$dashboard = $this->get_manual_dashboard_stats();
-			}
-
-			// Inventaris summary
-			$inventaris_query = $this->notelen_db->get('v_inventaris_summary');
-			$inventaris = $inventaris_query ? $inventaris_query->row() : null;
-
-			if (!$inventaris || !isset($inventaris->total_barang)) {
-				$inventaris = $this->get_manual_inventaris_stats();
 			}
 
 			return array(
 				'berkas' => $dashboard,
-				'inventaris' => $inventaris
+				'berkas_pbt' => $dashboard // View v_dashboard_summary sudah include stats PBT
 			);
 		} catch (Exception $e) {
 			// Fallback ke manual stats
 			return array(
 				'berkas' => $this->get_manual_dashboard_stats(),
-				'inventaris' => $this->get_manual_inventaris_stats()
+				'berkas_pbt' => $this->get_manual_dashboard_stats()
 			);
 		}
 	}
@@ -519,80 +351,34 @@ class Notelen_model extends CI_Model
 			$selesai = $this->notelen_db->where('status_berkas', 'SELESAI')
 				->count_all_results('berkas_masuk', FALSE);
 
+			// Reset untuk query berikutnya
+			$this->notelen_db->reset_query();
+
 			return (object)array(
-				'total_berkas' => $total,
-				'status_masuk' => $masuk,
-				'status_proses' => $proses,
-				'status_selesai' => $selesai
+				'total_berkas_masuk' => $total,
+				'berkas_masuk_baru' => $masuk,
+				'berkas_dalam_proses' => $proses,
+				'berkas_selesai' => $selesai,
+				'berkas_diarsip' => 0,
+				'berkas_hari_ini' => 0,
+				'berkas_minggu_ini' => 0
 			);
 		} catch (Exception $e) {
 			return (object)array(
-				'total_berkas' => 0,
-				'status_masuk' => 0,
-				'status_proses' => 0,
-				'status_selesai' => 0
+				'total_berkas_masuk' => 0,
+				'berkas_masuk_baru' => 0,
+				'berkas_dalam_proses' => 0,
+				'berkas_selesai' => 0,
+				'berkas_diarsip' => 0,
+				'berkas_hari_ini' => 0,
+				'berkas_minggu_ini' => 0
 			);
 		}
 	}
 
-	/**
-	 * Get manual inventaris stats
-	 */
-	private function get_manual_inventaris_stats()
-	{
-		try {
-			$this->notelen_db->select('COUNT(DISTINCT master_barang_id) as total_jenis_barang, SUM(jumlah) as total_barang');
-			$this->notelen_db->from('berkas_inventaris');
-			$query = $this->notelen_db->get();
-			$result = $query->row();
 
-			return $result ? $result : (object)array(
-				'total_jenis_barang' => 0,
-				'total_barang' => 0
-			);
-		} catch (Exception $e) {
-			return (object)array(
-				'total_jenis_barang' => 0,
-				'total_barang' => 0
-			);
-		}
-	}
 
-	/**
-	 * Create views if they don't exist
-	 */
-	private function create_views_if_not_exists()
-	{
-		try {
-			// Check if views exist, create if not
-			$tables = $this->notelen_db->list_tables();
 
-			if (!in_array('v_berkas_dashboard', $tables)) {
-				$this->notelen_db->query("
-                    CREATE VIEW v_berkas_dashboard AS
-                    SELECT 
-                        COUNT(*) as total_berkas,
-                        SUM(CASE WHEN status_berkas = 'MASUK' THEN 1 ELSE 0 END) as status_masuk,
-                        SUM(CASE WHEN status_berkas = 'PROSES' THEN 1 ELSE 0 END) as status_proses,
-                        SUM(CASE WHEN status_berkas = 'SELESAI' THEN 1 ELSE 0 END) as status_selesai
-                    FROM berkas_masuk
-                ");
-			}
-
-			if (!in_array('v_inventaris_summary', $tables)) {
-				$this->notelen_db->query("
-                    CREATE VIEW v_inventaris_summary AS
-                    SELECT 
-                        COUNT(DISTINCT master_barang_id) as total_jenis_barang,
-                        SUM(jumlah) as total_barang
-                    FROM berkas_inventaris
-                ");
-			}
-		} catch (Exception $e) {
-			// Ignore view creation errors
-			log_message('error', 'Could not create views: ' . $e->getMessage());
-		}
-	}
 
     // ===============================================
     // HELPER FUNCTIONS

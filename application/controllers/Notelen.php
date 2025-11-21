@@ -3,7 +3,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 /**
  * Controller untuk sistem notelen (berkas masuk perkara putus)
- * Fitur popup form untuk entry data inventaris
+ * Sistem berkas masuk dengan autocomplete SIPP dan analytics
  */
 class Notelen extends CI_Controller
 {
@@ -51,9 +51,6 @@ class Notelen extends CI_Controller
 			// Dashboard stats
 			$stats = $this->notelen->get_dashboard_stats();
 
-			// Master barang untuk popup
-			$master_barang = $this->notelen->get_master_barang();
-
 			$data = array(
 				'title' => 'Berkas Masuk Notelen',
 				'page_title' => 'Berkas Masuk untuk Notelen',
@@ -64,7 +61,6 @@ class Notelen extends CI_Controller
 				'limit' => $limit,
 				'filters' => $filters,
 				'stats' => $stats,
-				'master_barang' => $master_barang,
 				'sidebar_active' => 'notelen',
 				'submenu_active' => 'berkas_masuk'
 			);
@@ -106,9 +102,6 @@ class Notelen extends CI_Controller
         
         // Dashboard stats
         $stats = $this->notelen->get_dashboard_stats();
-        
-        // Master barang untuk popup
-        $master_barang = $this->notelen->get_master_barang();
 
         $data = array(
             'title' => 'Berkas Masuk Notelen',
@@ -120,7 +113,6 @@ class Notelen extends CI_Controller
             'limit' => $limit,
             'filters' => $filters,
             'stats' => $stats,
-            'master_barang' => $master_barang,
             'sidebar_active' => 'notelen',
             'submenu_active' => 'berkas_masuk'
         );
@@ -161,9 +153,6 @@ class Notelen extends CI_Controller
 			// Dashboard stats
 			$stats = $this->notelen->get_dashboard_stats();
 
-			// Master barang untuk popup
-			$master_barang = $this->notelen->get_master_barang();
-
 			$data = array(
 				'title' => 'Berkas Masuk Notelen 2',
 				'page_title' => 'Berkas Masuk untuk Notelen - Tampilan 2',
@@ -174,7 +163,6 @@ class Notelen extends CI_Controller
 				'limit' => $limit,
 				'filters' => $filters,
 				'stats' => $stats,
-				'master_barang' => $master_barang,
 				'sidebar_active' => 'notelen',
 				'submenu_active' => 'berkas_masuk2'
 			);
@@ -222,9 +210,6 @@ class Notelen extends CI_Controller
 			// Dashboard stats
 			$stats = $this->notelen->get_dashboard_stats();
 
-			// Master barang untuk popup
-			$master_barang = $this->notelen->get_master_barang();
-
 			$data = array(
 				'title' => 'Berkas Masuk Notelen - Template',
 				'page_title' => 'Berkas Masuk Notelen - Template System',
@@ -235,7 +220,6 @@ class Notelen extends CI_Controller
 				'limit' => $limit,
 				'filters' => $filters,
 				'stats' => $stats,
-				'master_barang' => $master_barang,
 				'sidebar_active' => 'notelen',
 				'submenu_active' => 'berkas_template'
 			);
@@ -268,7 +252,6 @@ class Notelen extends CI_Controller
 		}
 
 		$berkas = $this->notelen->get_berkas_by_id($id);
-		$inventaris = $this->notelen->get_inventaris_by_berkas($id);
 
 		if (!$berkas) {
 			echo json_encode(array('success' => false, 'message' => 'Berkas tidak ditemukan'));
@@ -284,25 +267,12 @@ class Notelen extends CI_Controller
 				'jenis_perkara' => $berkas->jenis_perkara,
 				'tanggal_putusan' => $berkas->tanggal_putusan,
 				'tanggal_masuk_notelen' => $berkas->tanggal_masuk_notelen,
-				'majelis_hakim' => $berkas->majelis_hakim ?: '-',
-				'panitera_pengganti' => $berkas->panitera_pengganti ?: '-',
+				'majelis_hakim' => $berkas->majelis_hakim ? $berkas->majelis_hakim : '-',
+				'panitera_pengganti' => $berkas->panitera_pengganti ? $berkas->panitera_pengganti : '-',
 				'status_berkas' => $berkas->status_berkas,
 				'catatan_notelen' => $berkas->catatan_notelen
-			),
-			'inventaris' => array()
+			)
 		);
-
-		foreach ($inventaris as $item) {
-			$data['inventaris'][] = array(
-				'id' => $item->id,
-				'nama_barang' => $item->nama_barang,
-				'jumlah' => $item->jumlah,
-				'satuan_barang' => $item->satuan_barang,
-				'kondisi_barang' => $item->kondisi_barang,
-				'keterangan' => $item->keterangan,
-				'tanggal_masuk' => $item->tanggal_masuk
-			);
-		}
 
 		echo json_encode($data);
 	}
@@ -465,137 +435,6 @@ class Notelen extends CI_Controller
 				'message' => $error_message
 			));
 		}
-	}    // ===============================================
-    // INVENTARIS MANAGEMENT
-    // ===============================================
-
-	/**
-	 * Add inventaris via AJAX
-	 */
-	public function ajax_add_inventaris()
-	{
-		$berkas_id = $this->input->post('berkas_id');
-		$master_barang_id = $this->input->post('master_barang_id');
-		$jumlah = $this->input->post('jumlah');
-		$kondisi = $this->input->post('kondisi_barang');
-		$keterangan = $this->input->post('keterangan');
-
-		// Validasi
-		if (!$berkas_id || !$master_barang_id || !$jumlah || $jumlah <= 0) {
-			echo json_encode(array(
-				'success' => false,
-				'message' => 'Data tidak lengkap atau jumlah tidak valid'
-			));
-			return;
-		}
-
-		$data = array(
-			'berkas_masuk_id' => $berkas_id,
-			'master_barang_id' => $master_barang_id,
-			'jumlah' => $jumlah,
-			'kondisi_barang' => $kondisi ?: 'BAIK',
-			'keterangan' => $keterangan,
-			'tanggal_masuk' => date('Y-m-d')
-		);
-
-		$result = $this->notelen->insert_inventaris($data);
-
-		if ($result) {
-			echo json_encode(array(
-				'success' => true,
-				'message' => 'Inventaris berhasil ditambahkan'
-			));
-		} else {
-			echo json_encode(array(
-				'success' => false,
-				'message' => 'Gagal menambahkan inventaris'
-			));
-		}
-	}
-
-	/**
-	 * Delete inventaris
-	 */
-	public function ajax_delete_inventaris()
-	{
-		$id = $this->input->post('id');
-
-		if (!$id) {
-			echo json_encode(array('success' => false, 'message' => 'ID tidak valid'));
-			return;
-		}
-
-		$result = $this->notelen->delete_inventaris($id);
-
-		if ($result) {
-			echo json_encode(array('success' => true, 'message' => 'Inventaris berhasil dihapus'));
-		} else {
-			echo json_encode(array('success' => false, 'message' => 'Gagal menghapus inventaris'));
-		}
-	}
-
-    // ===============================================
-    // MASTER BARANG MANAGEMENT
-    // ===============================================
-
-	/**
-	 * Get all master barang via AJAX
-	 */
-	public function ajax_get_master_barang()
-	{
-		$master_barang = $this->notelen->get_master_barang();
-
-		$data = array();
-		foreach ($master_barang as $item) {
-			$data[] = array(
-				'id' => $item->id,
-				'nama_barang' => $item->nama_barang,
-				'barcode' => $item->barcode,
-				'satuan_barang' => $item->satuan_barang
-			);
-		}
-
-		echo json_encode(array('success' => true, 'data' => $data));
-	}
-
-	/**
-	 * Add master barang via AJAX
-	 */
-	public function ajax_add_master_barang()
-	{
-		$nama_barang = trim($this->input->post('nama_barang'));
-		$barcode = trim($this->input->post('barcode'));
-		$satuan = trim($this->input->post('satuan_barang'));
-		$peringatan_stok = $this->input->post('peringatan_stok') ?: 10;
-
-		if (empty($nama_barang) || empty($satuan)) {
-			echo json_encode(array(
-				'success' => false,
-				'message' => 'Nama barang dan satuan harus diisi'
-			));
-			return;
-		}
-
-		$data = array(
-			'nama_barang' => $nama_barang,
-			'barcode' => $barcode,
-			'satuan_barang' => $satuan,
-			'peringatan_stok' => $peringatan_stok
-		);
-
-		$result = $this->notelen->insert_master_barang($data);
-
-		if ($result) {
-			echo json_encode(array(
-				'success' => true,
-				'message' => 'Master barang berhasil ditambahkan'
-			));
-		} else {
-			echo json_encode(array(
-				'success' => false,
-				'message' => 'Gagal menambahkan master barang'
-			));
-		}
 	}
 
     // ===============================================
@@ -703,8 +542,7 @@ class Notelen extends CI_Controller
 		$sheet->setCellValue('D1', 'Tanggal Putusan');
 		$sheet->setCellValue('E1', 'Tanggal Masuk');
 		$sheet->setCellValue('F1', 'Status');
-		$sheet->setCellValue('G1', 'Total Inventaris');
-		$sheet->setCellValue('H1', 'Majelis Hakim');
+		$sheet->setCellValue('G1', 'Majelis Hakim');
 
 		// Data
 		$row = 2;
@@ -715,8 +553,7 @@ class Notelen extends CI_Controller
 			$sheet->setCellValue('D' . $row, $berkas->tanggal_putusan);
 			$sheet->setCellValue('E' . $row, $berkas->tanggal_masuk_notelen);
 			$sheet->setCellValue('F' . $row, $berkas->status_berkas);
-			$sheet->setCellValue('G' . $row, $berkas->total_inventaris ?: 0);
-			$sheet->setCellValue('H' . $row, $berkas->majelis_hakim);
+			$sheet->setCellValue('G' . $row, $berkas->majelis_hakim);
 			$row++;
 		}
 
