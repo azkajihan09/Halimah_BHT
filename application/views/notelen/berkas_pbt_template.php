@@ -301,14 +301,14 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="nomorPerkaraPbt">Nomor Perkara * 
+                                <label for="nomorPerkaraPbt">Nomor Perkara *
                                     <small class="text-muted">(Ketik untuk mencari dari SIPP)</small>
                                 </label>
                                 <div class="input-group">
                                     <input type="hidden" id="perkaraIdSipp" name="perkara_id_sipp">
-                                    <input type="text" class="form-control" id="nomorPerkaraPbt" name="nomor_perkara" 
-                                           placeholder="Ketik nomor perkara untuk mencari..." 
-                                           autocomplete="off" required>
+                                    <input type="text" class="form-control" id="nomorPerkaraPbt" name="nomor_perkara"
+                                        placeholder="Ketik nomor perkara untuk mencari..."
+                                        autocomplete="off" required>
                                     <div class="input-group-append">
                                         <button type="button" class="btn btn-outline-secondary" id="clearPerkara" title="Bersihkan">
                                             <i class="fas fa-times"></i>
@@ -320,7 +320,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="jenisPerkaraPbt">Jenis Perkara 
+                                <label for="jenisPerkaraPbt">Jenis Perkara
                                     <small class="text-muted">(Auto-fill dari SIPP)</small>
                                 </label>
                                 <input type="text" class="form-control" id="jenisPerkaraPbt" name="jenis_perkara" readonly>
@@ -330,7 +330,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="tanggalPutusan">Tanggal Putusan * 
+                                <label for="tanggalPutusan">Tanggal Putusan *
                                     <small class="text-muted">(Auto-fill dari SIPP)</small>
                                 </label>
                                 <input type="date" class="form-control" id="tanggalPutusan" name="tanggal_putusan" required readonly>
@@ -352,7 +352,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="majelisHakim">Majelis Hakim 
+                                <label for="majelisHakim">Majelis Hakim
                                     <small class="text-muted">(Auto-fill dari SIPP)</small>
                                 </label>
                                 <textarea class="form-control" id="majelisHakim" name="majelis_hakim" rows="2" readonly></textarea>
@@ -360,7 +360,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="paniteraPengganti">Panitera Pengganti 
+                                <label for="paniteraPengganti">Panitera Pengganti
                                     <small class="text-muted">(Auto-fill dari SIPP)</small>
                                 </label>
                                 <input type="text" class="form-control" id="paniteraPengganti" name="panitera_pengganti" readonly>
@@ -391,37 +391,39 @@
 <script>
     $(document).ready(function() {
         console.log('Berkas PBT System loaded successfully!');
-        
+
         // Auto-complete nomor perkara dari SIPP
         let searchTimeout;
         let isLoading = false;
-        
+
         $('#nomorPerkaraPbt').on('input', function() {
             const search = $(this).val();
-            
+
             if (search.length < 2) {
                 $('#perkaraSuggestions').hide();
                 return;
             }
-            
+
             // Clear previous timeout
             clearTimeout(searchTimeout);
-            
+
             // Set new timeout untuk menghindari terlalu banyak request
             searchTimeout = setTimeout(function() {
                 if (isLoading) return;
-                
+
                 isLoading = true;
                 $('#perkaraSuggestions').html(`
                     <div class="list-group-item">
                         <i class="fas fa-spinner fa-spin"></i> Mencari perkara...
                     </div>
                 `).show();
-                
+
                 $.ajax({
                     url: '<?= base_url("notelen/ajax_get_perkara_dropdown") ?>',
                     type: 'GET',
-                    data: { search: search },
+                    data: {
+                        search: search
+                    },
                     dataType: 'json',
                     success: function(response) {
                         if (response.success && response.data.length > 0) {
@@ -466,13 +468,13 @@
                 });
             }, 300);
         });
-        
+
         // Handle click pada suggestion
         $(document).on('click', '.perkara-suggestion', function(e) {
             e.preventDefault();
-            
+
             const data = $(this).data();
-            
+
             // Fill form dengan data dari SIPP
             $('#perkaraIdSipp').val(data.perkaraId);
             $('#nomorPerkaraPbt').val(data.nomor);
@@ -480,13 +482,13 @@
             $('#tanggalPutusan').val(data.tanggal);
             $('#majelisHakim').val(data.majelis);
             $('#paniteraPengganti').val(data.panitera);
-            
+
             // Mark as selected from SIPP
             $('#nomorPerkaraPbt').data('selected-from-sipp', true);
-            
+
             // Hide suggestions
             $('#perkaraSuggestions').hide();
-            
+
             // Show success notification
             Swal.fire({
                 icon: 'success',
@@ -496,7 +498,7 @@
                 timer: 1500
             });
         });
-        
+
         // Clear button
         $('#clearPerkara').click(function() {
             $('#perkaraIdSipp').val('');
@@ -508,12 +510,12 @@
             $('#perkaraSuggestions').hide();
             $('#nomorPerkaraPbt').focus();
         });
-        
+
         // Manual typing validation
         $('#nomorPerkaraPbt').on('blur', function() {
             const search = $(this).val();
             const selectedFromSipp = $(this).data('selected-from-sipp');
-            
+
             if (search && !selectedFromSipp) {
                 Swal.fire({
                     icon: 'warning',
@@ -524,7 +526,7 @@
                 });
             }
         });
-        
+
         // Hide suggestions when click outside
         $(document).click(function(e) {
             if (!$(e.target).closest('#nomorPerkaraPbt, #perkaraSuggestions').length) {
@@ -537,11 +539,11 @@
         $('#newPbtModal').modal('show');
         $('#newPbtForm')[0].reset();
         $('#perkaraSuggestions').hide();
-        
+
         // Reset form state
         $('#nomorPerkaraPbt').data('selected-from-sipp', false);
         $('#perkaraIdSipp').val('');
-        
+
         // Focus ke nomor perkara
         setTimeout(function() {
             $('#nomorPerkaraPbt').focus();
