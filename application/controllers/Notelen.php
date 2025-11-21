@@ -805,4 +805,214 @@ class Notelen extends CI_Controller
 		// Redirect back to berkas template
 		redirect('notelen/berkas_template');
 	}
+
+	/**
+	 * Berkas PBT - Halaman utama PBT
+	 */
+	public function berkas_pbt()
+	{
+		try {
+			// Get filters from session or request
+			$filters = array(
+				'status_proses' => $this->input->get('status') ?: $this->session->userdata('notelen_pbt_filter_status') ?: '',
+				'nomor_perkara' => $this->input->get('nomor') ?: $this->session->userdata('notelen_pbt_filter_nomor') ?: '',
+				'tanggal_dari' => $this->input->get('dari') ?: $this->session->userdata('notelen_pbt_filter_dari') ?: '',
+				'tanggal_sampai' => $this->input->get('sampai') ?: $this->session->userdata('notelen_pbt_filter_sampai') ?: ''
+			);
+
+			// Save filters to session
+			$this->session->set_userdata('notelen_pbt_filter_status', $filters['status_proses']);
+			$this->session->set_userdata('notelen_pbt_filter_nomor', $filters['nomor_perkara']);
+			$this->session->set_userdata('notelen_pbt_filter_dari', $filters['tanggal_dari']);
+			$this->session->set_userdata('notelen_pbt_filter_sampai', $filters['tanggal_sampai']);
+
+			// Pagination
+			$page = $this->input->get('page') ?: 1;
+			$limit = 20;
+			$offset = ($page - 1) * $limit;
+
+			// Get data
+			$pbt_list = $this->notelen->get_berkas_pbt($limit, $offset, $filters);
+			$total_pbt = $this->notelen->count_berkas_pbt($filters);
+
+			// Dashboard stats
+			$stats = $this->notelen->get_pbt_dashboard_stats();
+
+			// Pagination calculation
+			$total_pages = ceil($total_pbt / $limit);
+
+			$data = array(
+				'pbt_list' => $pbt_list,
+				'total_pbt' => $total_pbt,
+				'stats' => $stats,
+				'filters' => $filters,
+				'current_page' => $page,
+				'total_pages' => $total_pages,
+				'offset' => $offset
+			);
+
+			$this->load->view('notelen/berkas_pbt_template', $data);
+		} catch (Exception $e) {
+			echo "<div style='padding: 20px; background: #f8f9fa; border: 1px solid #ddd;'>";
+			echo "<h3>Error Loading PBT System</h3>";
+			echo "<p><strong>Error Message:</strong> " . $e->getMessage() . "</p>";
+			echo "<p><strong>File:</strong> " . $e->getFile() . " (Line " . $e->getLine() . ")</p>";
+			echo "<p>Please check database connection and model files.</p>";
+			echo "</div>";
+		}
+	}
+
+	/**
+	 * Insert PBT baru via AJAX
+	 */
+	public function ajax_insert_pbt()
+	{
+		header('Content-Type: application/json; charset=utf-8');
+
+		$nomor_perkara = trim($this->input->post('nomor_perkara'));
+		$perkara_id_sipp = (int)$this->input->post('perkara_id_sipp');
+		$tanggal_putusan = $this->input->post('tanggal_putusan');
+		$tanggal_pbt = $this->input->post('tanggal_pbt');
+		$tanggal_bht = $this->input->post('tanggal_bht');
+		$jenis_perkara = $this->input->post('jenis_perkara');
+		$majelis_hakim = $this->input->post('majelis_hakim');
+		$panitera_pengganti = $this->input->post('panitera_pengganti');
+		$catatan = $this->input->post('catatan_pbt');
+
+		// Validasi
+		if (empty($nomor_perkara) || empty($tanggal_putusan)) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Nomor perkara dan tanggal putusan harus diisi'
+			));
+			return;
+		}
+
+		try {
+			$data = array(
+				'nomor_perkara' => $nomor_perkara,
+				'perkara_id_sipp' => $perkara_id_sipp ?: 0,
+				'jenis_perkara' => $jenis_perkara,
+				'tanggal_putusan' => $tanggal_putusan,
+				'tanggal_pbt' => $tanggal_pbt ?: null,
+				'tanggal_bht' => $tanggal_bht ?: null,
+				'majelis_hakim' => $majelis_hakim,
+				'panitera_pengganti' => $panitera_pengganti,
+				'catatan_pbt' => $catatan
+			);
+
+			$pbt_id = $this->notelen->insert_berkas_pbt($data);
+
+			if ($pbt_id) {
+				echo json_encode(array(
+					'success' => true,
+					'message' => 'Berkas PBT berhasil ditambahkan',
+					'pbt_id' => $pbt_id
+				));
+			} else {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Gagal menyimpan berkas PBT'
+				));
+			}
+		} catch (Exception $e) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
+			));
+		}
+	}
+
+	/**
+	 * Sync PBT dari SIPP
+	 */
+	public function ajax_sync_pbt()
+	{
+		header('Content-Type: application/json; charset=utf-8');
+
+		try {
+			$result = $this->notelen->sync_perkara_pbt();
+
+			if ($result['success']) {
+				echo json_encode(array(
+					'success' => true,
+					'message' => 'Sync berhasil! ' . $result['synced_count'] . ' data PBT ditambahkan, ' . $result['duplicate_count'] . ' duplikat ditemukan'
+				));
+			} else {
+				echo json_encode(array(
+					'success' => false,
+					'message' => $result['message']
+				));
+			}
+		} catch (Exception $e) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
+			));
+		}
+	}
+
+	/**
+	 * Delete berkas PBT via AJAX
+	 */
+	public function ajax_delete_pbt()
+	{
+		header('Content-Type: application/json; charset=utf-8');
+
+		$id = $this->input->post('id') ?: $this->input->get('id');
+		$redirect = $this->input->get('redirect');
+
+		if (!$id) {
+			if ($redirect) {
+				redirect('notelen/berkas_pbt');
+				return;
+			}
+			echo json_encode(array('success' => false, 'message' => 'ID tidak valid'));
+			return;
+		}
+
+		try {
+			$pbt = $this->notelen->get_pbt_by_id($id);
+			if (!$pbt) {
+				if ($redirect) {
+					$this->session->set_flashdata('error', 'Berkas PBT tidak ditemukan');
+					redirect('notelen/berkas_pbt');
+					return;
+				}
+				echo json_encode(array('success' => false, 'message' => 'Berkas PBT tidak ditemukan'));
+				return;
+			}
+
+			$result = $this->notelen->delete_berkas_pbt($id);
+
+			if ($result) {
+				if ($redirect) {
+					$this->session->set_flashdata('success', 'Berkas PBT ' . $pbt->nomor_perkara . ' berhasil dihapus');
+					redirect('notelen/berkas_pbt');
+					return;
+				}
+				echo json_encode(array(
+					'success' => true,
+					'message' => 'Berkas PBT ' . $pbt->nomor_perkara . ' berhasil dihapus'
+				));
+			} else {
+				if ($redirect) {
+					$this->session->set_flashdata('error', 'Gagal menghapus berkas PBT');
+					redirect('notelen/berkas_pbt');
+					return;
+				}
+				echo json_encode(array('success' => false, 'message' => 'Gagal menghapus berkas PBT'));
+			}
+		} catch (Exception $e) {
+			if ($redirect) {
+				$this->session->set_flashdata('error', 'Error: ' . $e->getMessage());
+				redirect('notelen/berkas_pbt');
+				return;
+			}
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
+			));
+		}
+	}
 }

@@ -48,6 +48,39 @@ CREATE TABLE `berkas_masuk` (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- =============================================
+-- TABEL BERKAS PBT (PEMBACAAN BERITA TALAK)
+-- =============================================
+CREATE TABLE `berkas_pbt` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `nomor_perkara` varchar(100) NOT NULL,
+    `perkara_id_sipp` int(11) NOT NULL,
+    `jenis_perkara` varchar(100) NULL,
+    `tanggal_putusan` date NOT NULL,
+    `tanggal_pbt` date NULL,
+    `tanggal_bht` date NULL,
+    `selisih_putus_pbt` int(11) NULL COMMENT 'Selisih hari antara putusan dan PBT',
+    `selisih_pbt_bht` int(11) NULL COMMENT 'Selisih hari antara PBT dan BHT',
+    `status_proses` enum(
+        'Belum PBT',
+        'Sudah PBT Belum BHT',
+        'Selesai'
+    ) NOT NULL DEFAULT 'Belum PBT',
+    `majelis_hakim` text NULL,
+    `panitera_pengganti` varchar(255) NULL,
+    `catatan_pbt` text NULL,
+    `is_duplicate_berkas` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Flag jika nomor perkara sudah ada di berkas_masuk',
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `nomor_perkara_pbt` (`nomor_perkara`),
+    INDEX `idx_perkara_id_pbt` (`perkara_id_sipp`),
+    INDEX `idx_tanggal_putusan_pbt` (`tanggal_putusan`),
+    INDEX `idx_tanggal_pbt` (`tanggal_pbt`),
+    INDEX `idx_status_proses` (`status_proses`),
+    INDEX `idx_duplicate_flag` (`is_duplicate_berkas`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- =============================================
 -- TABEL INVENTARIS BARANG PER BERKAS
 -- =============================================
 CREATE TABLE `berkas_inventaris` (

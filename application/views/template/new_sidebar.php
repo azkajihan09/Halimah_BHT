@@ -30,7 +30,7 @@
 					</a>
 				</li>
 
-				
+
 
 				<li class="nav-header">MANAJEMEN BHT</li>
 
@@ -103,17 +103,23 @@
 					<a href="#" class="nav-link">
 						<i class="nav-icon fas fa-file-archive text-warning"></i>
 						<p>
-							Catatan Berkas Masuk
+							Sistem Notelen
 							<i class="fas fa-angle-left right"></i>
 						</p>
 					</a>
 					<ul class="nav nav-treeview">
-						
 						<li class="nav-item">
 							<a href="<?php echo site_url('notelen/berkas_template') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'berkas_template' ? 'active' : '' ?>">
 								<i class="fas fa-folder-open nav-icon text-success"></i>
 								<p>Berkas Masuk</p>
 								<span class="badge badge-success right">NEW</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('notelen/berkas_pbt') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'berkas_pbt' ? 'active' : '' ?>">
+								<i class="fas fa-gavel nav-icon text-info"></i>
+								<p>Berkas PBT</p>
+								<span class="badge badge-info right">PBT</span>
 							</a>
 						</li>
 					</ul>

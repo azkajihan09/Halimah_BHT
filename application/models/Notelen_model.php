@@ -634,4 +634,262 @@ class Notelen_model extends CI_Model
 
 		$this->notelen_db->replace('notelen_config', $data);
 	}
+
+	// ===============================================
+	// BERKAS PBT MANAGEMENT
+	// ===============================================
+
+	/**
+	 * Get berkas PBT dengan filter dan pagination
+	 */
+	public function get_berkas_pbt($limit = null, $offset = 0, $filters = array())
+	{
+		$this->notelen_db->select('*');
+		$this->notelen_db->from('berkas_pbt');
+
+		// Apply filters
+		if (!empty($filters['status_proses'])) {
+			$this->notelen_db->where('status_proses', $filters['status_proses']);
+		}
+
+		if (!empty($filters['nomor_perkara'])) {
+			$this->notelen_db->like('nomor_perkara', $filters['nomor_perkara']);
+		}
+
+		if (!empty($filters['tanggal_dari']) && !empty($filters['tanggal_sampai'])) {
+			$this->notelen_db->where('tanggal_putusan >=', $filters['tanggal_dari']);
+			$this->notelen_db->where('tanggal_putusan <=', $filters['tanggal_sampai']);
+		}
+
+		$this->notelen_db->order_by('tanggal_putusan', 'DESC');
+
+		if ($limit) {
+			$this->notelen_db->limit($limit, $offset);
+		}
+
+		return $this->notelen_db->get()->result();
+	}
+
+	/**
+	 * Count berkas PBT
+	 */
+	public function count_berkas_pbt($filters = array())
+	{
+		$this->notelen_db->from('berkas_pbt');
+
+		// Apply same filters
+		if (!empty($filters['status_proses'])) {
+			$this->notelen_db->where('status_proses', $filters['status_proses']);
+		}
+
+		if (!empty($filters['nomor_perkara'])) {
+			$this->notelen_db->like('nomor_perkara', $filters['nomor_perkara']);
+		}
+
+		if (!empty($filters['tanggal_dari']) && !empty($filters['tanggal_sampai'])) {
+			$this->notelen_db->where('tanggal_putusan >=', $filters['tanggal_dari']);
+			$this->notelen_db->where('tanggal_putusan <=', $filters['tanggal_sampai']);
+		}
+
+		return $this->notelen_db->count_all_results();
+	}
+
+	/**
+	 * Get PBT by ID
+	 */
+	public function get_pbt_by_id($id)
+	{
+		return $this->notelen_db->get_where('berkas_pbt', array('id' => $id))->row();
+	}
+
+	/**
+	 * Get PBT by nomor perkara
+	 */
+	public function get_pbt_by_nomor($nomor_perkara)
+	{
+		return $this->notelen_db->get_where('berkas_pbt', array('nomor_perkara' => $nomor_perkara))->row();
+	}
+
+	/**
+	 * Insert berkas PBT baru
+	 */
+	public function insert_berkas_pbt($data)
+	{
+		// Check duplicate in berkas_masuk
+		$is_duplicate = $this->check_duplicate_berkas($data['nomor_perkara']);
+
+		// Calculate status and selisih
+		$status_proses = 'Belum PBT';
+		$selisih_putus_pbt = null;
+		$selisih_pbt_bht = null;
+
+		if (!empty($data['tanggal_pbt'])) {
+			if (!empty($data['tanggal_bht'])) {
+				$status_proses = 'Selesai';
+				$selisih_pbt_bht = $this->calculate_date_diff($data['tanggal_pbt'], $data['tanggal_bht']);
+			} else {
+				$status_proses = 'Sudah PBT Belum BHT';
+			}
+			$selisih_putus_pbt = $this->calculate_date_diff($data['tanggal_putusan'], $data['tanggal_pbt']);
+		}
+
+		$pbt_data = array(
+			'nomor_perkara' => $data['nomor_perkara'],
+			'perkara_id_sipp' => isset($data['perkara_id_sipp']) ? $data['perkara_id_sipp'] : 0,
+			'jenis_perkara' => isset($data['jenis_perkara']) ? $data['jenis_perkara'] : null,
+			'tanggal_putusan' => $data['tanggal_putusan'],
+			'tanggal_pbt' => isset($data['tanggal_pbt']) ? $data['tanggal_pbt'] : null,
+			'tanggal_bht' => isset($data['tanggal_bht']) ? $data['tanggal_bht'] : null,
+			'selisih_putus_pbt' => $selisih_putus_pbt,
+			'selisih_pbt_bht' => $selisih_pbt_bht,
+			'status_proses' => $status_proses,
+			'majelis_hakim' => isset($data['majelis_hakim']) ? $data['majelis_hakim'] : null,
+			'panitera_pengganti' => isset($data['panitera_pengganti']) ? $data['panitera_pengganti'] : null,
+			'catatan_pbt' => isset($data['catatan_pbt']) ? $data['catatan_pbt'] : null,
+			'is_duplicate_berkas' => $is_duplicate ? 1 : 0
+		);
+
+		$this->notelen_db->insert('berkas_pbt', $pbt_data);
+		return $this->notelen_db->insert_id();
+	}
+
+	/**
+	 * Delete berkas PBT
+	 */
+	public function delete_berkas_pbt($id)
+	{
+		$this->notelen_db->where('id', $id);
+		return $this->notelen_db->delete('berkas_pbt');
+	}
+
+	/**
+	 * Sync perkara PBT dari SIPP
+	 */
+	public function sync_perkara_pbt($limit = 100)
+	{
+		$query = "
+			SELECT 
+				p.nomor_perkara,
+				p.perkara_id,
+				p.jenis_perkara_nama as jenis_perkara,
+				DATE(pp.tanggal_putusan) as tanggal_putusan,
+				DATE(pjs.tanggal_sidang) as tanggal_pbt,
+				DATE(pp.tanggal_bht) as tanggal_bht,
+				DATEDIFF(pjs.tanggal_sidang, pp.tanggal_putusan) as selisih_putus_pbt,
+				DATEDIFF(pp.tanggal_bht, pjs.tanggal_sidang) as selisih_pbt_bht,
+				CASE 
+					WHEN pjs.tanggal_sidang IS NULL THEN 'Belum PBT'
+					WHEN pp.tanggal_bht IS NULL THEN 'Sudah PBT Belum BHT'
+					ELSE 'Selesai'
+				END as status_proses,
+				pp.majelis_hakim,
+				pp.panitera_pengganti
+			FROM perkara p
+			LEFT JOIN perkara_putusan pp ON p.perkara_id = pp.perkara_id
+			LEFT JOIN perkara_jadwal_sidang pjs ON p.perkara_id = pjs.perkara_id AND pjs.jenis_sidang_nama LIKE '%PBT%'
+			WHERE pp.tanggal_putusan IS NOT NULL
+			AND DATE_FORMAT(pp.tanggal_putusan, '%Y-%m') >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 6 MONTH), '%Y-%m')
+			ORDER BY pp.tanggal_putusan DESC
+			LIMIT ?
+		";
+
+		$sipp_data = $this->sipp_db->query($query, array((int)$limit))->result();
+
+		$synced_count = 0;
+		$duplicate_count = 0;
+		$errors = array();
+
+		foreach ($sipp_data as $row) {
+			try {
+				// Check if already exists in berkas_pbt
+				$existing = $this->get_pbt_by_nomor($row->nomor_perkara);
+				if ($existing) {
+					$duplicate_count++;
+					continue;
+				}
+
+				$data = array(
+					'nomor_perkara' => $row->nomor_perkara,
+					'perkara_id_sipp' => $row->perkara_id,
+					'jenis_perkara' => $row->jenis_perkara,
+					'tanggal_putusan' => $row->tanggal_putusan,
+					'tanggal_pbt' => $row->tanggal_pbt,
+					'tanggal_bht' => $row->tanggal_bht,
+					'majelis_hakim' => $row->majelis_hakim,
+					'panitera_pengganti' => $row->panitera_pengganti
+				);
+
+				$result = $this->insert_berkas_pbt($data);
+				if ($result) {
+					$synced_count++;
+				}
+			} catch (Exception $e) {
+				$errors[] = $row->nomor_perkara . ': ' . $e->getMessage();
+			}
+		}
+
+		return array(
+			'success' => true,
+			'synced_count' => $synced_count,
+			'duplicate_count' => $duplicate_count,
+			'errors' => $errors,
+			'message' => "Sync completed: {$synced_count} new, {$duplicate_count} duplicates"
+		);
+	}
+
+	/**
+	 * Get PBT dashboard stats
+	 */
+	public function get_pbt_dashboard_stats()
+	{
+		try {
+			$stats = new stdClass();
+
+			// Total PBT
+			$stats->total_pbt = $this->notelen_db->count_all('berkas_pbt');
+
+			// Count by status
+			$this->notelen_db->where('status_proses', 'Belum PBT');
+			$stats->belum_pbt = $this->notelen_db->count_all_results('berkas_pbt');
+
+			$this->notelen_db->where('status_proses', 'Sudah PBT Belum BHT');
+			$stats->sudah_pbt_belum_bht = $this->notelen_db->count_all_results('berkas_pbt');
+
+			$this->notelen_db->where('status_proses', 'Selesai');
+			$stats->selesai = $this->notelen_db->count_all_results('berkas_pbt');
+
+			// Count duplicates
+			$this->notelen_db->where('is_duplicate_berkas', 1);
+			$stats->duplicate_count = $this->notelen_db->count_all_results('berkas_pbt');
+
+			return array('pbt' => $stats);
+		} catch (Exception $e) {
+			return array('pbt' => null);
+		}
+	}
+
+	/**
+	 * Check if nomor perkara exists in berkas_masuk
+	 */
+	private function check_duplicate_berkas($nomor_perkara)
+	{
+		$result = $this->notelen_db->get_where('berkas_masuk', array('nomor_perkara' => $nomor_perkara))->row();
+		return $result ? true : false;
+	}
+
+	/**
+	 * Calculate date difference in days
+	 */
+	private function calculate_date_diff($date1, $date2)
+	{
+		if (empty($date1) || empty($date2)) {
+			return null;
+		}
+
+		$datetime1 = new DateTime($date1);
+		$datetime2 = new DateTime($date2);
+		$diff = $datetime1->diff($datetime2);
+
+		return $diff->days;
+	}
 }
