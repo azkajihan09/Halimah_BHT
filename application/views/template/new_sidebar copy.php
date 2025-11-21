@@ -30,7 +30,14 @@
 					</a>
 				</li>
 
-				
+				<!-- Dashboard Home - Enhanced -->
+				<!-- <li class="nav-item">
+					<a href="<?= site_url('dashboard_home') ?>" class="nav-link <?= $this->uri->segment(1) == 'dashboard_home' ? 'active' : '' ?>">
+						<i class="nav-icon fas fa-home text-success"></i>
+						<p>Dashboard Home</p>
+						<span class="badge badge-success right">Enhanced</span>
+					</a>
+				</li> -->
 
 				<li class="nav-header">MANAJEMEN BHT</li>
 
@@ -108,7 +115,18 @@
 						</p>
 					</a>
 					<ul class="nav nav-treeview">
-						
+						<!-- <li class="nav-item">
+							<a href="<?php echo site_url('notelen') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == '' ? 'active' : '' ?>">
+								<i class="fas fa-folder-open nav-icon text-success"></i>
+								<p>Berkas Perka Masuk </p>
+							</a>
+						</li> -->
+						<!-- <li class="nav-item">
+							<a href="<?php echo site_url('notelen/berkas_masuk2') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'berkas_masuk2' ? 'active' : '' ?>">
+								<i class="fas fa-table nav-icon text-primary"></i>
+								<p>Berkas Masuk 2 (Table)</p>
+							</a>
+						</li> -->
 						<li class="nav-item">
 							<a href="<?php echo site_url('notelen/berkas_template') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'berkas_template' ? 'active' : '' ?>">
 								<i class="fas fa-folder-open nav-icon text-success"></i>
@@ -119,7 +137,97 @@
 					</ul>
 				</li>
 
-				<li class="nav-header">PENGINGAT & NOTIFIKASI</li>
+				<!-- Menu Baru - Kalender & Tanggal -->
+				<!-- <li class="nav-item">
+					<a href="<?php echo site_url('Menu_baru/tanggal_pbt_bht') ?>" class="nav-link <?= $this->uri->segment(2) == 'tanggal_pbt_bht' ? 'active' : '' ?>">
+						<i class="nav-icon fas fa-calendar-alt text-purple"></i>
+						<p>Tanggal PBT dan BHT</p>
+					</a>
+				</li> -->
+
+				<!-- Laporan Kegiatan Hakim -->
+				<!-- <li class="nav-item">
+					<a href="#" class="nav-link">
+						<i class="nav-icon fas fa-gavel"></i>
+						<p>
+							Laporan Monitoring BHT
+							<i class="fas fa-angle-left right"></i>
+						</p>
+					</a>
+					<ul class="nav nav-treeview">
+
+						<li class="nav-item">
+							<a href="<?php echo site_url('Bht_putus') ?>" class="nav-link">
+								<i class="fas fa-file-signature nav-icon"></i>
+								<p>BHT Perkara Putus</p>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('Bht_putus_2') ?>" class="nav-link">
+								<i class="fas fa-file-contract nav-icon"></i>
+								<p>BHT Perkara Putus 2</p>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('Bht_putus_3') ?>" class="nav-link">
+								<i class="fas fa-file-invoice nav-icon"></i>
+								<p>BHT Perkara Putus 3</p>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('bht_putus_4') ?>" class="nav-link <?= $this->uri->segment(1) == 'bht_putus_4' ? 'active' : '' ?>">
+								<i class="fas fa-sort-amount-down nav-icon text-primary"></i>
+								<p>BHT Putus 4 - Sorting</p>
+								<span class="badge badge-info right">NEW</span>
+							</a>
+						</li>
+
+					</ul>
+				</li> -->
+
+				<!-- BHT Reminder System -->
+				<!-- <li class="nav-item">
+					<a href="#" class="nav-link">
+						<i class="nav-icon fas fa-bell text-warning"></i>
+						<p>
+							Sistem Pengingat BHT
+							<i class="fas fa-angle-left right"></i>
+						</p>
+					</a>
+					<ul class="nav nav-treeview">
+						<li class="nav-item">
+							<a href="<?php echo site_url('bht_reminder') ?>" class="nav-link <?= $this->uri->segment(1) == 'bht_reminder' ? 'active' : '' ?>">
+								<i class="fas fa-clock nav-icon text-danger"></i>
+								<p>Dashboard Pengingat</p>
+								<span class="badge badge-danger right" id="reminder-count">0</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('api/bht/reminders') ?>" class="nav-link" target="_blank">
+								<i class="fas fa-list nav-icon"></i>
+								<p>Data Pengingat (API)</p>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('bht_reminder/export_report?format=excel') ?>" class="nav-link">
+								<i class="fas fa-file-excel nav-icon text-success"></i>
+								<p>Export Laporan Excel</p>
+							</a>
+						</li>
+					</ul>
+				</li> -->
+
+				<!-- Data & Pengembangan -->
+<!-- 
+				<li class="nav-header">DATA &amp; PENGEMBANGAN</li>
+
+				Dashboard BHT Original
+				<li class="nav-item">
+					<a href="<?php echo site_url('dashboard_bht') ?>" class="nav-link <?= $this->uri->segment(1) == 'dashboard_bht' ? 'active' : '' ?>">
+						<i class="nav-icon fas fa-chart-line text-info"></i>
+						<p>Dashboard BHT Visual</p>
+					</a>
+				</li> -->
 
 				<!-- Testing & Development (Show only in development) -->
 				<!-- <?php if (ENVIRONMENT === 'development'): ?>
