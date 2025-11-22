@@ -1077,4 +1077,32 @@ class Notelen extends CI_Controller
 			));
 		}
 	}
+
+	// Command Center Dashboard - Futuristic style
+	public function command_center()
+	{
+		$data['title'] = 'Command Center - Notelen System';
+		$this->load->view('notelen/command_center', $data);
+	}
+
+	// Mobile Dashboard - Mobile-first design
+	public function mobile_dashboard()
+	{
+		$data['title'] = 'Mobile Dashboard - Notelen System';
+		$this->load->view('notelen/mobile_dashboard', $data);
+	}
+
+	// Timeline Interactive - Timeline view
+	public function timeline()
+	{
+		$data['title'] = 'Timeline Interactive - Notelen System';
+		$this->load->view('notelen/timeline_interactive', $data);
+	}
+
+	// Dashboard Gallery - Choose dashboard style
+	public function gallery()
+	{
+		$data['title'] = 'Dashboard Gallery - Notelen System';
+		$this->load->view('notelen/dashboard_gallery', $data);
+	}
 }

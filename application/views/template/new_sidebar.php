@@ -109,6 +109,13 @@
 					</a>
 					<ul class="nav nav-treeview">
 						<li class="nav-item">
+							<a href="<?php echo site_url('notelen/gallery') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'gallery' ? 'active' : '' ?>">
+								<i class="fas fa-th-large nav-icon text-purple"></i>
+								<p>Dashboard Gallery</p>
+								<span class="badge badge-purple right">HOT</span>
+							</a>
+						</li>
+						<li class="nav-item">
 							<a href="<?php echo site_url('notelen/berkas_template') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'berkas_template' ? 'active' : '' ?>">
 								<i class="fas fa-folder-open nav-icon text-success"></i>
 								<p>Berkas Masuk</p>
@@ -120,6 +127,40 @@
 								<i class="fas fa-gavel nav-icon text-info"></i>
 								<p>Berkas PBT</p>
 								<span class="badge badge-info right">PBT</span>
+							</a>
+						</li>
+					</ul>
+				</li>
+
+				<!-- Dashboard Options -->
+				<li class="nav-item">
+					<a href="#" class="nav-link">
+						<i class="nav-icon fas fa-tachometer-alt text-purple"></i>
+						<p>
+							Dashboard Styles
+							<i class="fas fa-angle-left right"></i>
+						</p>
+					</a>
+					<ul class="nav nav-treeview">
+						<li class="nav-item">
+							<a href="<?php echo site_url('notelen/command_center') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'command_center' ? 'active' : '' ?>">
+								<i class="fas fa-rocket nav-icon text-success"></i>
+								<p>Command Center</p>
+								<span class="badge badge-success right">Featured</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('notelen/mobile_dashboard') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'mobile_dashboard' ? 'active' : '' ?>">
+								<i class="fas fa-mobile-alt nav-icon text-info"></i>
+								<p>Mobile Dashboard</p>
+								<span class="badge badge-info right">Popular</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="<?php echo site_url('notelen/timeline') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'timeline' ? 'active' : '' ?>">
+								<i class="fas fa-history nav-icon text-warning"></i>
+								<p>Timeline View</p>
+								<span class="badge badge-warning right">New</span>
 							</a>
 						</li>
 					</ul>
@@ -274,6 +315,16 @@
 		}
 	}
 
+	/* Badge purple styling */
+	.badge-purple {
+		background-color: #6f42c1 !important;
+		color: white !important;
+	}
+
+	.text-purple {
+		color: #6f42c1 !important;
+	}
+
 	/* Styling khusus untuk menu BHT */
 	.nav-sidebar .nav-item>.nav-link.active .nav-icon {
 		color: #ffc107 !important;
@@ -282,5 +333,29 @@
 	/* Highlight untuk menu pengingat */
 	.nav-sidebar .nav-item>.nav-link:hover .text-warning {
 		color: #fff !important;
+	}
+
+	/* Hover effects untuk dashboard menu */
+	.nav-sidebar .nav-item>.nav-link:hover .text-purple {
+		color: #fff !important;
+	}
+
+	.nav-sidebar .nav-item>.nav-link:hover .badge-purple {
+		background-color: #fff !important;
+		color: #6f42c1 !important;
+	}
+
+	/* Special animation for HOT badge */
+	.badge-purple {
+		animation: glow-purple 2s infinite;
+	}
+
+	@keyframes glow-purple {
+		0%, 100% {
+			box-shadow: 0 0 5px rgba(111, 66, 193, 0.5);
+		}
+		50% {
+			box-shadow: 0 0 20px rgba(111, 66, 193, 0.8);
+		}
 	}
 </style>
