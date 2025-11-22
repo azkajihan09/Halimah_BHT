@@ -423,18 +423,26 @@
 	$('#newBerkasForm').submit(function(e) {
 		e.preventDefault();
 
+		// Disable submit button during processing
+		var submitBtn = $(this).find('button[type="submit"]');
+		var originalText = submitBtn.html();
+		submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
 		$.ajax({
-			url: '<?= base_url("notelen/ajax_insert_berkas") ?>',
+			url: '<?= base_url("notelen/ajax_insert_berkas_direct") ?>',
 			type: 'POST',
 			data: $(this).serialize(),
 			dataType: 'json',
+			timeout: 30000, // 30 second timeout
 			success: function(response) {
-				if (response.success) {
+				console.log('Success response:', response);
+				
+				if (response && response.success) {
 					$('#newBerkasModal').modal('hide');
 					Swal.fire({
 						icon: 'success',
 						title: 'Berhasil!',
-						text: response.message,
+						text: response.message || 'Berkas berhasil disimpan',
 						timer: 2000
 					}).then(() => {
 						location.reload();
@@ -443,16 +451,48 @@
 					Swal.fire({
 						icon: 'error',
 						title: 'Error!',
-						text: response.message
+						text: response.message || 'Terjadi kesalahan saat menyimpan data'
 					});
 				}
 			},
-			error: function() {
+			error: function(xhr, status, error) {
+				console.log('AJAX Error Details:');
+				console.log('Status:', status);
+				console.log('Error:', error);
+				console.log('Response Text:', xhr.responseText);
+				console.log('Status Code:', xhr.status);
+				
+				var errorMessage = 'Terjadi kesalahan koneksi';
+				
+				// Try to parse error response
+				try {
+					if (xhr.responseText) {
+						var errorResponse = JSON.parse(xhr.responseText);
+						if (errorResponse && errorResponse.message) {
+							errorMessage = errorResponse.message;
+						}
+					}
+				} catch(e) {
+					// If response is not JSON, show part of the response text
+					if (xhr.responseText && xhr.responseText.length > 0) {
+						errorMessage = 'Server Error: ' + xhr.responseText.substring(0, 200);
+					} else if (status === 'timeout') {
+						errorMessage = 'Request timeout - coba lagi';
+					} else if (status === 'parsererror') {
+						errorMessage = 'Server mengirim response yang tidak valid';
+					}
+				}
+				
 				Swal.fire({
 					icon: 'error',
-					title: 'Error!',
-					text: 'Terjadi kesalahan koneksi'
+					title: 'Error Koneksi!',
+					text: errorMessage,
+					footer: 'Jika data sudah tersimpan, silakan refresh halaman'
 				});
+			},
+			complete: function() {
+				// Re-enable submit button
+				submitBtn.prop('disabled', false).html(originalText);
 			}
 		});
 	});

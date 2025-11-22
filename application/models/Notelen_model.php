@@ -108,31 +108,51 @@ class Notelen_model extends CI_Model
 	 */
 	public function insert_berkas_masuk($data)
 	{
-		// Check if already exists
-		$existing = $this->get_berkas_by_nomor($data['nomor_perkara']);
-		if ($existing) {
-			return $existing->id;
+		try {
+			// Check if already exists
+			$existing = $this->get_berkas_by_nomor($data['nomor_perkara']);
+			if ($existing) {
+				return $existing->id;
+			}
+
+			$berkas_data = array(
+				'nomor_perkara' => $data['nomor_perkara'],
+				'perkara_id_sipp' => $data['perkara_id_sipp'],
+				'jenis_perkara' => isset($data['jenis_perkara']) ? $data['jenis_perkara'] : null,
+				'tanggal_putusan' => $data['tanggal_putusan'],
+				'tanggal_masuk_notelen' => isset($data['tanggal_masuk_notelen']) ? $data['tanggal_masuk_notelen'] : date('Y-m-d'),
+				'majelis_hakim' => isset($data['majelis_hakim']) ? $data['majelis_hakim'] : null,
+				'panitera_pengganti' => isset($data['panitera_pengganti']) ? $data['panitera_pengganti'] : null,
+				'status_berkas' => isset($data['status_berkas']) ? $data['status_berkas'] : 'MASUK',
+				'catatan_notelen' => isset($data['catatan_notelen']) ? $data['catatan_notelen'] : null
+			);
+
+			// Start transaction
+			$this->notelen_db->trans_start();
+
+			$this->notelen_db->insert('berkas_masuk', $berkas_data);
+			$berkas_id = $this->notelen_db->insert_id();
+
+			if ($berkas_id) {
+				// Log activity
+				$this->log_notelen_activity($berkas_id, 'BERKAS_MASUK', 'Berkas masuk ke notelen', null, null);
+			}
+
+			// Complete transaction
+			$this->notelen_db->trans_complete();
+
+			if ($this->notelen_db->trans_status() === FALSE) {
+				return false;
+			}
+
+			return $berkas_id;
+			
+		} catch (Exception $e) {
+			// Rollback transaction on error
+			$this->notelen_db->trans_rollback();
+			log_message('error', 'Error inserting berkas: ' . $e->getMessage());
+			return false;
 		}
-
-		$berkas_data = array(
-			'nomor_perkara' => $data['nomor_perkara'],
-			'perkara_id_sipp' => $data['perkara_id_sipp'],
-			'jenis_perkara' => isset($data['jenis_perkara']) ? $data['jenis_perkara'] : null,
-			'tanggal_putusan' => $data['tanggal_putusan'],
-			'tanggal_masuk_notelen' => isset($data['tanggal_masuk_notelen']) ? $data['tanggal_masuk_notelen'] : date('Y-m-d'),
-			'majelis_hakim' => isset($data['majelis_hakim']) ? $data['majelis_hakim'] : null,
-			'panitera_pengganti' => isset($data['panitera_pengganti']) ? $data['panitera_pengganti'] : null,
-			'status_berkas' => isset($data['status_berkas']) ? $data['status_berkas'] : 'MASUK',
-			'catatan_notelen' => isset($data['catatan_notelen']) ? $data['catatan_notelen'] : null
-		);
-
-		$this->notelen_db->insert('berkas_masuk', $berkas_data);
-		$berkas_id = $this->notelen_db->insert_id();
-
-		// Log activity
-		$this->log_notelen_activity($berkas_id, 'BERKAS_MASUK', 'Berkas masuk ke notelen', null, null);
-
-		return $berkas_id;
 	}
 
 	/**

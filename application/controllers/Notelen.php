@@ -278,60 +278,255 @@ class Notelen extends CI_Controller
 	}
 
 	/**
+	 * Test AJAX response page
+	 */
+	public function test_ajax()
+	{
+		$data = array(
+			'page_title' => 'Test AJAX Response'
+		);
+		$this->load->view('notelen/test_ajax_response', $data);
+	}
+
+	/**
+	 * Test database connection
+	 */
+	public function test_db_connection()
+	{
+		header('Content-Type: application/json');
+		
+		try {
+			// Load database directly
+			$notelen_db = $this->load->database('notelen_db', TRUE);
+			
+			if (!$notelen_db) {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Failed to load notelen database'
+				));
+				exit();
+			}
+			
+			// Test basic query
+			$result = $notelen_db->query("SELECT 1 as test")->row();
+			
+			// Test berkas table
+			$count = $notelen_db->query("SELECT COUNT(*) as total FROM berkas_masuk")->row();
+			
+			echo json_encode(array(
+				'success' => true,
+				'message' => 'Database connection OK',
+				'test_result' => $result,
+				'berkas_count' => $count,
+				'database_name' => $notelen_db->database
+			));
+		} catch (Exception $e) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Database error: ' . $e->getMessage()
+			));
+		}
+		exit();
+	}
+
+	/**
+	 * Insert berkas baru via AJAX - Direct database approach
+	 */
+	public function ajax_insert_berkas_direct()
+	{
+		// Clear any output buffer
+		while (ob_get_level()) {
+			ob_end_clean();
+		}
+		
+		// Disable error display for AJAX
+		ini_set('display_errors', 0);
+		error_reporting(0);
+		
+		// Set response headers
+		header('Content-Type: application/json');
+		header('Cache-Control: no-cache, must-revalidate');
+		
+		try {
+			// Load database directly
+			$notelen_db = $this->load->database('notelen_db', TRUE);
+			
+			if (!$notelen_db) {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Database connection failed'
+				));
+				exit();
+			}
+
+			$nomor_perkara = trim($this->input->post('nomor_perkara'));
+			$tanggal_putusan = $this->input->post('tanggal_putusan');
+			$jenis_perkara = $this->input->post('jenis_perkara');
+			$majelis_hakim = $this->input->post('majelis_hakim');
+			$panitera_pengganti = $this->input->post('panitera_pengganti');
+			$catatan = $this->input->post('catatan_notelen');
+
+			// Validasi
+			if (empty($nomor_perkara) || empty($tanggal_putusan)) {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Nomor perkara dan tanggal putusan harus diisi'
+				));
+				exit();
+			}
+
+			// Check existing - direct query
+			$existing = $notelen_db->query("SELECT id FROM berkas_masuk WHERE nomor_perkara = ?", array($nomor_perkara))->row();
+			if ($existing) {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Berkas dengan nomor perkara ini sudah ada'
+				));
+				exit();
+			}
+
+			// Insert data directly
+			$data = array(
+				'nomor_perkara' => $nomor_perkara,
+				'perkara_id_sipp' => 0,
+				'jenis_perkara' => $jenis_perkara,
+				'tanggal_putusan' => $tanggal_putusan,
+				'tanggal_masuk_notelen' => date('Y-m-d'),
+				'majelis_hakim' => $majelis_hakim,
+				'panitera_pengganti' => $panitera_pengganti,
+				'status_berkas' => 'MASUK',
+				'catatan_notelen' => $catatan,
+				'created_at' => date('Y-m-d H:i:s'),
+				'updated_at' => date('Y-m-d H:i:s')
+			);
+
+			$notelen_db->insert('berkas_masuk', $data);
+			$berkas_id = $notelen_db->insert_id();
+
+			if ($berkas_id) {
+				echo json_encode(array(
+					'success' => true,
+					'message' => 'Berkas berhasil ditambahkan',
+					'berkas_id' => $berkas_id
+				));
+			} else {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Gagal menambahkan berkas'
+				));
+			}
+			exit();
+			
+		} catch (Exception $e) {
+			// Log the actual error for debugging
+			log_message('error', 'AJAX Insert Berkas Error: ' . $e->getMessage() . ' File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+			
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Terjadi kesalahan sistem. Silakan coba lagi.',
+				'debug' => ENVIRONMENT !== 'production' ? $e->getMessage() : null
+			));
+			exit();
+		}
+	}
+
+	/**
 	 * Insert berkas baru via AJAX
 	 */
 	public function ajax_insert_berkas()
 	{
-		$nomor_perkara = trim($this->input->post('nomor_perkara'));
-		$tanggal_putusan = $this->input->post('tanggal_putusan');
-		$jenis_perkara = $this->input->post('jenis_perkara');
-		$majelis_hakim = $this->input->post('majelis_hakim');
-		$panitera_pengganti = $this->input->post('panitera_pengganti');
-		$catatan = $this->input->post('catatan_notelen');
-
-		// Validasi
-		if (empty($nomor_perkara) || empty($tanggal_putusan)) {
-			echo json_encode(array(
-				'success' => false,
-				'message' => 'Nomor perkara dan tanggal putusan harus diisi'
-			));
-			return;
+		// Clear any output buffer
+		while (ob_get_level()) {
+			ob_end_clean();
 		}
+		
+		// Disable error display for AJAX
+		ini_set('display_errors', 0);
+		error_reporting(0);
+		
+		// Set response headers
+		header('Content-Type: application/json');
+		header('Cache-Control: no-cache, must-revalidate');
+		
+		try {
+			// Test database connection first
+			if (!$this->notelen->notelen_db) {
+				$response = array(
+					'success' => false,
+					'message' => 'Database notelen tidak terhubung'
+				);
+				echo json_encode($response);
+				exit();
+			}
 
-		// Check existing
-		$existing = $this->notelen->get_berkas_by_nomor($nomor_perkara);
-		if ($existing) {
-			echo json_encode(array(
+			$nomor_perkara = trim($this->input->post('nomor_perkara'));
+			$tanggal_putusan = $this->input->post('tanggal_putusan');
+			$jenis_perkara = $this->input->post('jenis_perkara');
+			$majelis_hakim = $this->input->post('majelis_hakim');
+			$panitera_pengganti = $this->input->post('panitera_pengganti');
+			$catatan = $this->input->post('catatan_notelen');
+
+			// Validasi
+			if (empty($nomor_perkara) || empty($tanggal_putusan)) {
+				$response = array(
+					'success' => false,
+					'message' => 'Nomor perkara dan tanggal putusan harus diisi'
+				);
+				echo json_encode($response);
+				exit();
+			}
+
+			// Check existing
+			$existing = $this->notelen->get_berkas_by_nomor($nomor_perkara);
+			if ($existing) {
+				$response = array(
+					'success' => false,
+					'message' => 'Berkas dengan nomor perkara ini sudah ada'
+				);
+				echo json_encode($response);
+				exit();
+			}
+
+			$data = array(
+				'nomor_perkara' => $nomor_perkara,
+				'perkara_id_sipp' => 0, // Manual entry
+				'jenis_perkara' => $jenis_perkara,
+				'tanggal_putusan' => $tanggal_putusan,
+				'majelis_hakim' => $majelis_hakim,
+				'panitera_pengganti' => $panitera_pengganti,
+				'status_berkas' => 'MASUK',
+				'catatan_notelen' => $catatan
+			);
+
+			$berkas_id = $this->notelen->insert_berkas_masuk($data);
+
+			if ($berkas_id) {
+				$response = array(
+					'success' => true,
+					'message' => 'Berkas berhasil ditambahkan',
+					'berkas_id' => $berkas_id
+				);
+			} else {
+				$response = array(
+					'success' => false,
+					'message' => 'Gagal menambahkan berkas'
+				);
+			}
+			
+			echo json_encode($response);
+			exit();
+			
+		} catch (Exception $e) {
+			// Log the actual error for debugging
+			log_message('error', 'AJAX Insert Berkas Error: ' . $e->getMessage() . ' File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+			
+			$response = array(
 				'success' => false,
-				'message' => 'Berkas dengan nomor perkara ini sudah ada'
-			));
-			return;
-		}
-
-		$data = array(
-			'nomor_perkara' => $nomor_perkara,
-			'perkara_id_sipp' => 0, // Manual entry
-			'jenis_perkara' => $jenis_perkara,
-			'tanggal_putusan' => $tanggal_putusan,
-			'majelis_hakim' => $majelis_hakim,
-			'panitera_pengganti' => $panitera_pengganti,
-			'status_berkas' => 'MASUK',
-			'catatan_notelen' => $catatan
-		);
-
-		$berkas_id = $this->notelen->insert_berkas_masuk($data);
-
-		if ($berkas_id) {
-			echo json_encode(array(
-				'success' => true,
-				'message' => 'Berkas berhasil ditambahkan',
-				'berkas_id' => $berkas_id
-			));
-		} else {
-			echo json_encode(array(
-				'success' => false,
-				'message' => 'Gagal menambahkan berkas'
-			));
+				'message' => 'Terjadi kesalahan sistem. Silakan coba lagi.',
+				'debug' => ENVIRONMENT !== 'production' ? $e->getMessage() : null
+			);
+			echo json_encode($response);
+			exit();
 		}
 	}
 
