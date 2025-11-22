@@ -1,8 +1,8 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-$config['base_url'] = 'http://localhost/Halimah_BHT/';
-// $config['base_url'] = 'http://localhost:8080/Halimah_BHT/';
+//$config['base_url'] = 'http://localhost/Halimah_BHT/';
+$config['base_url'] = 'http://localhost:8080/Halimah_BHT/';
 // $config['base_url'] = 'http://localhost:8080/lab_sipp/';
 $config['index_page'] = 'index.php';
 $config['uri_protocol'] = 'REQUEST_URI';
