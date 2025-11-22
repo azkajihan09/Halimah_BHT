@@ -20,8 +20,8 @@ var NOTELEN_CONFIG = {
 $.ajaxSetup({
     timeout: NOTELEN_CONFIG.ajax_timeout,
     beforeSend: function(xhr, settings) {
-        // Add CSRF token for CodeIgniter security
-        if (settings.type === 'POST') {
+        // Add CSRF token for CodeIgniter security (if enabled)
+        if (settings.type === 'POST' && NOTELEN_CONFIG.csrf_token_name && NOTELEN_CONFIG.csrf_hash) {
             var csrfName = NOTELEN_CONFIG.csrf_token_name;
             var csrfHash = NOTELEN_CONFIG.csrf_hash;
             

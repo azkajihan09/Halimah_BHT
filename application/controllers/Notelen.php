@@ -285,12 +285,24 @@ class Notelen extends CI_Controller
 		header('Content-Type: application/json');
 		header('Cache-Control: no-cache, must-revalidate');
 		
+		// Test configuration
+		$config_status = array(
+			'log_path' => $this->config->item('log_path') ?: 'default',
+			'log_threshold' => $this->config->item('log_threshold'),
+			'cache_path' => $this->config->item('cache_path') ?: 'default',
+			'base_url' => $this->config->item('base_url')
+		);
+		
+		// Test logging
+		log_message('info', 'Testing server connection from: ' . (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'CLI'));
+		
 		echo json_encode(array(
 			'success' => true,
 			'message' => 'Server connection OK',
 			'timestamp' => date('Y-m-d H:i:s'),
 			'server' => isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'unknown',
-			'environment' => ENVIRONMENT
+			'environment' => ENVIRONMENT,
+			'config' => $config_status
 		));
 		exit();
 	}
