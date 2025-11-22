@@ -2,6 +2,9 @@
 
 <?php $this->load->view('template/new_sidebar'); ?>
 
+<!-- Include AJAX Config for Server Compatibility -->
+<?php $this->load->view('notelen/ajax_config'); ?>
+
 <!-- Content Wrapper -->
 <div class="content-wrapper">
 	<!-- Content Header -->
@@ -373,7 +376,7 @@
 	// Load data perkara untuk dropdown
 	function loadPerkaraDropdown() {
 		$.ajax({
-			url: '<?= base_url("notelen/ajax_get_perkara_dropdown") ?>',
+			url: getAjaxUrl('notelen/ajax_get_perkara_dropdown'),
 			type: 'GET',
 			dataType: 'json',
 			success: function(response) {
@@ -429,7 +432,7 @@
 		submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
 
 		$.ajax({
-			url: '<?= base_url("notelen/ajax_insert_berkas_direct") ?>',
+			url: getAjaxUrl('notelen/ajax_insert_berkas_direct'),
 			type: 'POST',
 			data: $(this).serialize(),
 			dataType: 'json',
@@ -508,7 +511,7 @@
 		}).then((result) => {
 			if (result.isConfirmed) {
 				$.ajax({
-					url: '<?= base_url("notelen/ajax_sync_sipp") ?>',
+					url: getAjaxUrl('notelen/ajax_sync_sipp'),
 					type: 'POST',
 					data: {
 						limit: 100
@@ -573,7 +576,7 @@
 		}).then((result) => {
 			if (result.isConfirmed) {
 				// Simple approach - just redirect with delete parameter
-				window.location.href = '<?= base_url("notelen/ajax_delete_berkas") ?>?id=' + berkas_id + '&redirect=1';
+				window.location.href = getAjaxUrl('notelen/ajax_delete_berkas') + '?id=' + berkas_id + '&redirect=1';
 			}
 		});
 	}

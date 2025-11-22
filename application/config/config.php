@@ -1,10 +1,30 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-//$config['base_url'] = 'http://localhost/Halimah_BHT/';
-$config['base_url'] = 'http://localhost:8080/Halimah_BHT/';
-// $config['base_url'] = 'http://localhost:8080/lab_sipp/';
-$config['index_page'] = 'index.php';
+// =============================================
+// ENVIRONMENT DETECTION & BASE URL
+// =============================================
+if (isset($_SERVER['HTTP_HOST'])) {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+    $host = $_SERVER['HTTP_HOST'];
+    
+    // Detect environment
+    if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
+        // Local development
+        $config['base_url'] = $protocol . $host . '/Halimah_BHT/';
+        define('ENVIRONMENT', 'development');
+    } else {
+        // Production server - adjust path as needed
+        $config['base_url'] = $protocol . $host . '/'; // or '/subfolder/' if in subfolder
+        define('ENVIRONMENT', 'production');
+    }
+} else {
+    // CLI or fallback
+    $config['base_url'] = 'http://localhost/Halimah_BHT/';
+    define('ENVIRONMENT', 'development');
+}
+
+$config['index_page'] = '';
 $config['uri_protocol'] = 'REQUEST_URI';
 $config['url_suffix'] = '';
 $config['language'] = 'english';

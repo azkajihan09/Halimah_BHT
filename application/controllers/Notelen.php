@@ -278,6 +278,24 @@ class Notelen extends CI_Controller
 	}
 
 	/**
+	 * Test server connection for AJAX
+	 */
+	public function test_server_connection()
+	{
+		header('Content-Type: application/json');
+		header('Cache-Control: no-cache, must-revalidate');
+		
+		echo json_encode(array(
+			'success' => true,
+			'message' => 'Server connection OK',
+			'timestamp' => date('Y-m-d H:i:s'),
+			'server' => isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'unknown',
+			'environment' => ENVIRONMENT
+		));
+		exit();
+	}
+
+	/**
 	 * Test AJAX response page
 	 */
 	public function test_ajax()
