@@ -411,14 +411,16 @@
 
 					<div class="form-group">
 						<label>Tanggal Putusan *</label>
-						<input type="date" name="tanggal_putusan" id="editTanggalPutusan" class="form-control" required>
+						<input type="date" name="tanggal_putusan" id="editTanggalPutusan" class="form-control" readonly disabled required>
+						<small class="form-text text-muted">Tanggal putusan tidak dapat diubah</small>
 					</div>
 
 					<div class="row">
 						<div class="col-md-6">
 							<div class="form-group">
 								<label>Jenis Perkara</label>
-								<input type="text" name="jenis_perkara" id="editJenisPerkara" class="form-control">
+								<input type="text" name="jenis_perkara" id="editJenisPerkara" class="form-control" readonly disabled>
+								<small class="form-text text-muted">Jenis perkara tidak dapat diubah</small>
 							</div>
 						</div>
 						<div class="col-md-6">
@@ -436,12 +438,14 @@
 
 					<div class="form-group">
 						<label>Majelis Hakim</label>
-						<input type="text" name="majelis_hakim" id="editMajelisHakim" class="form-control">
+						<input type="text" name="majelis_hakim" id="editMajelisHakim" class="form-control" readonly disabled>
+						<small class="form-text text-muted">Majelis hakim tidak dapat diubah</small>
 					</div>
 
 					<div class="form-group">
 						<label>Panitera Pengganti</label>
-						<input type="text" name="panitera_pengganti" id="editPaniteraPengganti" class="form-control">
+						<input type="text" name="panitera_pengganti" id="editPaniteraPengganti" class="form-control" readonly disabled>
+						<small class="form-text text-muted">Panitera pengganti tidak dapat diubah</small>
 					</div>
 
 					<div class="form-group">
@@ -482,11 +486,11 @@
 		$('#editBerkasForm')[0].reset();
 		$('#editBerkasId').val(berkas_id);
 
-		// Pastikan semua field dapat diedit (kecuali nomor perkara)
-		$('#editTanggalPutusan').prop('readonly', false).prop('disabled', false);
-		$('#editJenisPerkara').prop('readonly', false).prop('disabled', false);
-		$('#editMajelisHakim').prop('readonly', false).prop('disabled', false);
-		$('#editPaniteraPengganti').prop('readonly', false).prop('disabled', false);
+		// Pastikan field readonly tetap readonly
+		$('#editTanggalPutusan').prop('readonly', true).prop('disabled', true);
+		$('#editJenisPerkara').prop('readonly', true).prop('disabled', true);
+		$('#editMajelisHakim').prop('readonly', true).prop('disabled', true);
+		$('#editPaniteraPengganti').prop('readonly', true).prop('disabled', true);
 
 		// Load data berkas untuk edit
 		loadBerkasForEdit(berkas_id);
@@ -506,11 +510,11 @@
 				if (response.success && response.berkas) {
 					var berkas = response.berkas;
 
-					// Pastikan field dapat diedit
-					$('#editTanggalPutusan').prop('readonly', false);
-					$('#editJenisPerkara').prop('readonly', false);
-					$('#editMajelisHakim').prop('readonly', false);
-					$('#editPaniteraPengganti').prop('readonly', false);
+					// Pastikan field readonly tetap readonly
+					$('#editTanggalPutusan').prop('readonly', true).prop('disabled', true);
+					$('#editJenisPerkara').prop('readonly', true).prop('disabled', true);
+					$('#editMajelisHakim').prop('readonly', true).prop('disabled', true);
+					$('#editPaniteraPengganti').prop('readonly', true).prop('disabled', true);
 
 					// Set data
 					$('#editNomorPerkara').val(berkas.nomor_perkara || '');
