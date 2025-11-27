@@ -1,7 +1,7 @@
 -- Database untuk Sistem Notelen
-CREATE DATABASE IF NOT EXISTS `notelen_system` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `catatan_bht` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-USE `notelen_system`;
+USE `catatan_bht`;
 
 -- =============================================
 -- TABEL BERKAS MASUK (PERKARA PUTUS)
@@ -26,7 +26,7 @@ CREATE TABLE `berkas_masuk` (
     `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `nomor_perkara` (`nomor_perkara`),
-    INDEX `idx_perkara_id` (`perkara_id_sipp`),
+    INDEX `idx_perkara_id` (`perkara_id_sipp`), 
     INDEX `idx_tanggal_putusan` (`tanggal_putusan`),
     INDEX `idx_status` (`status_berkas`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
