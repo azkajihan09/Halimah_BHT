@@ -3,7 +3,7 @@
 	<!-- Brand Logo -->
 	<a href="<?php echo site_url('home') ?>" class="brand-link navbar-green">
 		<img src="<?php echo base_url() ?>assets/dist/img/logo-mahkamah-agung.png" alt="Logo PA Amuntai" class="brand-image img-circle elevation-2" style="opacity: .8">
-		<span class="brand-text font-weight-light">Monitoring BHT</span>
+		<span class="brand-text font-weight-light">SIGAP BHT</span>
 	</a>
 
 	<!-- Sidebar -->
@@ -68,7 +68,7 @@
 				</li>
 
 				<!-- Menu Baru - Manajemen Berkas -->
-				<li class="nav-item">
+				<!-- <li class="nav-item">
 					<a href="#" class="nav-link">
 						<i class="nav-icon fas fa-folder-open text-primary"></i>
 						<p>
@@ -96,7 +96,7 @@
 							</a>
 						</li>
 					</ul>
-				</li>
+				</li> -->
 
 				<!-- Notelen System -->
 				<li class="nav-item">
@@ -108,13 +108,13 @@
 						</p>
 					</a>
 					<ul class="nav nav-treeview">
-						<li class="nav-item">
+						<!-- <li class="nav-item">
 							<a href="<?php echo site_url('notelen/gallery') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'gallery' ? 'active' : '' ?>">
 								<i class="fas fa-th-large nav-icon text-purple"></i>
 								<p>Dashboard Gallery</p>
 								<span class="badge badge-purple right">HOT</span>
 							</a>
-						</li>
+						</li> -->
 						<li class="nav-item">
 							<a href="<?php echo site_url('notelen/berkas_template') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'berkas_template' ? 'active' : '' ?>">
 								<i class="fas fa-folder-open nav-icon text-success"></i>
@@ -133,7 +133,7 @@
 				</li>
 
 				<!-- Dashboard Options -->
-				<li class="nav-item">
+				<!-- <li class="nav-item">
 					<a href="#" class="nav-link">
 						<i class="nav-icon fas fa-tachometer-alt text-purple"></i>
 						<p>
@@ -164,7 +164,7 @@
 							</a>
 						</li>
 					</ul>
-				</li>
+				</li> -->
 
 				<li class="nav-header">PENGINGAT & NOTIFIKASI</li>
 
@@ -351,9 +351,12 @@
 	}
 
 	@keyframes glow-purple {
-		0%, 100% {
+
+		0%,
+		100% {
 			box-shadow: 0 0 5px rgba(111, 66, 193, 0.5);
 		}
+
 		50% {
 			box-shadow: 0 0 20px rgba(111, 66, 193, 0.8);
 		}
