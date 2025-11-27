@@ -367,6 +367,18 @@
 								<small id="jenisHelp" class="form-text text-muted">Manual input atau auto-fill dari SIPP</small>
 							</div>
 						</div>
+						<div class="col-md-6">
+							<div class="form-group">
+								<label>Status Berkas *</label>
+								<select name="status_berkas" id="statusBerkas" class="form-control" required>
+									<option value="MASUK" selected>Masuk</option>
+									<option value="PROSES">Proses</option>
+									<option value="SELESAI">Selesai</option>
+									<option value="ARSIP">Arsip</option>
+								</select>
+								<small class="form-text text-primary">Pilih status berkas</small>
+							</div>
+						</div>
 					</div>
 
 					<div class="form-group">
