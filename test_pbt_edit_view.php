@@ -346,7 +346,8 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="editJenisPerkara">Jenis Perkara</label>
-                                        <input type="text" class="form-control" id="editJenisPerkara" name="jenis_perkara">
+                                        <input type="text" class="form-control" id="editJenisPerkara" name="jenis_perkara" readonly>
+                                        <small class="text-muted">Data dari database SIPP, tidak dapat diubah</small>
                                     </div>
                                 </div>
                             </div>
@@ -374,13 +375,15 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="editMajelisHakim">Majelis Hakim</label>
-                                        <textarea class="form-control" id="editMajelisHakim" name="majelis_hakim" rows="2"></textarea>
+                                        <textarea class="form-control" id="editMajelisHakim" name="majelis_hakim" rows="2" readonly></textarea>
+                                        <small class="text-muted">Data dari database SIPP, tidak dapat diubah</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="editPaniteraPengganti">Panitera Pengganti</label>
-                                        <input type="text" class="form-control" id="editPaniteraPengganti" name="panitera_pengganti">
+                                        <input type="text" class="form-control" id="editPaniteraPengganti" name="panitera_pengganti" readonly>
+                                        <small class="text-muted">Data dari database SIPP, tidak dapat diubah</small>
                                     </div>
                                 </div>
                             </div>

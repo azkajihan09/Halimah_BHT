@@ -1172,20 +1172,17 @@ class Notelen extends CI_Controller
 			return;
 		}
 
-		// Prepare update data
+		// Prepare update data - exclude readonly fields (jenis_perkara, majelis_hakim, panitera_pengganti, tanggal_putusan)
+		// Only process editable fields: tanggal_pbt, tanggal_bht, catatan_pbt
 		$update_data = array(
-			'jenis_perkara' => $this->input->post('jenis_perkara'),
-			'tanggal_putusan' => $this->input->post('tanggal_putusan'),
 			'tanggal_pbt' => $this->input->post('tanggal_pbt') ?: null,
 			'tanggal_bht' => $this->input->post('tanggal_bht') ?: null,
-			'majelis_hakim' => $this->input->post('majelis_hakim'),
-			'panitera_pengganti' => $this->input->post('panitera_pengganti'),
 			'catatan_pbt' => $this->input->post('catatan_pbt')
 		);
 
-		// Calculate selisih hari and status
-		if ($update_data['tanggal_pbt'] && $update_data['tanggal_putusan']) {
-			$tanggal_putusan = new DateTime($update_data['tanggal_putusan']);
+		// Calculate selisih hari and status using existing tanggal_putusan from database
+		if ($update_data['tanggal_pbt'] && $existing_pbt->tanggal_putusan) {
+			$tanggal_putusan = new DateTime($existing_pbt->tanggal_putusan);
 			$tanggal_pbt = new DateTime($update_data['tanggal_pbt']);
 			$diff = $tanggal_putusan->diff($tanggal_pbt);
 			$update_data['selisih_putus_pbt'] = $diff->days;

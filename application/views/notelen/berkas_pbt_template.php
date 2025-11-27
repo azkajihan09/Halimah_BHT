@@ -566,15 +566,17 @@
 						<div class="col-md-6">
 							<div class="form-group">
 								<label for="editJenisPerkara">Jenis Perkara</label>
-								<input type="text" class="form-control" id="editJenisPerkara" name="jenis_perkara">
+								<input type="text" class="form-control" id="editJenisPerkara" name="jenis_perkara" readonly>
+								<small class="text-muted">Data dari database SIPP, tidak dapat diubah</small>
 							</div>
 						</div>
 					</div>
 					<div class="row">
 						<div class="col-md-4">
 							<div class="form-group">
-								<label for="editTanggalPutusan">Tanggal Putusan *</label>
-								<input type="date" class="form-control" id="editTanggalPutusan" name="tanggal_putusan" required>
+								<label for="editTanggalPutusan">Tanggal Putusan</label>
+								<input type="date" class="form-control" id="editTanggalPutusan" name="tanggal_putusan" readonly>
+								<small class="text-muted">Data dari database SIPP, tidak dapat diubah</small>
 							</div>
 						</div>
 						<div class="col-md-4">
@@ -594,13 +596,15 @@
 						<div class="col-md-6">
 							<div class="form-group">
 								<label for="editMajelisHakim">Majelis Hakim</label>
-								<textarea class="form-control" id="editMajelisHakim" name="majelis_hakim" rows="2"></textarea>
+								<textarea class="form-control" id="editMajelisHakim" name="majelis_hakim" rows="2" readonly></textarea>
+								<small class="text-muted">Data dari database SIPP, tidak dapat diubah</small>
 							</div>
 						</div>
 						<div class="col-md-6">
 							<div class="form-group">
 								<label for="editPaniteraPengganti">Panitera Pengganti</label>
-								<input type="text" class="form-control" id="editPaniteraPengganti" name="panitera_pengganti">
+								<input type="text" class="form-control" id="editPaniteraPengganti" name="panitera_pengganti" readonly>
+								<small class="text-muted">Data dari database SIPP, tidak dapat diubah</small>
 							</div>
 						</div>
 					</div>
@@ -1145,27 +1149,8 @@
 	$('#editPbtForm').submit(function(e) {
 		e.preventDefault();
 
-		// Validation
-		const requiredFields = ['nomor_perkara', 'tanggal_putusan'];
-		let isValid = true;
-		let missingFields = [];
-
-		requiredFields.forEach(function(field) {
-			const value = $(`#edit${field.charAt(0).toUpperCase() + field.slice(1).replace('_', '')}`).val();
-			if (!value || value.trim() === '') {
-				isValid = false;
-				missingFields.push(field.replace('_', ' '));
-			}
-		});
-
-		if (!isValid) {
-			Swal.fire({
-				icon: 'error',
-				title: 'Data Tidak Lengkap',
-				text: 'Field berikut harus diisi: ' + missingFields.join(', ')
-			});
-			return;
-		}
+		// No validation needed - all required fields are readonly
+		// Only editable fields: tanggal_pbt, tanggal_bht, catatan_pbt (all optional)
 
 		// Show loading
 		Swal.fire({
