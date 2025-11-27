@@ -105,7 +105,7 @@
 											<option value="MASUK" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'MASUK') ? 'selected' : '' ?>>Masuk</option>
 											<option value="PROSES" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'PROSES') ? 'selected' : '' ?>>Proses</option>
 											<option value="SELESAI" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'SELESAI') ? 'selected' : '' ?>>Selesai</option>
-											<option value="KELUAR" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'KELUAR') ? 'selected' : '' ?>>Keluar</option>
+											<option value="ARSIP" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'ARSIP') ? 'selected' : '' ?>>Arsip</option>
 										</select>
 									</div>
 								</div>
@@ -159,14 +159,15 @@
 								<table class="table table-striped table-hover mb-0">
 									<thead class="thead-dark">
 										<tr>
-											<th width="5%">No</th>
-											<th width="18%">Nomor Perkara *</th>
-											<th width="12%">Tanggal Putusan *</th>
-											<th width="15%">Jenis Perkara</th>
-											<th width="10%">Masuk</th>
-											<th width="15%">Majelis Hakim</th>
-											<th width="10%">Panitera</th>
-											<th width="15%">Catatan Notelen</th>
+											<th width="4%">No</th>
+											<th width="15%">Nomor Perkara *</th>
+											<th width="10%">Tanggal Putusan *</th>
+											<th width="10%">Jenis Perkara</th>
+											<th width="8%">Masuk</th>
+											<th width="8%">Status Berkas</th>
+											<th width="10%">Majelis Hakim</th>
+											<th width="8%">Panitera</th>
+											<th width="12%">Catatan Notelen</th>
 											<th width="10%">Aksi</th>
 										</tr>
 									</thead>
@@ -194,6 +195,30 @@
 														<?php endif; ?>
 													</td>
 													<td>
+														<?php
+														$status = isset($berkas->status_berkas) ? $berkas->status_berkas : 'MASUK';
+														$badge_color = '';
+														switch ($status) {
+															case 'MASUK':
+																$badge_color = 'badge-primary';
+																break;
+															case 'PROSES':
+																$badge_color = 'badge-warning';
+																break;
+															case 'SELESAI':
+																$badge_color = 'badge-success';
+																break;
+															case 'ARSIP':
+																$badge_color = 'badge-secondary';
+																break;
+															default:
+																$badge_color = 'badge-light';
+																break;
+														}
+														?>
+														<span class="badge <?= $badge_color ?>"><?= $status ?></span>
+													</td>
+													<td>
 														<small class="text-muted" style="font-size: 0.85em; max-width: 150px; word-wrap: break-word;">
 															<?= isset($berkas->majelis_hakim) ? $berkas->majelis_hakim : '-' ?>
 														</small>
@@ -209,16 +234,24 @@
 														</small>
 													</td>
 													<td>
-														<button type="button" class="btn btn-danger btn-sm"
-															onclick="deleteBerkas(<?= $berkas->id ?>, '<?= isset($berkas->nomor_perkara) ? $berkas->nomor_perkara : '' ?>')">
-															<i class="fas fa-trash"></i> Delete
-														</button>
+														<div class="btn-group" role="group">
+															<button type="button" class="btn btn-primary btn-sm"
+																onclick="openEditBerkasModal(<?= $berkas->id ?>)"
+																title="Edit berkas">
+																<i class="fas fa-edit"></i>
+															</button>
+															<button type="button" class="btn btn-danger btn-sm"
+																onclick="deleteBerkas(<?= $berkas->id ?>, '<?= isset($berkas->nomor_perkara) ? $berkas->nomor_perkara : '' ?>')"
+																title="Hapus berkas">
+																<i class="fas fa-trash"></i>
+															</button>
+														</div>
 													</td>
 												</tr>
 											<?php endforeach; ?>
 										<?php else: ?>
 											<tr>
-												<td colspan="9" class="text-center text-muted py-4">
+												<td colspan="10" class="text-center text-muted py-4">
 													<i class="fas fa-folder-open fa-3x mb-3"></i><br>
 													<h4>Belum Ada Data Berkas</h4>
 													<p>Klik tombol "Tambah Berkas" atau "Sync SIPP" untuk menambah data</p>
@@ -357,6 +390,77 @@
 	</div>
 </div>
 
+<!-- Modal Edit Berkas -->
+<div class="modal fade" id="editBerkasModal" tabindex="-1">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header bg-warning">
+				<h4 class="modal-title">
+					<i class="fas fa-edit"></i> Edit Berkas Masuk
+				</h4>
+				<button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+			</div>
+			<form id="editBerkasForm">
+				<input type="hidden" name="berkas_id" id="editBerkasId">
+				<div class="modal-body">
+					<div class="form-group">
+						<label>Nomor Perkara *</label>
+						<input type="text" name="nomor_perkara" id="editNomorPerkara" class="form-control" readonly>
+						<small class="form-text text-muted">Nomor perkara tidak dapat diubah</small>
+					</div>
+
+					<div class="form-group">
+						<label>Tanggal Putusan *</label>
+						<input type="date" name="tanggal_putusan" id="editTanggalPutusan" class="form-control" required>
+					</div>
+
+					<div class="row">
+						<div class="col-md-6">
+							<div class="form-group">
+								<label>Jenis Perkara</label>
+								<input type="text" name="jenis_perkara" id="editJenisPerkara" class="form-control">
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="form-group">
+								<label>Status Berkas</label>
+								<select name="status_berkas" id="editStatusBerkas" class="form-control">
+									<option value="MASUK">Masuk</option>
+									<option value="PROSES">Proses</option>
+									<option value="SELESAI">Selesai</option>
+									<option value="ARSIP">Arsip</option>
+								</select>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Majelis Hakim</label>
+						<input type="text" name="majelis_hakim" id="editMajelisHakim" class="form-control">
+					</div>
+
+					<div class="form-group">
+						<label>Panitera Pengganti</label>
+						<input type="text" name="panitera_pengganti" id="editPaniteraPengganti" class="form-control">
+					</div>
+
+					<div class="form-group">
+						<label>Catatan Notelen</label>
+						<textarea name="catatan_notelen" id="editCatatanNotelen" class="form-control" rows="3"
+							placeholder="Catatan khusus untuk notelen..."></textarea>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+					<button type="submit" class="btn btn-warning">
+						<i class="fas fa-save"></i> Update Berkas
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
 <!-- JavaScript untuk SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -371,6 +475,67 @@
 
 		// Load dropdown perkara
 		loadPerkaraDropdown();
+	}
+
+	function openEditBerkasModal(berkas_id) {
+		$('#editBerkasModal').modal('show');
+		$('#editBerkasForm')[0].reset();
+		$('#editBerkasId').val(berkas_id);
+
+		// Pastikan semua field dapat diedit (kecuali nomor perkara)
+		$('#editTanggalPutusan').prop('readonly', false).prop('disabled', false);
+		$('#editJenisPerkara').prop('readonly', false).prop('disabled', false);
+		$('#editMajelisHakim').prop('readonly', false).prop('disabled', false);
+		$('#editPaniteraPengganti').prop('readonly', false).prop('disabled', false);
+
+		// Load data berkas untuk edit
+		loadBerkasForEdit(berkas_id);
+	}
+
+	// Load data berkas untuk form edit
+	function loadBerkasForEdit(berkas_id) {
+		$.ajax({
+			url: getAjaxUrl('notelen/ajax_get_berkas'),
+			type: 'POST',
+			data: {
+				id: berkas_id
+			},
+			dataType: 'json',
+			success: function(response) {
+				console.log('Response berkas:', response);
+				if (response.success && response.berkas) {
+					var berkas = response.berkas;
+
+					// Pastikan field dapat diedit
+					$('#editTanggalPutusan').prop('readonly', false);
+					$('#editJenisPerkara').prop('readonly', false);
+					$('#editMajelisHakim').prop('readonly', false);
+					$('#editPaniteraPengganti').prop('readonly', false);
+
+					// Set data
+					$('#editNomorPerkara').val(berkas.nomor_perkara || '');
+					$('#editTanggalPutusan').val(berkas.tanggal_putusan || '');
+					$('#editJenisPerkara').val(berkas.jenis_perkara || '');
+					$('#editStatusBerkas').val(berkas.status_berkas || 'MASUK');
+					$('#editMajelisHakim').val(berkas.majelis_hakim || '');
+					$('#editPaniteraPengganti').val(berkas.panitera_pengganti || '');
+					$('#editCatatanNotelen').val(berkas.catatan_notelen || '');
+				} else {
+					Swal.fire({
+						icon: 'error',
+						title: 'Error!',
+						text: 'Gagal memuat data berkas'
+					});
+				}
+			},
+			error: function() {
+				Swal.fire({
+					icon: 'error',
+					title: 'Error!',
+					text: 'Terjadi kesalahan saat memuat data berkas'
+				});
+			}
+		});
 	}
 
 	// Load data perkara untuk dropdown
@@ -439,7 +604,7 @@
 			timeout: 30000, // 30 second timeout
 			success: function(response) {
 				console.log('Success response:', response);
-				
+
 				if (response && response.success) {
 					$('#newBerkasModal').modal('hide');
 					Swal.fire({
@@ -464,9 +629,9 @@
 				console.log('Error:', error);
 				console.log('Response Text:', xhr.responseText);
 				console.log('Status Code:', xhr.status);
-				
+
 				var errorMessage = 'Terjadi kesalahan koneksi';
-				
+
 				// Try to parse error response
 				try {
 					if (xhr.responseText) {
@@ -475,7 +640,7 @@
 							errorMessage = errorResponse.message;
 						}
 					}
-				} catch(e) {
+				} catch (e) {
 					// If response is not JSON, show part of the response text
 					if (xhr.responseText && xhr.responseText.length > 0) {
 						errorMessage = 'Server Error: ' + xhr.responseText.substring(0, 200);
@@ -485,12 +650,83 @@
 						errorMessage = 'Server mengirim response yang tidak valid';
 					}
 				}
-				
+
 				Swal.fire({
 					icon: 'error',
 					title: 'Error Koneksi!',
 					text: errorMessage,
 					footer: 'Jika data sudah tersimpan, silakan refresh halaman'
+				});
+			},
+			complete: function() {
+				// Re-enable submit button
+				submitBtn.prop('disabled', false).html(originalText);
+			}
+		});
+	});
+
+	$('#editBerkasForm').submit(function(e) {
+		e.preventDefault();
+
+		// Disable submit button during processing
+		var submitBtn = $(this).find('button[type="submit"]');
+		var originalText = submitBtn.html();
+		submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
+
+		$.ajax({
+			url: getAjaxUrl('notelen/ajax_update_berkas'),
+			type: 'POST',
+			data: $(this).serialize(),
+			dataType: 'json',
+			timeout: 30000,
+			success: function(response) {
+				console.log('Update response:', response);
+
+				if (response && response.success) {
+					$('#editBerkasModal').modal('hide');
+					Swal.fire({
+						icon: 'success',
+						title: 'Berhasil!',
+						text: response.message || 'Berkas berhasil diupdate',
+						timer: 2000
+					}).then(() => {
+						location.reload();
+					});
+				} else {
+					Swal.fire({
+						icon: 'error',
+						title: 'Error!',
+						text: response.message || 'Terjadi kesalahan saat update data'
+					});
+				}
+			},
+			error: function(xhr, status, error) {
+				console.log('AJAX Error Details:');
+				console.log('Status:', status);
+				console.log('Error:', error);
+				console.log('Response Text:', xhr.responseText);
+
+				var errorMessage = 'Terjadi kesalahan koneksi';
+
+				try {
+					if (xhr.responseText) {
+						var errorResponse = JSON.parse(xhr.responseText);
+						if (errorResponse && errorResponse.message) {
+							errorMessage = errorResponse.message;
+						}
+					}
+				} catch (e) {
+					if (xhr.responseText && xhr.responseText.length > 0) {
+						errorMessage = 'Server Error: ' + xhr.responseText.substring(0, 200);
+					} else if (status === 'timeout') {
+						errorMessage = 'Request timeout - coba lagi';
+					}
+				}
+
+				Swal.fire({
+					icon: 'error',
+					title: 'Error Update!',
+					text: errorMessage
 				});
 			},
 			complete: function() {

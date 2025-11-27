@@ -259,7 +259,7 @@ class Notelen extends CI_Controller
 		}
 
 		// Format data
-		$data = array(
+		echo json_encode(array(
 			'success' => true,
 			'berkas' => array(
 				'id' => $berkas->id,
@@ -267,14 +267,12 @@ class Notelen extends CI_Controller
 				'jenis_perkara' => $berkas->jenis_perkara,
 				'tanggal_putusan' => $berkas->tanggal_putusan,
 				'tanggal_masuk_notelen' => $berkas->tanggal_masuk_notelen,
-				'majelis_hakim' => $berkas->majelis_hakim ? $berkas->majelis_hakim : '-',
-				'panitera_pengganti' => $berkas->panitera_pengganti ? $berkas->panitera_pengganti : '-',
+				'majelis_hakim' => $berkas->majelis_hakim ? $berkas->majelis_hakim : '',
+				'panitera_pengganti' => $berkas->panitera_pengganti ? $berkas->panitera_pengganti : '',
 				'status_berkas' => $berkas->status_berkas,
 				'catatan_notelen' => $berkas->catatan_notelen
 			)
-		);
-
-		echo json_encode($data);
+		));
 	}
 
 	/**
@@ -284,7 +282,7 @@ class Notelen extends CI_Controller
 	{
 		header('Content-Type: application/json');
 		header('Cache-Control: no-cache, must-revalidate');
-		
+
 		// Test configuration
 		$config_status = array(
 			'log_path' => $this->config->item('log_path') ?: 'default',
@@ -292,10 +290,10 @@ class Notelen extends CI_Controller
 			'cache_path' => $this->config->item('cache_path') ?: 'default',
 			'base_url' => $this->config->item('base_url')
 		);
-		
+
 		// Test logging
 		log_message('info', 'Testing server connection from: ' . (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'CLI'));
-		
+
 		echo json_encode(array(
 			'success' => true,
 			'message' => 'Server connection OK',
@@ -324,11 +322,11 @@ class Notelen extends CI_Controller
 	public function test_db_connection()
 	{
 		header('Content-Type: application/json');
-		
+
 		try {
 			// Load database directly
 			$notelen_db = $this->load->database('notelen_db', TRUE);
-			
+
 			if (!$notelen_db) {
 				echo json_encode(array(
 					'success' => false,
@@ -336,13 +334,13 @@ class Notelen extends CI_Controller
 				));
 				exit();
 			}
-			
+
 			// Test basic query
 			$result = $notelen_db->query("SELECT 1 as test")->row();
-			
+
 			// Test berkas table
 			$count = $notelen_db->query("SELECT COUNT(*) as total FROM berkas_masuk")->row();
-			
+
 			echo json_encode(array(
 				'success' => true,
 				'message' => 'Database connection OK',
@@ -368,19 +366,19 @@ class Notelen extends CI_Controller
 		while (ob_get_level()) {
 			ob_end_clean();
 		}
-		
+
 		// Disable error display for AJAX
 		ini_set('display_errors', 0);
 		error_reporting(0);
-		
+
 		// Set response headers
 		header('Content-Type: application/json');
 		header('Cache-Control: no-cache, must-revalidate');
-		
+
 		try {
 			// Load database directly
 			$notelen_db = $this->load->database('notelen_db', TRUE);
-			
+
 			if (!$notelen_db) {
 				echo json_encode(array(
 					'success' => false,
@@ -446,11 +444,10 @@ class Notelen extends CI_Controller
 				));
 			}
 			exit();
-			
 		} catch (Exception $e) {
 			// Log the actual error for debugging
 			log_message('error', 'AJAX Insert Berkas Error: ' . $e->getMessage() . ' File: ' . $e->getFile() . ' Line: ' . $e->getLine());
-			
+
 			echo json_encode(array(
 				'success' => false,
 				'message' => 'Terjadi kesalahan sistem. Silakan coba lagi.',
@@ -469,15 +466,15 @@ class Notelen extends CI_Controller
 		while (ob_get_level()) {
 			ob_end_clean();
 		}
-		
+
 		// Disable error display for AJAX
 		ini_set('display_errors', 0);
 		error_reporting(0);
-		
+
 		// Set response headers
 		header('Content-Type: application/json');
 		header('Cache-Control: no-cache, must-revalidate');
-		
+
 		try {
 			// Test database connection first
 			if (!$this->notelen->notelen_db) {
@@ -542,14 +539,13 @@ class Notelen extends CI_Controller
 					'message' => 'Gagal menambahkan berkas'
 				);
 			}
-			
+
 			echo json_encode($response);
 			exit();
-			
 		} catch (Exception $e) {
 			// Log the actual error for debugging
 			log_message('error', 'AJAX Insert Berkas Error: ' . $e->getMessage() . ' File: ' . $e->getFile() . ' Line: ' . $e->getLine());
-			
+
 			$response = array(
 				'success' => false,
 				'message' => 'Terjadi kesalahan sistem. Silakan coba lagi.',
@@ -581,6 +577,83 @@ class Notelen extends CI_Controller
 		} else {
 			echo json_encode(array('success' => false, 'message' => 'Gagal update status'));
 		}
+	}
+
+	/**
+	 * Update berkas via AJAX
+	 */
+	public function ajax_update_berkas()
+	{
+		// Set JSON header
+		header('Content-Type: application/json; charset=utf-8');
+
+		// Clear any output buffer
+		while (ob_get_level()) {
+			ob_end_clean();
+		}
+
+		try {
+			$berkas_id = $this->input->post('berkas_id');
+			$nomor_perkara = trim($this->input->post('nomor_perkara'));
+			$tanggal_putusan = $this->input->post('tanggal_putusan');
+			$jenis_perkara = $this->input->post('jenis_perkara');
+			$majelis_hakim = $this->input->post('majelis_hakim');
+			$panitera_pengganti = $this->input->post('panitera_pengganti');
+			$status_berkas = $this->input->post('status_berkas');
+			$catatan = $this->input->post('catatan_notelen');
+
+			// Validasi input
+			if (empty($berkas_id) || empty($nomor_perkara) || empty($tanggal_putusan)) {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Data tidak lengkap: ID berkas, nomor perkara dan tanggal putusan harus diisi'
+				));
+				exit();
+			}
+
+			// Check if berkas exists
+			$existing_berkas = $this->notelen->get_berkas_by_id($berkas_id);
+			if (!$existing_berkas) {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Berkas tidak ditemukan'
+				));
+				exit();
+			}
+
+			// Prepare update data
+			$update_data = array(
+				'tanggal_putusan' => $tanggal_putusan,
+				'jenis_perkara' => $jenis_perkara,
+				'majelis_hakim' => $majelis_hakim,
+				'panitera_pengganti' => $panitera_pengganti,
+				'status_berkas' => $status_berkas ? $status_berkas : 'MASUK',
+				'catatan_notelen' => $catatan,
+				'updated_at' => date('Y-m-d H:i:s')
+			);
+
+			// Update berkas using model
+			$result = $this->notelen->update_berkas_masuk($berkas_id, $update_data);
+
+			if ($result) {
+				echo json_encode(array(
+					'success' => true,
+					'message' => 'Berkas ' . $nomor_perkara . ' berhasil diupdate',
+					'berkas_id' => $berkas_id
+				));
+			} else {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Gagal mengupdate berkas'
+				));
+			}
+		} catch (Exception $e) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
+			));
+		}
+		exit();
 	}
 
 	/**

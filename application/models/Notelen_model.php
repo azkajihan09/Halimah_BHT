@@ -185,6 +185,26 @@ class Notelen_model extends CI_Model
 	}
 
 	/**
+	 * Update berkas masuk
+	 */
+	public function update_berkas_masuk($id, $data)
+	{
+		$current = $this->get_berkas_by_id($id);
+		if (!$current) {
+			return false;
+		}
+
+		$this->notelen_db->where('id', $id);
+		$result = $this->notelen_db->update('berkas_masuk', $data);
+
+		if ($result) {
+			$this->log_notelen_activity($id, 'UPDATE', 'Data berkas diupdate', null, null);
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Delete berkas masuk
 	 */
 	public function delete_berkas_masuk($id)
@@ -405,40 +425,28 @@ class Notelen_model extends CI_Model
     // ===============================================
 
 	/**
-	 * Log activity
+	 * Log activity - disabled (tabel notelen_log sudah dihapus)
 	 */
 	private function log_notelen_activity($berkas_id, $activity_type, $description, $old_value = null, $new_value = null)
 	{
-		$log_data = array(
-			'berkas_masuk_id' => $berkas_id,
-			'activity_type' => $activity_type,
-			'description' => $description,
-			'old_value' => $old_value,
-			'new_value' => $new_value,
-			'user_name' => 'SYSTEM'
-		);
-
-		$this->notelen_db->insert('notelen_log', $log_data);
+		// Method ini sudah tidak digunakan karena tabel notelen_log telah dihapus
+		// Tetap dipertahankan untuk kompatibilitas method yang sudah ada
+		return true;
 	}
 
 	/**
-	 * Get/Set config
+	 * Get/Set config - disabled (tabel notelen_config sudah dihapus)
 	 */
 	public function get_config($key)
 	{
-		$result = $this->notelen_db->get_where('notelen_config', array('config_key' => $key))->row();
-		return $result ? $result->config_value : null;
+		// Method ini sudah tidak digunakan karena tabel notelen_config telah dihapus
+		return null;
 	}
 
 	public function update_config($key, $value)
 	{
-		$data = array(
-			'config_key' => $key,
-			'config_value' => $value,
-			'updated_at' => date('Y-m-d H:i:s')
-		);
-
-		$this->notelen_db->replace('notelen_config', $data);
+		// Method ini sudah tidak digunakan karena tabel notelen_config telah dihapus
+		return true;
 	}
 
 	// ===============================================
