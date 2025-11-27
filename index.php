@@ -57,6 +57,17 @@
 
 /*
  *---------------------------------------------------------------
+ * TIMEZONE SETTING
+ *---------------------------------------------------------------
+ *
+ * Set default timezone untuk menghindari warning timezone
+ * Indonesia menggunakan beberapa timezone: WIB (UTC+7), WITA (UTC+8), WIT (UTC+9)
+ * Untuk Jakarta/Java/Sumatra gunakan Asia/Jakarta (WIB)
+ */
+	date_default_timezone_set('Asia/Jakarta');
+
+/*
+ *---------------------------------------------------------------
  * ERROR REPORTING
  *---------------------------------------------------------------
  *

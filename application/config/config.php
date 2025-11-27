@@ -2,6 +2,12 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 // =============================================
+// TIMEZONE SETTING
+// =============================================
+// Set timezone untuk Indonesia (WIB - Jakarta)
+date_default_timezone_set('Asia/Jakarta');
+
+// =============================================
 // ENVIRONMENT DETECTION & BASE URL
 // =============================================
 if (isset($_SERVER['HTTP_HOST'])) {
