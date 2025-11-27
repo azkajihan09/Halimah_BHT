@@ -13,7 +13,7 @@ date_default_timezone_set('Asia/Jakarta');
 if (isset($_SERVER['HTTP_HOST'])) {
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
     $host = $_SERVER['HTTP_HOST'];
-    
+
     // Detect environment and set base URL accordingly
     if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
         // Local development

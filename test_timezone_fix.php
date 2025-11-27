@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Test file untuk memverifikasi pengaturan timezone
  * File ini menguji apakah warning timezone sudah diperbaiki
@@ -35,4 +36,3 @@ echo "\n=== TEST COMPLETED ===\n";
 if (!defined('BASEPATH')) {
     echo "\nNote: Jika tidak ada warning timezone di atas, maka pengaturan sudah berhasil!\n";
 }
-?>
