@@ -339,16 +339,24 @@
 				<div class="modal-body">
 					<div class="form-group">
 						<label>Nomor Perkara *</label>
-						<select name="nomor_perkara" id="nomorPerkaraSelect" class="form-control" required>
-							<option value="">Pilih Nomor Perkara...</option>
-						</select>
-						<small class="form-text text-muted">Pilih dari daftar perkara yang sudah putus</small>
+						<div class="input-group">
+							<input type="text" name="nomor_perkara" id="nomorPerkara" class="form-control"
+								placeholder="Ketik nomor perkara..." required autocomplete="off">
+							<div class="input-group-append">
+								<button type="button" class="btn btn-outline-secondary" id="clearPerkara" title="Clear">
+									<i class="fas fa-times"></i>
+								</button>
+							</div>
+						</div>
+						<div id="perkaraSuggestions" class="list-group" style="position: absolute; z-index: 1050; max-height: 300px; overflow-y: auto; display: none;"></div>
+						<input type="hidden" name="perkara_id_sipp" id="perkaraIdSipp">
+						<small class="form-text text-muted">Ketik minimal 2 karakter untuk mencari dari database SIPP</small>
 					</div>
 
 					<div class="form-group">
 						<label>Tanggal Putusan *</label>
 						<input type="date" name="tanggal_putusan" id="tanggalPutusan" class="form-control" readonly required>
-						<small class="form-text text-muted">Otomatis terisi dari data SIPP</small>
+						<small id="tanggalHelp" class="form-text text-muted">Manual input atau auto-fill dari SIPP</small>
 					</div>
 
 					<div class="row">
@@ -356,7 +364,7 @@
 							<div class="form-group">
 								<label>Jenis Perkara</label>
 								<input type="text" name="jenis_perkara" id="jenisPerkara" class="form-control" readonly>
-								<small class="form-text text-muted">Otomatis terisi dari data SIPP</small>
+								<small id="jenisHelp" class="form-text text-muted">Manual input atau auto-fill dari SIPP</small>
 							</div>
 						</div>
 					</div>
@@ -364,13 +372,13 @@
 					<div class="form-group">
 						<label>Majelis Hakim</label>
 						<input type="text" name="majelis_hakim" id="majelisHakim" class="form-control" readonly>
-						<small class="form-text text-muted">Otomatis terisi dari data SIPP</small>
+						<small id="majelisHelp" class="form-text text-muted">Manual input atau auto-fill dari SIPP</small>
 					</div>
 
 					<div class="form-group">
 						<label>Panitera Pengganti</label>
 						<input type="text" name="panitera_pengganti" id="paniteraPengganti" class="form-control" readonly>
-						<small class="form-text text-muted">Otomatis terisi dari data SIPP</small>
+						<small id="paniteraHelp" class="form-text text-muted">Manual input atau auto-fill dari SIPP</small>
 					</div>
 
 					<div class="form-group">
@@ -471,14 +479,187 @@
 <script>
 	$(document).ready(function() {
 		console.log('Notelen System loaded successfully!');
+
+		// Setup autocomplete nomor perkara (saat ready)
+		setupNomorPerkaraAutocomplete();
 	});
 
 	function openNewBerkasModal() {
 		$('#newBerkasModal').modal('show');
 		$('#newBerkasForm')[0].reset();
+		$('#perkaraSuggestions').hide();
 
-		// Load dropdown perkara
-		loadPerkaraDropdown();
+		// Reset form state
+		$('#nomorPerkara').data('selected-from-sipp', false);
+		$('#perkaraIdSipp').val('');
+
+		// Reset visual indicators
+		updateFieldLabels(false);
+
+		// Focus ke nomor perkara
+		setTimeout(function() {
+			$('#nomorPerkara').focus();
+		}, 500);
+	}
+
+	// Setup autocomplete untuk nomor perkara (improved version from berkas_pbt)
+	function setupNomorPerkaraAutocomplete() {
+		let searchTimeout;
+		let isLoading = false;
+
+		$('#nomorPerkara').on('input', function() {
+			const search = $(this).val();
+
+			if (search.length < 2) {
+				$('#perkaraSuggestions').hide();
+				return;
+			}
+
+			// Clear previous timeout
+			clearTimeout(searchTimeout);
+
+			// Set new timeout untuk menghindari terlalu banyak request
+			searchTimeout = setTimeout(function() {
+				if (isLoading) return;
+
+				isLoading = true;
+				$('#perkaraSuggestions').html(`
+					<div class="list-group-item">
+						<i class="fas fa-spinner fa-spin"></i> Mencari data perkara...
+					</div>
+				`).show();
+
+				$.ajax({
+					url: getAjaxUrl('notelen/ajax_get_perkara_dropdown'),
+					type: 'GET',
+					data: {
+						search: search
+					},
+					dataType: 'json',
+					success: function(response) {
+						if (response.success && response.data.length > 0) {
+							let html = '';
+							response.data.forEach(function(item) {
+								html += `
+									<a href="#" class="list-group-item list-group-item-action perkara-suggestion"
+										data-perkara-id="${item.perkara_id}"
+										data-nomor="${item.nomor_perkara}"
+										data-jenis="${item.jenis_perkara || ''}"
+										data-tanggal="${item.tanggal_putusan || ''}"
+										data-majelis="${item.majelis_hakim || ''}"
+										data-panitera="${item.panitera_pengganti || ''}">
+										<div class="d-flex w-100 justify-content-between">
+											<h6 class="mb-1 text-primary">${item.nomor_perkara}</h6>
+											<small class="text-muted">${item.tanggal_putusan || 'N/A'}</small>
+										</div>
+										<p class="mb-1">${item.jenis_perkara || 'Jenis tidak diketahui'}</p>
+										<small class="text-muted">
+											${item.majelis_hakim ? 'Hakim: ' + item.majelis_hakim.substring(0, 30) + '...' : 'Data hakim tidak tersedia'}
+										</small>
+									</a>
+								`;
+							});
+							$('#perkaraSuggestions').html(html).show();
+						} else {
+							$('#perkaraSuggestions').html(`
+								<div class="list-group-item text-muted">
+									<i class="fas fa-exclamation-circle"></i> Tidak ada data perkara ditemukan
+								</div>
+							`).show();
+						}
+					},
+					error: function() {
+						$('#perkaraSuggestions').html(`
+							<div class="list-group-item text-danger">
+								<i class="fas fa-exclamation-triangle"></i> Error loading data
+							</div>
+						`).show();
+					},
+					complete: function() {
+						isLoading = false;
+					}
+				});
+			}, 300);
+		});
+
+		// Handle click pada suggestion
+		$(document).on('click', '.perkara-suggestion', function(e) {
+			e.preventDefault();
+
+			const data = $(this).data();
+
+			// Fill form dengan data dari SIPP
+			$('#perkaraIdSipp').val(data.perkaraId);
+			$('#nomorPerkara').val(data.nomor);
+			$('#jenisPerkara').val(data.jenis);
+			$('#tanggalPutusan').val(data.tanggal);
+			$('#majelisHakim').val(data.majelis);
+			$('#paniteraPengganti').val(data.panitera);
+
+			// Mark as selected from SIPP
+			$('#nomorPerkara').data('selected-from-sipp', true);
+
+			// Update visual indicators to show auto-filled
+			updateFieldLabels(true);
+
+			// Hide suggestions
+			$('#perkaraSuggestions').hide();
+
+			// Show success notification
+			Swal.fire({
+				icon: 'success',
+				title: 'Data Ditemukan!',
+				text: 'Form telah diisi otomatis dengan data dari SIPP',
+				showConfirmButton: false,
+				timer: 1500
+			});
+		});
+
+		// Clear button
+		$('#clearPerkara').click(function() {
+			$('#perkaraIdSipp').val('');
+			$('#nomorPerkara').val('').data('selected-from-sipp', false);
+			$('#jenisPerkara').val('');
+			$('#tanggalPutusan').val('');
+			$('#majelisHakim').val('');
+			$('#paniteraPengganti').val('');
+			$('#perkaraSuggestions').hide();
+
+			// Update visual indicators to show manual input
+			updateFieldLabels(false);
+
+			$('#nomorPerkara').focus();
+		});
+
+		// Hide suggestions when click outside
+		$(document).click(function(e) {
+			if (!$(e.target).closest('#nomorPerkara, #perkaraSuggestions').length) {
+				$('#perkaraSuggestions').hide();
+			}
+		});
+	}
+
+	// Function to update field labels based on source
+	function updateFieldLabels(fromSipp) {
+		if (fromSipp) {
+			$('#jenisHelp').text('(Auto-filled dari SIPP)').removeClass('text-muted').addClass('text-success');
+			$('#tanggalHelp').text('(Auto-filled dari SIPP)').removeClass('text-muted').addClass('text-success');
+			$('#majelisHelp').text('(Auto-filled dari SIPP)').removeClass('text-muted').addClass('text-success');
+			$('#paniteraHelp').text('(Auto-filled dari SIPP)').removeClass('text-muted').addClass('text-success');
+
+			// Add success icons
+			$('#jenisPerkara, #tanggalPutusan, #majelisHakim, #paniteraPengganti')
+				.addClass('border-success');
+		} else {
+			$('#jenisHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
+			$('#tanggalHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
+			$('#majelisHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
+			$('#paniteraHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
+
+			// Remove success styling
+			$('#jenisPerkara, #tanggalPutusan, #majelisHakim, #paniteraPengganti')
+				.removeClass('border-success');
+		}
 	}
 
 	function openEditBerkasModal(berkas_id) {
