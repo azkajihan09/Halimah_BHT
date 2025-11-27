@@ -235,7 +235,12 @@
 													</td>
 													<td>
 														<div class="btn-group" role="group">
-															<button type="button" class="btn btn-primary btn-sm"
+															<button type="button" class="btn btn-info btn-sm"
+																onclick="viewBerkasDetail(<?= $berkas->id ?>)"
+																title="Lihat Detail">
+																<i class="fas fa-eye"></i>
+															</button>
+															<button type="button" class="btn btn-warning btn-sm"
 																onclick="openEditBerkasModal(<?= $berkas->id ?>)"
 																title="Edit berkas">
 																<i class="fas fa-edit"></i>
@@ -485,6 +490,135 @@
 	</div>
 </div>
 
+<!-- Modal Lihat Detail Berkas -->
+<div class="modal fade" id="viewBerkasModal" tabindex="-1">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header bg-info">
+				<h4 class="modal-title">
+					<i class="fas fa-eye"></i> Detail Berkas Masuk
+				</h4>
+				<button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="info-box">
+							<span class="info-box-icon bg-primary"><i class="fas fa-gavel"></i></span>
+							<div class="info-box-content">
+								<span class="info-box-text">Nomor Perkara</span>
+								<span class="info-box-number" id="viewNomorPerkara">-</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="info-box">
+							<span class="info-box-icon bg-warning"><i class="fas fa-calendar"></i></span>
+							<div class="info-box-content">
+								<span class="info-box-text">Tanggal Putusan</span>
+								<span class="info-box-number" id="viewTanggalPutusan">-</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-6">
+						<div class="info-box">
+							<span class="info-box-icon bg-success"><i class="fas fa-balance-scale"></i></span>
+							<div class="info-box-content">
+								<span class="info-box-text">Jenis Perkara</span>
+								<span class="info-box-number" id="viewJenisPerkara">-</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="info-box">
+							<span class="info-box-icon bg-info"><i class="fas fa-flag"></i></span>
+							<div class="info-box-content">
+								<span class="info-box-text">Status Berkas</span>
+								<span class="info-box-number" id="viewStatusBerkas">-</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-6">
+						<div class="info-box">
+							<span class="info-box-icon bg-secondary"><i class="fas fa-calendar-alt"></i></span>
+							<div class="info-box-content">
+								<span class="info-box-text">Tanggal Masuk Notelen</span>
+								<span class="info-box-number" id="viewTanggalMasuk">-</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="info-box">
+							<span class="info-box-icon bg-purple"><i class="fas fa-database"></i></span>
+							<div class="info-box-content">
+								<span class="info-box-text">ID SIPP</span>
+								<span class="info-box-number" id="viewPerkaraIdSipp">-</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="card">
+					<div class="card-header">
+						<h5><i class="fas fa-users"></i> Informasi Persidangan</h5>
+					</div>
+					<div class="card-body">
+						<div class="form-group">
+							<label><strong>Majelis Hakim:</strong></label>
+							<p id="viewMajelisHakim" class="text-muted">-</p>
+						</div>
+						<div class="form-group">
+							<label><strong>Panitera Pengganti:</strong></label>
+							<p id="viewPaniteraPengganti" class="text-muted">-</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="card">
+					<div class="card-header">
+						<h5><i class="fas fa-sticky-note"></i> Catatan Notelen</h5>
+					</div>
+					<div class="card-body">
+						<p id="viewCatatanNotelen" class="text-muted">-</p>
+					</div>
+				</div>
+
+				<div class="card">
+					<div class="card-header">
+						<h5><i class="fas fa-clock"></i> Informasi Sistem</h5>
+					</div>
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-6">
+								<strong>Dibuat:</strong>
+								<p id="viewCreatedAt" class="text-muted">-</p>
+							</div>
+							<div class="col-md-6">
+								<strong>Terakhir Diupdate:</strong>
+								<p id="viewUpdatedAt" class="text-muted">-</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-warning" onclick="editFromView()">
+					<i class="fas fa-edit"></i> Edit Berkas
+				</button>
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">
+					<i class="fas fa-times"></i> Tutup
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 <!-- JavaScript untuk SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -672,6 +806,122 @@
 			$('#jenisPerkara, #tanggalPutusan, #majelisHakim, #paniteraPengganti')
 				.removeClass('border-success');
 		}
+	}
+
+	// Function untuk view detail berkas
+	function viewBerkasDetail(berkas_id) {
+		$('#viewBerkasModal').modal('show');
+
+		// Clear previous data
+		$('#viewNomorPerkara').text('-');
+		$('#viewTanggalPutusan').text('-');
+		$('#viewJenisPerkara').text('-');
+		$('#viewStatusBerkas').text('-');
+		$('#viewTanggalMasuk').text('-');
+		$('#viewPerkaraIdSipp').text('-');
+		$('#viewMajelisHakim').text('-');
+		$('#viewPaniteraPengganti').text('-');
+		$('#viewCatatanNotelen').text('-');
+		$('#viewCreatedAt').text('-');
+		$('#viewUpdatedAt').text('-');
+
+		// Store berkas_id for edit button
+		$('#viewBerkasModal').data('berkas-id', berkas_id);
+
+		// Load data berkas
+		$.ajax({
+			url: getAjaxUrl('notelen/ajax_get_berkas'),
+			type: 'POST',
+			data: {
+				id: berkas_id
+			},
+			dataType: 'json',
+			success: function(response) {
+				console.log('View response:', response);
+				if (response.success && response.berkas) {
+					var berkas = response.berkas;
+
+					// Populate data
+					$('#viewNomorPerkara').text(berkas.nomor_perkara || '-');
+					$('#viewTanggalPutusan').text(berkas.tanggal_putusan ? formatDate(berkas.tanggal_putusan) : '-');
+					$('#viewJenisPerkara').text(berkas.jenis_perkara || '-');
+
+					// Status dengan badge
+					var statusHtml = '';
+					switch (berkas.status_berkas) {
+						case 'MASUK':
+							statusHtml = '<span class="badge badge-primary">Masuk</span>';
+							break;
+						case 'PROSES':
+							statusHtml = '<span class="badge badge-warning">Proses</span>';
+							break;
+						case 'SELESAI':
+							statusHtml = '<span class="badge badge-success">Selesai</span>';
+							break;
+						case 'ARSIP':
+							statusHtml = '<span class="badge badge-secondary">Arsip</span>';
+							break;
+						default:
+							statusHtml = '<span class="badge badge-light">' + (berkas.status_berkas || '-') + '</span>';
+					}
+					$('#viewStatusBerkas').html(statusHtml);
+
+					$('#viewTanggalMasuk').text(berkas.tanggal_masuk_notelen ? formatDate(berkas.tanggal_masuk_notelen) : '-');
+					$('#viewPerkaraIdSipp').text(berkas.perkara_id_sipp || '-');
+					$('#viewMajelisHakim').text(berkas.majelis_hakim || '-');
+					$('#viewPaniteraPengganti').text(berkas.panitera_pengganti || '-');
+					$('#viewCatatanNotelen').text(berkas.catatan_notelen || 'Tidak ada catatan');
+					$('#viewCreatedAt').text(berkas.created_at ? formatDateTime(berkas.created_at) : '-');
+					$('#viewUpdatedAt').text(berkas.updated_at ? formatDateTime(berkas.updated_at) : '-');
+				} else {
+					Swal.fire({
+						icon: 'error',
+						title: 'Error!',
+						text: 'Gagal memuat detail berkas'
+					});
+				}
+			},
+			error: function() {
+				Swal.fire({
+					icon: 'error',
+					title: 'Error!',
+					text: 'Terjadi kesalahan saat memuat detail berkas'
+				});
+			}
+		});
+	}
+
+	// Function untuk edit dari view modal
+	function editFromView() {
+		var berkas_id = $('#viewBerkasModal').data('berkas-id');
+		$('#viewBerkasModal').modal('hide');
+
+		setTimeout(function() {
+			openEditBerkasModal(berkas_id);
+		}, 500);
+	}
+
+	// Helper functions untuk format date
+	function formatDate(dateString) {
+		if (!dateString) return '-';
+		var date = new Date(dateString);
+		return date.toLocaleDateString('id-ID', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric'
+		});
+	}
+
+	function formatDateTime(dateTimeString) {
+		if (!dateTimeString) return '-';
+		var date = new Date(dateTimeString);
+		return date.toLocaleDateString('id-ID', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
 	}
 
 	function openEditBerkasModal(berkas_id) {

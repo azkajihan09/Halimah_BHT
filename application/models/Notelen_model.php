@@ -616,6 +616,18 @@ class Notelen_model extends CI_Model
 	}
 
 	/**
+	 * Update berkas PBT
+	 */
+	public function update_berkas_pbt($id, $data)
+	{
+		// Add updated timestamp
+		$data['updated_at'] = date('Y-m-d H:i:s');
+
+		$this->notelen_db->where('id', $id);
+		return $this->notelen_db->update('berkas_pbt', $data);
+	}
+
+	/**
 	 * Delete berkas PBT
 	 */
 	public function delete_berkas_pbt($id)

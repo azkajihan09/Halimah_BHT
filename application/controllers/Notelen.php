@@ -264,14 +264,18 @@ class Notelen extends CI_Controller
 			'berkas' => array(
 				'id' => $berkas->id,
 				'nomor_perkara' => $berkas->nomor_perkara,
+				'perkara_id_sipp' => isset($berkas->perkara_id_sipp) ? $berkas->perkara_id_sipp : '',
 				'jenis_perkara' => $berkas->jenis_perkara,
 				'tanggal_putusan' => $berkas->tanggal_putusan,
 				'tanggal_masuk_notelen' => $berkas->tanggal_masuk_notelen,
 				'majelis_hakim' => $berkas->majelis_hakim ? $berkas->majelis_hakim : '',
 				'panitera_pengganti' => $berkas->panitera_pengganti ? $berkas->panitera_pengganti : '',
 				'status_berkas' => $berkas->status_berkas,
-				'catatan_notelen' => $berkas->catatan_notelen
-			)
+				'catatan_notelen' => $berkas->catatan_notelen ? $berkas->catatan_notelen : '',
+				'created_at' => isset($berkas->created_at) ? $berkas->created_at : '',
+				'updated_at' => isset($berkas->updated_at) ? $berkas->updated_at : ''
+			),
+			'message' => 'Data berkas berhasil dimuat'
 		));
 	}
 
@@ -1077,6 +1081,140 @@ class Notelen extends CI_Controller
 				echo json_encode(array(
 					'success' => false,
 					'message' => $result['message']
+				));
+			}
+		} catch (Exception $e) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
+			));
+		}
+	}
+
+	/**
+	 * AJAX - Get single PBT data for detail/edit
+	 */
+	public function ajax_get_pbt()
+	{
+		$id = $this->input->get('id');
+
+		if (!$id) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'ID berkas PBT tidak valid'
+			));
+			return;
+		}
+
+		try {
+			$pbt = $this->notelen->get_pbt_by_id($id);
+
+			if ($pbt) {
+				// Convert object to array and ensure all fields are available
+				$data = array(
+					'id' => $pbt->id,
+					'nomor_perkara' => $pbt->nomor_perkara,
+					'jenis_perkara' => $pbt->jenis_perkara,
+					'tanggal_putusan' => $pbt->tanggal_putusan,
+					'tanggal_pbt' => $pbt->tanggal_pbt,
+					'tanggal_bht' => $pbt->tanggal_bht,
+					'majelis_hakim' => $pbt->majelis_hakim,
+					'panitera_pengganti' => $pbt->panitera_pengganti,
+					'catatan_pbt' => $pbt->catatan_pbt,
+					'status_proses' => $pbt->status_proses,
+					'selisih_putus_pbt' => $pbt->selisih_putus_pbt,
+					'perkara_id_sipp' => property_exists($pbt, 'perkara_id_sipp') ? $pbt->perkara_id_sipp : null,
+					'created_at' => property_exists($pbt, 'created_at') ? $pbt->created_at : null,
+					'updated_at' => property_exists($pbt, 'updated_at') ? $pbt->updated_at : null
+				);
+
+				echo json_encode(array(
+					'success' => true,
+					'data' => $data,
+					'message' => 'Data PBT berhasil diambil'
+				));
+			} else {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Data PBT tidak ditemukan'
+				));
+			}
+		} catch (Exception $e) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
+			));
+		}
+	}
+
+	/**
+	 * AJAX - Update berkas PBT
+	 */
+	public function ajax_update_pbt()
+	{
+		$id = $this->input->post('id');
+
+		if (!$id) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'ID berkas PBT tidak valid'
+			));
+			return;
+		}
+
+		// Get current PBT data
+		$existing_pbt = $this->notelen->get_pbt_by_id($id);
+		if (!$existing_pbt) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Berkas PBT tidak ditemukan'
+			));
+			return;
+		}
+
+		// Prepare update data
+		$update_data = array(
+			'jenis_perkara' => $this->input->post('jenis_perkara'),
+			'tanggal_putusan' => $this->input->post('tanggal_putusan'),
+			'tanggal_pbt' => $this->input->post('tanggal_pbt') ?: null,
+			'tanggal_bht' => $this->input->post('tanggal_bht') ?: null,
+			'majelis_hakim' => $this->input->post('majelis_hakim'),
+			'panitera_pengganti' => $this->input->post('panitera_pengganti'),
+			'catatan_pbt' => $this->input->post('catatan_pbt')
+		);
+
+		// Calculate selisih hari and status
+		if ($update_data['tanggal_pbt'] && $update_data['tanggal_putusan']) {
+			$tanggal_putusan = new DateTime($update_data['tanggal_putusan']);
+			$tanggal_pbt = new DateTime($update_data['tanggal_pbt']);
+			$diff = $tanggal_putusan->diff($tanggal_pbt);
+			$update_data['selisih_putus_pbt'] = $diff->days;
+		} else {
+			$update_data['selisih_putus_pbt'] = null;
+		}
+
+		// Update status proses
+		if ($update_data['tanggal_bht']) {
+			$update_data['status_proses'] = 'Selesai';
+		} elseif ($update_data['tanggal_pbt']) {
+			$update_data['status_proses'] = 'Sudah PBT Belum BHT';
+		} else {
+			$update_data['status_proses'] = 'Belum PBT';
+		}
+
+		try {
+			$result = $this->notelen->update_berkas_pbt($id, $update_data);
+
+			if ($result) {
+				echo json_encode(array(
+					'success' => true,
+					'message' => 'Berkas PBT ' . $existing_pbt->nomor_perkara . ' berhasil diperbarui',
+					'data' => $update_data
+				));
+			} else {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Gagal memperbarui berkas PBT'
 				));
 			}
 		} catch (Exception $e) {
