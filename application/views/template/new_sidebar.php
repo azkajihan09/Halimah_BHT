@@ -103,7 +103,7 @@
 					<a href="#" class="nav-link">
 						<i class="nav-icon fas fa-file-archive text-warning"></i>
 						<p>
-							Sistem Notelen
+							Sistem Notulen (pencatatan BHT)
 							<i class="fas fa-angle-left right"></i>
 						</p>
 					</a>
