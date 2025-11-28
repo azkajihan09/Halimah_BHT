@@ -12,7 +12,7 @@
 		<div class="container-fluid">
 			<div class="row mb-2">
 				<div class="col-sm-6">
-					<h1 class="m-0"><?= isset($page_title) ? $page_title : 'Berkas Masuk Notelen 2' ?></h1>
+					<h1 class="m-0"><?= isset($page_title) ? $page_title : 'Berkas Masuk Notelen' ?></h1>
 				</div>
 				<div class="col-sm-6">
 					<ol class="breadcrumb float-sm-right">
@@ -158,7 +158,7 @@
 											<th width="15%">Nomor Perkara *</th>
 											<th width="10%">Tanggal Putusan *</th>
 											<th width="10%">Jenis Perkara</th>
-											<th width="8%">Masuk</th>
+											<th width="8%">Berkas Masuk</th>
 											<th width="8%">Status Berkas</th>
 											<th width="10%">Majelis Hakim</th>
 											<th width="8%">Panitera</th>
