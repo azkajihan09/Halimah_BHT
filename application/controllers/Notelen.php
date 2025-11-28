@@ -396,6 +396,8 @@ class Notelen extends CI_Controller
 			$jenis_perkara = $this->input->post('jenis_perkara');
 			$majelis_hakim = $this->input->post('majelis_hakim');
 			$panitera_pengganti = $this->input->post('panitera_pengganti');
+			$jurusita = $this->input->post('jurusita');
+			$status_berkas = $this->input->post('status_berkas');
 			$catatan = $this->input->post('catatan_notelen');
 
 			// Validasi
@@ -426,7 +428,8 @@ class Notelen extends CI_Controller
 				'tanggal_masuk_notelen' => date('Y-m-d'),
 				'majelis_hakim' => $majelis_hakim,
 				'panitera_pengganti' => $panitera_pengganti,
-				'status_berkas' => 'MASUK',
+				'jurusita' => $jurusita,
+				'status_berkas' => $status_berkas ?: 'PANITERA_PENGGANTI',
 				'catatan_notelen' => $catatan,
 				'created_at' => date('Y-m-d H:i:s'),
 				'updated_at' => date('Y-m-d H:i:s')
@@ -603,6 +606,7 @@ class Notelen extends CI_Controller
 			$jenis_perkara = $this->input->post('jenis_perkara');
 			$majelis_hakim = $this->input->post('majelis_hakim');
 			$panitera_pengganti = $this->input->post('panitera_pengganti');
+			$jurusita = $this->input->post('jurusita');
 			$status_berkas = $this->input->post('status_berkas');
 			$catatan = $this->input->post('catatan_notelen');
 
@@ -631,7 +635,8 @@ class Notelen extends CI_Controller
 				'jenis_perkara' => $jenis_perkara,
 				'majelis_hakim' => $majelis_hakim,
 				'panitera_pengganti' => $panitera_pengganti,
-				'status_berkas' => $status_berkas ? $status_berkas : 'MASUK',
+				'jurusita' => $jurusita,
+				'status_berkas' => $status_berkas ? $status_berkas : 'PANITERA_PENGGANTI',
 				'catatan_notelen' => $catatan,
 				'updated_at' => date('Y-m-d H:i:s')
 			);

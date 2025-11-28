@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Status Dropdown & Jurusita</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>Test: Status Dropdown dan Jurusita Column</h3>
+            </div>
+            <div class="card-body">
+                <!-- Test Status Dropdown -->
+                <div class="form-group">
+                    <label for="statusTest">Status Berkas (New Values)</label>
+                    <select id="statusTest" class="form-control">
+                        <option value="PANITERA_PENGGANTI">Panitera Pengganti</option>
+                        <option value="ALIH_MEDIA">Alih Media</option>
+                        <option value="BELUM_ADA_PBT">Belum Ada PBT</option>
+                        <option value="MENUNGGU_BHT">Menunggu BHT</option>
+                        <option value="SELESAI_ARSIP">Selesai Arsip</option>
+                    </select>
+                </div>
+
+                <!-- Test Jurusita Field -->
+                <div class="form-group">
+                    <label for="jurusitaTest">Jurusita</label>
+                    <input type="text" id="jurusitaTest" class="form-control" placeholder="Nama Jurusita">
+                </div>
+
+                <!-- Test Table with Jurusita Column -->
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Nomor Perkara</th>
+                                <th>Status</th>
+                                <th>Panitera</th>
+                                <th>Jurusita</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>123/Pdt.G/2024/PA.Xyz</td>
+                                <td><span class="badge badge-primary">Panitera Pengganti</span></td>
+                                <td>John Doe</td>
+                                <td>Jane Smith</td>
+                                <td>
+                                    <button class="btn btn-info btn-sm">Detail</button>
+                                    <button class="btn btn-warning btn-sm">Edit</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>124/Pdt.G/2024/PA.Xyz</td>
+                                <td><span class="badge badge-info">Alih Media</span></td>
+                                <td>Robert Johnson</td>
+                                <td>Mary Wilson</td>
+                                <td>
+                                    <button class="btn btn-info btn-sm">Detail</button>
+                                    <button class="btn btn-warning btn-sm">Edit</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>125/Pdt.G/2024/PA.Xyz</td>
+                                <td><span class="badge badge-warning">Belum Ada PBT</span></td>
+                                <td>David Brown</td>
+                                <td>Sarah Davis</td>
+                                <td>
+                                    <button class="btn btn-info btn-sm">Detail</button>
+                                    <button class="btn btn-warning btn-sm">Edit</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>126/Pdt.G/2024/PA.Xyz</td>
+                                <td><span class="badge badge-warning">Menunggu BHT</span></td>
+                                <td>Michael Jones</td>
+                                <td>Lisa Garcia</td>
+                                <td>
+                                    <button class="btn btn-info btn-sm">Detail</button>
+                                    <button class="btn btn-warning btn-sm">Edit</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>127/Pdt.G/2024/PA.Xyz</td>
+                                <td><span class="badge badge-success">Selesai Arsip</span></td>
+                                <td>Christopher Miller</td>
+                                <td>Jennifer Anderson</td>
+                                <td>
+                                    <button class="btn btn-info btn-sm">Detail</button>
+                                    <button class="btn btn-warning btn-sm">Edit</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>✅ Success!</strong> Status dropdown has been updated with new values: Panitera Pengganti,
+                    Alih Media, Belum Ada PBT, Menunggu BHT, Selesai Arsip
+                </div>
+                <div class="alert alert-info">
+                    <strong>ℹ️ Info:</strong> Jurusita column has been added to the table structure and connected to
+                    SIPP database
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

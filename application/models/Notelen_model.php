@@ -242,7 +242,8 @@ class Notelen_model extends CI_Model
                 p.jenis_perkara_nama as jenis_perkara,
                 pp.tanggal_putusan,
                 COALESCE(pen.majelis_hakim_nama, '-') as majelis_hakim,
-                COALESCE(pen.panitera_pengganti_text, '-') as panitera_pengganti
+                COALESCE(pen.panitera_pengganti_text, '-') as panitera_pengganti,
+                COALESCE(pen.jurusita_text, '-') as jurusita
             FROM perkara p
             INNER JOIN perkara_putusan pp ON p.perkara_id = pp.perkara_id
             LEFT JOIN perkara_penetapan pen ON p.perkara_id = pen.perkara_id
@@ -271,7 +272,8 @@ class Notelen_model extends CI_Model
                 p.jenis_perkara_nama as jenis_perkara,
                 pp.tanggal_putusan,
                 COALESCE(pen.majelis_hakim_nama, '-') as majelis_hakim,
-                COALESCE(pen.panitera_pengganti_text, '-') as panitera_pengganti
+                COALESCE(pen.panitera_pengganti_text, '-') as panitera_pengganti,
+                COALESCE(pen.jurusita_text, '-') as jurusita
             FROM perkara p
             INNER JOIN perkara_putusan pp ON p.perkara_id = pp.perkara_id
             LEFT JOIN perkara_penetapan pen ON p.perkara_id = pen.perkara_id

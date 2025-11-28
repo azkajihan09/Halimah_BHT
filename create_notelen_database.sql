@@ -15,18 +15,20 @@ CREATE TABLE `berkas_masuk` (
     `tanggal_masuk_notelen` date NOT NULL,
     `majelis_hakim` text NULL,
     `panitera_pengganti` varchar(255) NULL,
+    `jurusita` varchar(255) NULL,
     `status_berkas` enum(
-        'MASUK',
-        'PROSES',
-        'SELESAI',
-        'ARSIP'
-    ) NOT NULL DEFAULT 'MASUK',
+        'PANITERA_PENGGANTI',
+        'ALIH_MEDIA',
+        'BELUM_ADA_PBT',
+        'MENUNGGU_BHT',
+        'SELESAI_ARSIP'
+    ) NOT NULL DEFAULT 'PANITERA_PENGGANTI',
     `catatan_notelen` text NULL,
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `nomor_perkara` (`nomor_perkara`),
-    INDEX `idx_perkara_id` (`perkara_id_sipp`), 
+    INDEX `idx_perkara_id` (`perkara_id_sipp`),
     INDEX `idx_tanggal_putusan` (`tanggal_putusan`),
     INDEX `idx_status` (`status_berkas`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;

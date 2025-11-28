@@ -18,7 +18,7 @@
 					<ol class="breadcrumb float-sm-right">
 						<li class="breadcrumb-item"><a href="<?= base_url() ?>">Dashboard</a></li>
 						<li class="breadcrumb-item"><a href="<?= base_url('notelen') ?>">Notelen</a></li>
-						<li class="breadcrumb-item active">Berkas Masuk 2</li>
+						<li class="breadcrumb-item active">Berkas Masuk</li>
 					</ol>
 				</div>
 			</div>
@@ -102,10 +102,11 @@
 										<label>Status Berkas:</label>
 										<select name="status" class="form-control">
 											<option value="">Semua Status</option>
-											<option value="MASUK" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'MASUK') ? 'selected' : '' ?>>Masuk</option>
-											<option value="PROSES" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'PROSES') ? 'selected' : '' ?>>Proses</option>
-											<option value="SELESAI" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'SELESAI') ? 'selected' : '' ?>>Selesai</option>
-											<option value="ARSIP" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'ARSIP') ? 'selected' : '' ?>>Arsip</option>
+											<option value="PANITERA_PENGGANTI" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'PANITERA_PENGGANTI') ? 'selected' : '' ?>>Panitera Pengganti</option>
+											<option value="ALIH_MEDIA" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'ALIH_MEDIA') ? 'selected' : '' ?>>Alih Media</option>
+											<option value="BELUM_ADA_PBT" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'BELUM_ADA_PBT') ? 'selected' : '' ?>>Belum Ada PBT</option>
+											<option value="MENUNGGU_BHT" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'MENUNGGU_BHT') ? 'selected' : '' ?>>Menunggu BHT</option>
+											<option value="SELESAI_ARSIP" <?= (isset($filters['status_berkas']) && $filters['status_berkas'] == 'SELESAI_ARSIP') ? 'selected' : '' ?>>Selesai Arsip</option>
 										</select>
 									</div>
 								</div>
@@ -133,12 +134,6 @@
 										<button type="button" class="btn btn-success" onclick="openNewBerkasModal()">
 											<i class="fas fa-plus"></i> Tambah Berkas
 										</button>
-										<button type="button" class="btn btn-info" onclick="syncFromSipp()">
-											<i class="fas fa-sync"></i> Sync SIPP
-										</button>
-										<a href="<?= base_url('notelen/export?format=excel') ?>" class="btn btn-warning">
-											<i class="fas fa-download"></i> Export Excel
-										</a>
 									</div>
 								</div>
 							</form>
@@ -167,6 +162,7 @@
 											<th width="8%">Status Berkas</th>
 											<th width="10%">Majelis Hakim</th>
 											<th width="8%">Panitera</th>
+											<th width="8%">Jurusita</th>
 											<th width="12%">Catatan Notelen</th>
 											<th width="10%">Aksi</th>
 										</tr>
@@ -196,27 +192,37 @@
 													</td>
 													<td>
 														<?php
-														$status = isset($berkas->status_berkas) ? $berkas->status_berkas : 'MASUK';
+														$status = isset($berkas->status_berkas) ? $berkas->status_berkas : 'PANITERA_PENGGANTI';
 														$badge_color = '';
+														$status_display = '';
 														switch ($status) {
-															case 'MASUK':
+															case 'PANITERA_PENGGANTI':
 																$badge_color = 'badge-primary';
+																$status_display = 'Panitera Pengganti';
 																break;
-															case 'PROSES':
+															case 'ALIH_MEDIA':
+																$badge_color = 'badge-info';
+																$status_display = 'Alih Media';
+																break;
+															case 'BELUM_ADA_PBT':
 																$badge_color = 'badge-warning';
+																$status_display = 'Belum Ada PBT';
 																break;
-															case 'SELESAI':
+															case 'MENUNGGU_BHT':
+																$badge_color = 'badge-warning';
+																$status_display = 'Menunggu BHT';
+																break;
+															case 'SELESAI_ARSIP':
 																$badge_color = 'badge-success';
-																break;
-															case 'ARSIP':
-																$badge_color = 'badge-secondary';
+																$status_display = 'Selesai Arsip';
 																break;
 															default:
 																$badge_color = 'badge-light';
+																$status_display = $status;
 																break;
 														}
 														?>
-														<span class="badge <?= $badge_color ?>"><?= $status ?></span>
+														<span class="badge <?= $badge_color ?>"><?= $status_display ?></span>
 													</td>
 													<td>
 														<small class="text-muted" style="font-size: 0.85em; max-width: 150px; word-wrap: break-word;">
@@ -226,6 +232,11 @@
 													<td>
 														<small class="text-muted">
 															<?= isset($berkas->panitera_pengganti) ? $berkas->panitera_pengganti : '-' ?>
+														</small>
+													</td>
+													<td>
+														<small class="text-muted">
+															<?= isset($berkas->jurusita) ? $berkas->jurusita : '-' ?>
 														</small>
 													</td>
 													<td>
@@ -376,10 +387,11 @@
 							<div class="form-group">
 								<label>Status Berkas *</label>
 								<select name="status_berkas" id="statusBerkas" class="form-control" required>
-									<option value="MASUK" selected>Masuk</option>
-									<option value="PROSES">Proses</option>
-									<option value="SELESAI">Selesai</option>
-									<option value="ARSIP">Arsip</option>
+									<option value="PANITERA_PENGGANTI" selected>Panitera Pengganti</option>
+									<option value="ALIH_MEDIA">Alih Media</option>
+									<option value="BELUM_ADA_PBT">Belum Ada PBT</option>
+									<option value="MENUNGGU_BHT">Menunggu BHT</option>
+									<option value="SELESAI_ARSIP">Selesai Arsip</option>
 								</select>
 								<small class="form-text text-primary">Pilih status berkas</small>
 							</div>
@@ -396,6 +408,12 @@
 						<label>Panitera Pengganti</label>
 						<input type="text" name="panitera_pengganti" id="paniteraPengganti" class="form-control" readonly>
 						<small id="paniteraHelp" class="form-text text-muted">Manual input atau auto-fill dari SIPP</small>
+					</div>
+
+					<div class="form-group">
+						<label>Jurusita</label>
+						<input type="text" name="jurusita" id="jurusita" class="form-control" readonly>
+						<small id="jurusitaHelp" class="form-text text-muted">Manual input atau auto-fill dari SIPP</small>
 					</div>
 
 					<div class="form-group">
@@ -452,10 +470,11 @@
 							<div class="form-group">
 								<label>Status Berkas</label>
 								<select name="status_berkas" id="editStatusBerkas" class="form-control">
-									<option value="MASUK">Masuk</option>
-									<option value="PROSES">Proses</option>
-									<option value="SELESAI">Selesai</option>
-									<option value="ARSIP">Arsip</option>
+									<option value="PANITERA_PENGGANTI">Panitera Pengganti</option>
+									<option value="ALIH_MEDIA">Alih Media</option>
+									<option value="BELUM_ADA_PBT">Belum Ada PBT</option>
+									<option value="MENUNGGU_BHT">Menunggu BHT</option>
+									<option value="SELESAI_ARSIP">Selesai Arsip</option>
 								</select>
 							</div>
 						</div>
@@ -471,6 +490,12 @@
 						<label>Panitera Pengganti</label>
 						<input type="text" name="panitera_pengganti" id="editPaniteraPengganti" class="form-control" readonly>
 						<small class="form-text text-muted">Panitera pengganti tidak dapat diubah</small>
+					</div>
+
+					<div class="form-group">
+						<label>Jurusita</label>
+						<input type="text" name="jurusita" id="editJurusita" class="form-control" readonly>
+						<small class="form-text text-muted">Jurusita tidak dapat diubah</small>
 					</div>
 
 					<div class="form-group">
@@ -576,6 +601,10 @@
 						<div class="form-group">
 							<label><strong>Panitera Pengganti:</strong></label>
 							<p id="viewPaniteraPengganti" class="text-muted">-</p>
+						</div>
+						<div class="form-group">
+							<label><strong>Jurusita:</strong></label>
+							<p id="viewJurusita" class="text-muted">-</p>
 						</div>
 					</div>
 				</div>
@@ -693,7 +722,8 @@
 										data-jenis="${item.jenis_perkara || ''}"
 										data-tanggal="${item.tanggal_putusan || ''}"
 										data-majelis="${item.majelis_hakim || ''}"
-										data-panitera="${item.panitera_pengganti || ''}">
+										data-panitera="${item.panitera_pengganti || ''}"
+										data-jurusita="${item.jurusita || ''}">>
 										<div class="d-flex w-100 justify-content-between">
 											<h6 class="mb-1 text-primary">${item.nomor_perkara}</h6>
 											<small class="text-muted">${item.tanggal_putusan || 'N/A'}</small>
@@ -741,6 +771,7 @@
 			$('#tanggalPutusan').val(data.tanggal);
 			$('#majelisHakim').val(data.majelis);
 			$('#paniteraPengganti').val(data.panitera);
+			$('#jurusita').val(data.jurusita);
 
 			// Mark as selected from SIPP
 			$('#nomorPerkara').data('selected-from-sipp', true);
@@ -769,6 +800,7 @@
 			$('#tanggalPutusan').val('');
 			$('#majelisHakim').val('');
 			$('#paniteraPengganti').val('');
+			$('#jurusita').val('');
 			$('#perkaraSuggestions').hide();
 
 			// Update visual indicators to show manual input
@@ -792,18 +824,20 @@
 			$('#tanggalHelp').text('(Auto-filled dari SIPP)').removeClass('text-muted').addClass('text-success');
 			$('#majelisHelp').text('(Auto-filled dari SIPP)').removeClass('text-muted').addClass('text-success');
 			$('#paniteraHelp').text('(Auto-filled dari SIPP)').removeClass('text-muted').addClass('text-success');
+			$('#jurusitaHelp').text('(Auto-filled dari SIPP)').removeClass('text-muted').addClass('text-success');
 
 			// Add success icons
-			$('#jenisPerkara, #tanggalPutusan, #majelisHakim, #paniteraPengganti')
+			$('#jenisPerkara, #tanggalPutusan, #majelisHakim, #paniteraPengganti, #jurusita')
 				.addClass('border-success');
 		} else {
 			$('#jenisHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
 			$('#tanggalHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
 			$('#majelisHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
 			$('#paniteraHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
+			$('#jurusitaHelp').text('(Manual input atau auto-fill dari SIPP)').removeClass('text-success').addClass('text-muted');
 
 			// Remove success styling
-			$('#jenisPerkara, #tanggalPutusan, #majelisHakim, #paniteraPengganti')
+			$('#jenisPerkara, #tanggalPutusan, #majelisHakim, #paniteraPengganti, #jurusita')
 				.removeClass('border-success');
 		}
 	}
@@ -821,6 +855,7 @@
 		$('#viewPerkaraIdSipp').text('-');
 		$('#viewMajelisHakim').text('-');
 		$('#viewPaniteraPengganti').text('-');
+		$('#viewJurusita').text('-');
 		$('#viewCatatanNotelen').text('-');
 		$('#viewCreatedAt').text('-');
 		$('#viewUpdatedAt').text('-');
@@ -870,6 +905,7 @@
 					$('#viewPerkaraIdSipp').text(berkas.perkara_id_sipp || '-');
 					$('#viewMajelisHakim').text(berkas.majelis_hakim || '-');
 					$('#viewPaniteraPengganti').text(berkas.panitera_pengganti || '-');
+					$('#viewJurusita').text(berkas.jurusita || '-');
 					$('#viewCatatanNotelen').text(berkas.catatan_notelen || 'Tidak ada catatan');
 					$('#viewCreatedAt').text(berkas.created_at ? formatDateTime(berkas.created_at) : '-');
 					$('#viewUpdatedAt').text(berkas.updated_at ? formatDateTime(berkas.updated_at) : '-');
@@ -934,6 +970,7 @@
 		$('#editJenisPerkara').prop('readonly', true);
 		$('#editMajelisHakim').prop('readonly', true);
 		$('#editPaniteraPengganti').prop('readonly', true);
+		$('#editJurusita').prop('readonly', true);
 
 		// Load data berkas untuk edit
 		loadBerkasForEdit(berkas_id);
@@ -958,14 +995,16 @@
 					$('#editJenisPerkara').prop('readonly', true);
 					$('#editMajelisHakim').prop('readonly', true);
 					$('#editPaniteraPengganti').prop('readonly', true);
+					$('#editJurusita').prop('readonly', true);
 
 					// Set data
 					$('#editNomorPerkara').val(berkas.nomor_perkara || '');
 					$('#editTanggalPutusan').val(berkas.tanggal_putusan || '');
 					$('#editJenisPerkara').val(berkas.jenis_perkara || '');
-					$('#editStatusBerkas').val(berkas.status_berkas || 'MASUK');
+					$('#editStatusBerkas').val(berkas.status_berkas || 'PANITERA_PENGGANTI');
 					$('#editMajelisHakim').val(berkas.majelis_hakim || '');
 					$('#editPaniteraPengganti').val(berkas.panitera_pengganti || '');
+					$('#editJurusita').val(berkas.jurusita || '');
 					$('#editCatatanNotelen').val(berkas.catatan_notelen || '');
 				} else {
 					Swal.fire({
@@ -1026,12 +1065,14 @@
 			$('#jenisPerkara').val(detail.jenis_perkara || '-');
 			$('#majelisHakim').val(detail.majelis_hakim || '-');
 			$('#paniteraPengganti').val(detail.panitera_pengganti || '-');
+			$('#jurusita').val(detail.jurusita || '-');
 		} else {
 			// Clear fields if no selection
 			$('#tanggalPutusan').val('');
 			$('#jenisPerkara').val('');
 			$('#majelisHakim').val('');
 			$('#paniteraPengganti').val('');
+			$('#jurusita').val('');
 		}
 	});
 
