@@ -373,9 +373,9 @@
 						<div class="col-md-6">
 							<div class="form-group">
 								<label for="jurusita">Jurusita
-									<small class="text-muted" id="jurusitaHelp">(Manual input atau auto-fill dari SIPP)</small>
+									<small class="text-muted" id="jurusitaHelp">(Otomatis dari data SIPP)</small>
 								</label>
-								<input type="text" class="form-control" id="jurusita" name="jurusita" placeholder="Nama Jurusita">
+								<input type="text" class="form-control" id="jurusita" name="jurusita" placeholder="Nama Jurusita" readonly>
 							</div>
 						</div>
 						<div class="col-md-6">
@@ -630,8 +630,8 @@
 						<div class="col-md-6">
 							<div class="form-group">
 								<label for="editJurusita">Jurusita</label>
-								<input type="text" class="form-control" id="editJurusita" name="jurusita" placeholder="Nama Jurusita">
-								<small class="text-muted">Field ini dapat diubah</small>
+								<input type="text" class="form-control" id="editJurusita" name="jurusita" placeholder="Nama Jurusita" readonly>
+								<small class="text-muted">Data dari SIPP (readonly)</small>
 							</div>
 						</div>
 						<div class="col-md-6">
