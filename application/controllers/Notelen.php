@@ -1021,6 +1021,7 @@ class Notelen extends CI_Controller
 		$jenis_perkara = $this->input->post('jenis_perkara');
 		$majelis_hakim = $this->input->post('majelis_hakim');
 		$panitera_pengganti = $this->input->post('panitera_pengganti');
+		$jurusita = $this->input->post('jurusita');
 		$catatan = $this->input->post('catatan_pbt');
 
 		// Validasi
@@ -1042,6 +1043,7 @@ class Notelen extends CI_Controller
 				'tanggal_bht' => $tanggal_bht ?: null,
 				'majelis_hakim' => $majelis_hakim,
 				'panitera_pengganti' => $panitera_pengganti,
+				'jurusita' => $jurusita,
 				'catatan_pbt' => $catatan
 			);
 

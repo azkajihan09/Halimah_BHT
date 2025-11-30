@@ -609,6 +609,7 @@ class Notelen_model extends CI_Model
 			'status_proses' => $status_proses,
 			'majelis_hakim' => isset($data['majelis_hakim']) ? $data['majelis_hakim'] : null,
 			'panitera_pengganti' => isset($data['panitera_pengganti']) ? $data['panitera_pengganti'] : null,
+			'jurusita' => isset($data['jurusita']) ? $data['jurusita'] : null,
 			'catatan_pbt' => isset($data['catatan_pbt']) ? $data['catatan_pbt'] : null,
 			'is_duplicate_berkas' => $is_duplicate ? 1 : 0
 		);
@@ -659,9 +660,11 @@ class Notelen_model extends CI_Model
 					ELSE 'Selesai'
 				END as status_proses,
 				pp.majelis_hakim,
-				pp.panitera_pengganti
+				pp.panitera_pengganti,
+				COALESCE(pen.jurusita_text, '-') as jurusita
 			FROM perkara p
 			LEFT JOIN perkara_putusan pp ON p.perkara_id = pp.perkara_id
+			LEFT JOIN perkara_penetapan pen ON p.perkara_id = pen.perkara_id
 			LEFT JOIN perkara_jadwal_sidang pjs ON p.perkara_id = pjs.perkara_id AND pjs.jenis_sidang_nama LIKE '%PBT%'
 			WHERE pp.tanggal_putusan IS NOT NULL
 			AND DATE_FORMAT(pp.tanggal_putusan, '%Y-%m') >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 6 MONTH), '%Y-%m')
@@ -692,7 +695,8 @@ class Notelen_model extends CI_Model
 					'tanggal_pbt' => $row->tanggal_pbt,
 					'tanggal_bht' => $row->tanggal_bht,
 					'majelis_hakim' => $row->majelis_hakim,
-					'panitera_pengganti' => $row->panitera_pengganti
+					'panitera_pengganti' => $row->panitera_pengganti,
+					'jurusita' => $row->jurusita
 				);
 
 				$result = $this->insert_berkas_pbt($data);
