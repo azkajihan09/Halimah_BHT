@@ -87,3 +87,8 @@ UPDATE `berkas_masuk` SET `status_berkas` = 'SELESAI' WHERE `status_berkas` = 'S
 ALTER TABLE `berkas_masuk` 
 MODIFY COLUMN `status_berkas` enum('MASUK', 'PROSES', 'SELESAI', 'ARSIP') NOT NULL DEFAULT 'MASUK';
 */
+
+
+ALTER TABLE `berkas_pbt`
+
+ADD COLUMN `jurusita` varchar(255) NULL AFTER `panitera_pengganti`;

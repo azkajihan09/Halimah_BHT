@@ -157,6 +157,7 @@
 								<th>Tanggal PBT</th>
 								<th>Majelis Hakim</th>
 								<th>Panitera</th>
+								<th>Jurusita</th>
 								<th>Selisih Hari</th>
 								<th>Status Proses</th>
 								<th>Catatan PBT</th>
@@ -193,6 +194,7 @@
 										</td>
 										<td><?= $pbt->majelis_hakim ?: '-' ?></td>
 										<td><?= $pbt->panitera_pengganti ?: '-' ?></td>
+										<td><?= $pbt->jurusita ?: '-' ?></td>
 										<td>
 											<?php if ($pbt->selisih_putus_pbt): ?>
 												<span class="badge badge-<?= $pbt->selisih_putus_pbt > 14 ? 'danger' : 'info' ?>">
@@ -331,9 +333,9 @@
 						<div class="col-md-4">
 							<div class="form-group">
 								<label for="tanggalPutusan">Tanggal Putusan *
-									<small class="text-muted" id="tanggalHelp">(Manual input atau auto-fill dari SIPP)</small>
+									<small class="text-muted" id="tanggalHelp">(Data dari SIPP, tidak dapat diubah)</small>
 								</label>
-								<input type="date" class="form-control" id="tanggalPutusan" name="tanggal_putusan" required>
+								<input type="date" class="form-control" id="tanggalPutusan" name="tanggal_putusan" required readonly>
 							</div>
 						</div>
 						<div class="col-md-4">
@@ -353,23 +355,35 @@
 						<div class="col-md-6">
 							<div class="form-group">
 								<label for="majelisHakim">Majelis Hakim
-									<small class="text-muted" id="majelisHelp">(Manual input atau auto-fill dari SIPP)</small>
+									<small class="text-muted" id="majelisHelp">(Data dari SIPP, tidak dapat diubah)</small>
 								</label>
-								<textarea class="form-control" id="majelisHakim" name="majelis_hakim" rows="2"></textarea>
+								<textarea class="form-control" id="majelisHakim" name="majelis_hakim" rows="2" readonly></textarea>
 							</div>
 						</div>
 						<div class="col-md-6">
 							<div class="form-group">
 								<label for="paniteraPengganti">Panitera Pengganti
-									<small class="text-muted" id="paniteraHelp">(Manual input atau auto-fill dari SIPP)</small>
+									<small class="text-muted" id="paniteraHelp">(Data dari SIPP, tidak dapat diubah)</small>
 								</label>
-								<input type="text" class="form-control" id="paniteraPengganti" name="panitera_pengganti">
+								<input type="text" class="form-control" id="paniteraPengganti" name="panitera_pengganti" readonly>
 							</div>
 						</div>
 					</div>
-					<div class="form-group">
-						<label for="catatanPbt">Catatan PBT</label>
-						<textarea class="form-control" id="catatanPbt" name="catatan_pbt" rows="3"></textarea>
+					<div class="row">
+						<div class="col-md-6">
+							<div class="form-group">
+								<label for="jurusita">Jurusita
+									<small class="text-muted" id="jurusitaHelp">(Manual input atau auto-fill dari SIPP)</small>
+								</label>
+								<input type="text" class="form-control" id="jurusita" name="jurusita" placeholder="Nama Jurusita">
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="form-group">
+								<label for="catatanPbt">Catatan PBT</label>
+								<textarea class="form-control" id="catatanPbt" name="catatan_pbt" rows="2" placeholder="Catatan atau keterangan tambahan"></textarea>
+							</div>
+						</div>
 					</div>
 				</form>
 			</div>
@@ -481,6 +495,10 @@
 									<tr>
 										<td><strong>Panitera Pengganti:</strong></td>
 										<td id="detailPaniteraPengganti">-</td>
+									</tr>
+									<tr>
+										<td><strong>Jurusita:</strong></td>
+										<td id="detailJurusita">-</td>
 									</tr>
 								</table>
 							</div>
@@ -608,9 +626,20 @@
 							</div>
 						</div>
 					</div>
-					<div class="form-group">
-						<label for="editCatatanPbt">Catatan PBT</label>
-						<textarea class="form-control" id="editCatatanPbt" name="catatan_pbt" rows="3"></textarea>
+					<div class="row">
+						<div class="col-md-6">
+							<div class="form-group">
+								<label for="editJurusita">Jurusita</label>
+								<input type="text" class="form-control" id="editJurusita" name="jurusita" placeholder="Nama Jurusita">
+								<small class="text-muted">Field ini dapat diubah</small>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="form-group">
+								<label for="editCatatanPbt">Catatan PBT</label>
+								<textarea class="form-control" id="editCatatanPbt" name="catatan_pbt" rows="2" placeholder="Catatan atau keterangan tambahan"></textarea>
+							</div>
+						</div>
 					</div>
 				</form>
 			</div>
@@ -677,13 +706,14 @@
                                        data-jenis="${item.jenis_perkara || ''}"
                                        data-tanggal="${item.tanggal_putusan || ''}"
                                        data-majelis="${item.majelis_hakim || ''}"
-                                       data-panitera="${item.panitera_pengganti || ''}">
+                                       data-panitera="${item.panitera_pengganti || ''}"
+                                       data-jurusita="${item.jurusita || ''}">
                                         <div class="d-flex w-100 justify-content-between">
                                             <h6 class="mb-1">${item.nomor_perkara}</h6>
                                             <small class="text-primary">${item.tanggal_putusan || ''}</small>
                                         </div>
                                         <p class="mb-1 text-muted">${item.jenis_perkara || 'Tidak ada jenis'}</p>
-                                        <small class="text-secondary">Majelis: ${item.majelis_hakim || 'Tidak ada data'}</small>
+                                        <small class="text-secondary">Majelis: ${item.majelis_hakim || 'Tidak ada data'} | Jurusita: ${item.jurusita || 'Tidak ada data'}</small>
                                     </a>
                                 `;
 							});
@@ -723,6 +753,7 @@
 			$('#tanggalPutusan').val(data.tanggal);
 			$('#majelisHakim').val(data.majelis);
 			$('#paniteraPengganti').val(data.panitera);
+			$('#jurusita').val(data.jurusita);
 
 			// Mark as selected from SIPP
 			$('#nomorPerkaraPbt').data('selected-from-sipp', true);
@@ -751,6 +782,7 @@
 			$('#tanggalPutusan').val('');
 			$('#majelisHakim').val('');
 			$('#paniteraPengganti').val('');
+			$('#jurusita').val('');
 			$('#perkaraSuggestions').hide();
 
 			// Update visual indicators to show manual input
@@ -1009,6 +1041,7 @@
 					$('#detailTanggalBht').text(formatDate(data.tanggal_bht));
 					$('#detailMajelisHakim').text(data.majelis_hakim || '-');
 					$('#detailPaniteraPengganti').text(data.panitera_pengganti || '-');
+					$('#detailJurusita').text(data.jurusita || '-');
 					$('#detailPerkaraIdSipp').text(data.perkara_id_sipp || '-');
 					$('#detailCreatedAt').text(formatDateTime(data.created_at));
 					$('#detailUpdatedAt').text(formatDateTime(data.updated_at));
@@ -1110,6 +1143,7 @@
 					$('#editTanggalBht').val(data.tanggal_bht || '');
 					$('#editMajelisHakim').val(data.majelis_hakim || '');
 					$('#editPaniteraPengganti').val(data.panitera_pengganti || '');
+					$('#editJurusita').val(data.jurusita || '');
 					$('#editCatatanPbt').val(data.catatan_pbt || '');
 
 					// Show modal edit
