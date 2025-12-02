@@ -11,20 +11,20 @@ date_default_timezone_set('Asia/Jakarta');
 // ENVIRONMENT DETECTION & BASE URL
 // =============================================
 if (isset($_SERVER['HTTP_HOST'])) {
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
-    $host = $_SERVER['HTTP_HOST'];
+	$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+	$host = $_SERVER['HTTP_HOST'];
 
-    // Detect environment and set base URL accordingly
-    if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
-        // Local development
-        $config['base_url'] = $protocol . $host . '/Halimah_BHT/';
-    } else {
-        // Production server - adjust path as needed
-        $config['base_url'] = $protocol . $host . '/'; // or '/subfolder/' if in subfolder
-    }
+	// Detect environment and set base URL accordingly
+	if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
+		// Local development - XAMPP default port 80
+		$config['base_url'] = $protocol . $host . '/Halimah_BHT/';
+	} else {
+		// Production server - adjust path as needed
+		$config['base_url'] = $protocol . $host . '/'; // or '/subfolder/' if in subfolder
+	}
 } else {
-    // CLI or fallback
-    $config['base_url'] = 'http://localhost/Halimah_BHT/';
+	// CLI or fallback - XAMPP default port 80
+	$config['base_url'] = 'http://localhost/Halimah_BHT/';
 }
 
 $config['index_page'] = '';
@@ -127,11 +127,11 @@ $config['proxy_ips'] = '';
 // ENVIRONMENT-SPECIFIC SETTINGS
 // =============================================
 if (ENVIRONMENT === 'development') {
-    $config['log_threshold'] = 4; // Log everything in development
-    $config['enable_hooks'] = TRUE;
+	$config['log_threshold'] = 4; // Log everything in development
+	$config['enable_hooks'] = TRUE;
 } else {
-    $config['log_threshold'] = 1; // Only errors in production
-    $config['enable_hooks'] = FALSE;
+	$config['log_threshold'] = 1; // Only errors in production
+	$config['enable_hooks'] = FALSE;
 }
 $config['sess_time_to_update'] = 300;
 $config['sess_regenerate_destroy'] = FALSE;

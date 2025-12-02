@@ -77,7 +77,12 @@ date_default_timezone_set('Asia/Jakarta');
  */
 switch (ENVIRONMENT) {
 	case 'development':
-		error_reporting(-1);
+		// Sembunyikan deprecation warnings untuk PHP 8.2+
+		if (version_compare(PHP_VERSION, '8.2', '>=')) {
+			error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_USER_NOTICE & ~E_USER_DEPRECATED);
+		} else {
+			error_reporting(-1);
+		}
 		ini_set('display_errors', 1);
 		break;
 
