@@ -11,4 +11,3 @@ echo "<h2>Detail Lengkap:</h2>";
 
 // Tampilkan phpinfo lengkap
 phpinfo();
-?>
