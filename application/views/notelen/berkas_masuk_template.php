@@ -1,5 +1,4 @@
 <?php $this->load->view('template/new_header'); ?>
-<?php $this->load->view('template/new_header'); ?>
 
 <?php $this->load->view('template/new_sidebar'); ?>
 
