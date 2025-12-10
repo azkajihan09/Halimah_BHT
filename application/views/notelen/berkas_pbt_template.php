@@ -95,9 +95,6 @@
 						<button type="button" class="btn btn-sm btn-success" onclick="openNewPbtModal()">
 							<i class="fas fa-plus"></i> Tambah PBT Manual
 						</button>
-						<button type="button" class="btn btn-sm btn-info" onclick="syncFromSipp()">
-							<i class="fas fa-sync"></i> Sync dari SIPP
-						</button>
 					</div>
 				</div>
 				<div class="card-body">
@@ -245,10 +242,7 @@
 										<div class="p-3">
 											<i class="fas fa-inbox fa-3x text-muted mb-3"></i>
 											<h5 class="text-muted">Tidak ada data berkas PBT</h5>
-											<p class="text-muted">Silakan sync dari SIPP atau tambah manual</p>
-											<button class="btn btn-primary" onclick="syncFromSipp()">
-												<i class="fas fa-sync"></i> Sync dari SIPP
-											</button>
+											<p class="text-muted">Silakan tambah manual</p>
 										</div>
 									</td>
 								</tr>

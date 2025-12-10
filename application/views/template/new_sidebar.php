@@ -3,7 +3,7 @@
 	<!-- Brand Logo -->
 	<a href="<?php echo site_url('home') ?>" class="brand-link navbar-green">
 		<img src="<?php echo base_url() ?>assets/dist/img/logo-mahkamah-agung.png" alt="Logo PA Amuntai" class="brand-image img-circle elevation-2" style="opacity: .8">
-		<span class="brand-text font-weight-light">SIGAP BHT</span>
+		<span class="brand-text font-weight-light">SIMONA</span>
 	</a>
 
 	<!-- Sidebar -->
@@ -67,36 +67,6 @@
 					</ul>
 				</li>
 
-				<!-- Menu Baru - Manajemen Berkas -->
-				<!-- <li class="nav-item">
-					<a href="#" class="nav-link">
-						<i class="nav-icon fas fa-folder-open text-primary"></i>
-						<p>
-							Manajemen Berkas
-							<i class="fas fa-angle-left right"></i>
-						</p>
-					</a>
-					<ul class="nav nav-treeview">
-						<li class="nav-item">
-							<a href="<?php echo site_url('Menu_baru/berkas_masuk') ?>" class="nav-link <?= $this->uri->segment(2) == 'berkas_masuk' ? 'active' : '' ?>">
-								<i class="fas fa-inbox nav-icon text-success"></i>
-								<p>Berkas Masuk</p>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a href="<?php echo site_url('Menu_baru/pbt_masuk') ?>" class="nav-link <?= $this->uri->segment(2) == 'pbt_masuk' ? 'active' : '' ?>">
-								<i class="fas fa-file-import nav-icon text-info"></i>
-								<p>PBT Masuk</p>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a href="<?php echo site_url('Menu_baru/berkas_menu_bht') ?>" class="nav-link <?= $this->uri->segment(2) == 'berkas_menu_bht' ? 'active' : '' ?>">
-								<i class="fas fa-archive nav-icon text-secondary"></i>
-								<p>Berkas Menu BHT</p>
-							</a>
-						</li>
-					</ul>
-				</li> -->
 
 				<!-- Notelen System -->
 				<li class="nav-item">
@@ -132,75 +102,8 @@
 					</ul>
 				</li>
 
-				<!-- Dashboard Options -->
-				<!-- <li class="nav-item">
-					<a href="#" class="nav-link">
-						<i class="nav-icon fas fa-tachometer-alt text-purple"></i>
-						<p>
-							Dashboard Styles
-							<i class="fas fa-angle-left right"></i>
-						</p>
-					</a>
-					<ul class="nav nav-treeview">
-						<li class="nav-item">
-							<a href="<?php echo site_url('notelen/command_center') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'command_center' ? 'active' : '' ?>">
-								<i class="fas fa-rocket nav-icon text-success"></i>
-								<p>Command Center</p>
-								<span class="badge badge-success right">Featured</span>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a href="<?php echo site_url('notelen/mobile_dashboard') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'mobile_dashboard' ? 'active' : '' ?>">
-								<i class="fas fa-mobile-alt nav-icon text-info"></i>
-								<p>Mobile Dashboard</p>
-								<span class="badge badge-info right">Popular</span>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a href="<?php echo site_url('notelen/timeline') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'timeline' ? 'active' : '' ?>">
-								<i class="fas fa-history nav-icon text-warning"></i>
-								<p>Timeline View</p>
-								<span class="badge badge-warning right">New</span>
-							</a>
-						</li>
-					</ul>
-				</li> -->
 
-				<li class="nav-header">PENGINGAT & NOTIFIKASI</li>
 
-				<!-- Testing & Development (Show only in development) -->
-				<!-- <?php if (ENVIRONMENT === 'development'): ?>
-					<li class="nav-header">TESTING & DEBUG</li>
-					<li class="nav-item">
-						<a href="#" class="nav-link">
-							<i class="nav-icon fas fa-bug text-warning"></i>
-							<p>
-								Development Tools
-								<i class="fas fa-angle-left right"></i>
-							</p>
-						</a>
-						<ul class="nav nav-treeview">
-							<li class="nav-item">
-								<a href="<?php echo site_url('test/bht') ?>" class="nav-link" target="_blank">
-									<i class="fas fa-vial nav-icon"></i>
-									<p>Test BHT System</p>
-								</a>
-							</li>
-							<li class="nav-item">
-								<a href="<?php echo site_url('test/bht/template') ?>" class="nav-link" target="_blank">
-									<i class="fas fa-code nav-icon"></i>
-									<p>Test Template System</p>
-								</a>
-							</li>
-							<li class="nav-item">
-								<a href="<?php echo base_url('README_BHT_SYSTEM.md') ?>" class="nav-link" target="_blank">
-									<i class="fas fa-book nav-icon text-primary"></i>
-									<p>Dokumentasi System</p>
-								</a>
-							</li>
-						</ul>
-					</li>
-				<?php endif; ?> -->
 
 			</ul>
 		</nav>

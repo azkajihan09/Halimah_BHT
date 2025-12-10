@@ -1,12 +1,12 @@
 <footer class="main-footer">
 	<div class="d-flex justify-content-between align-items-center">
 		<div>
-			<strong>Sistem Informasi Pengadilan Agama Amuntai &copy; <?php echo date('Y'); ?></strong>
+			<strong>Sistem Monitoring Perkara &copy; <?php echo date('Y'); ?></strong>
 		</div>
 		<div>
 			<span class="text-muted">Dikembangkan oleh</span>
-			<a href="#" class="text-primary">Tim IT Pengadilan Agama Amuntai</a>
-			<span class="badge badge-info">v2.1</span>
+			<a href="#" class="text-primary">Windy Sabtami, S.Kom</a>
+			<span class="badge badge-info">v2.0</span>
 		</div>
 	</div>
 </footer>

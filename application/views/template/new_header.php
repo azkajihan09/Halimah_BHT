@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>SIPP | Pengadilan Agama Amuntai</title>
+	<title>SIMONA | Pengadilan Agama Amuntai</title>
 
 	<!-- Google Font: Source Sans Pro -->
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -294,14 +294,14 @@
 				<li class="nav-item dropdown user-menu">
 					<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
 						<img src="<?php echo base_url() ?>assets/dist/img/Logo PA Amuntai - Trans.png" class="user-image img-circle elevation-2" alt="User Image">
-						<span class="d-none d-md-inline">DATA SIPP</span>
+						<span class="d-none d-md-inline">Data dari SIPP</span>
 					</a>
 					<ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
 						<!-- User image -->
 						<li class="user-header bg-primary">
 							<img src="<?php echo base_url() ?>assets/dist/img/Logo PA Amuntai - Trans.png" class="img-circle elevation-2" alt="User Image">
 							<p>
-								Sata SIPP - PA Amuntai
+								Data dari SIPP - PA Amuntai
 								<small>Perkara</small>
 							</p>
 						</li>
