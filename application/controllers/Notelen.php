@@ -1437,19 +1437,30 @@ class Notelen extends CI_Controller
 			// Get statistics
 			$stats = $this->notelen->get_perkara_putus_harian_stats($tanggal);
 
-			echo json_encode(array(
+			$response = array(
 				'success' => true,
 				'data' => $perkara_data,
 				'stats' => $stats,
-				'message' => 'Data berhasil dimuat',
 				'tanggal' => $tanggal,
 				'total_records' => count($perkara_data)
-			));
+			);
+
+			// Customize message based on results
+			if (count($perkara_data) == 0) {
+				$response['message'] = 'Tidak ada data perkara Pdt.G (Gugatan) yang putus pada tanggal ' . $tanggal .
+					'. Coba pilih tanggal lain seperti 2025-12-01 yang memiliki data.';
+				$response['suggestion'] = 'Pilih tanggal 2025-12-01 untuk melihat contoh data yang tersedia';
+			} else {
+				$response['message'] = 'Ditemukan ' . count($perkara_data) . ' perkara Pdt.G yang putus pada tanggal ' . $tanggal;
+			}
+
+			echo json_encode($response);
 		} catch (Exception $e) {
 			log_message('error', 'Error get perkara putus harian: ' . $e->getMessage());
 			echo json_encode(array(
 				'success' => false,
-				'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+				'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage(),
+				'error_detail' => $e->getMessage()
 			));
 		}
 
