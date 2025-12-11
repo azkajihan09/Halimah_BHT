@@ -699,9 +699,7 @@ class Notelen extends CI_Controller
 				return;
 			}
 
-			// Enable CI database debug for better error messages
-			$this->notelen->notelen_db->db_debug = TRUE;
-
+			// Delete berkas using model method
 			$result = $this->notelen->delete_berkas_masuk($id);
 
 			if ($result) {
@@ -715,12 +713,7 @@ class Notelen extends CI_Controller
 					'message' => 'Berkas ' . $berkas->nomor_perkara . ' berhasil dihapus'
 				));
 			} else {
-				// Check database error
-				$db_error = $this->notelen->notelen_db->error();
 				$error_message = 'Gagal menghapus berkas';
-				if (!empty($db_error['message'])) {
-					$error_message = 'Database Error: ' . $db_error['message'];
-				}
 
 				if ($redirect) {
 					$this->session->set_flashdata('error', $error_message);
@@ -742,6 +735,7 @@ class Notelen extends CI_Controller
 				'message' => $error_message
 			));
 		}
+		exit();
 	}
 
     // ===============================================
