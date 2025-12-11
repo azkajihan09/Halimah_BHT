@@ -824,6 +824,7 @@ class Notelen_model extends CI_Model
 				DATE(pp.tanggal_putusan) as tanggal_putus,
 				pp.putusan_verstek,
 				SUBSTRING_INDEX(pen.majelis_hakim_nama, '</br>', 3) as hakim,
+				COALESCE(pen.panitera_pengganti_text, '-') as panitera_pengganti,
 				DATE(pppp.tanggal_pemberitahuan_putusan) as tanggal_pemberitahuan_putusan,
 				COALESCE(DATE(pppp.tanggal_pemberitahuan_putusan), DATE(pp.tanggal_putusan)) as tanggal_pbt_efektif,
 				

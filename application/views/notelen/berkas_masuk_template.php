@@ -158,10 +158,10 @@
 											<i class="fas fa-calendar-day"></i> Input Otomatis
 										</a>
 										<button type="button" class="btn btn-success btn-sm" onclick="openNewBerkasModal()">
-											<i class="fas fa-plus"></i> Tambah
+											<i class="fas fa-plus"></i> Tambah Manual
 										</button>
 										<button type="button" class="btn btn-danger btn-sm" onclick="deleteAllBerkas()">
-											<i class="fas fa-trash"></i> Hapus Semua
+											<i class="fas fa-trash"></i> Hapus Semua Data/Hati2
 										</button>
 									</div>
 								</div>

@@ -229,6 +229,7 @@
 											<th width="15%">Tanggal Putus</th>
 											<th width="20%">Jenis Perkara</th>
 											<th width="18%">Majelis Hakim</th>
+											<th width="10%">Panitera Pengganti</th>
 											<th width="12%">JSP</th>
 											<th width="15%">Status Berkas</th>
 											<th width="12%">Aksi</th>
@@ -415,6 +416,9 @@
 				</td>
 				<td>
 					<small>${item.hakim || '-'}</small>
+				</td>
+				<td>
+					<span class="badge badge-info">${item.panitera_pengganti || '-'}</span>
 				</td>
 				<td>
 					<span class="badge badge-light">${item.jsp || '-'}</span>
