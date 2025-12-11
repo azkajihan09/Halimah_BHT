@@ -48,6 +48,15 @@
 				</div>
 			<?php endif; ?>
 
+			<!-- Auto Entry Success Message -->
+			<div id="autoEntrySuccessAlert" class="alert alert-info alert-dismissible fade show" role="alert" style="display:none;">
+				<i class="fas fa-info-circle"></i>
+				<span id="autoEntryMessage">Data berkas hasil input otomatis ditampilkan di bawah.</span>
+				<button type="button" class="close" onclick="$('#autoEntrySuccessAlert').hide()">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+
 			<!-- Statistics Cards -->
 			<div class="row">
 				<div class="col-md-3 col-sm-6">
@@ -672,9 +681,63 @@
 	$(document).ready(function() {
 		console.log('Notelen System loaded successfully!');
 
+		// Check for auto entry parameters
+		handleAutoEntryParams();
+
 		// Setup autocomplete nomor perkara (saat ready)
 		setupNomorPerkaraAutocomplete();
 	});
+
+	// Handle auto entry parameters from URL
+	function handleAutoEntryParams() {
+		const urlParams = new URLSearchParams(window.location.search);
+		const from = urlParams.get('from');
+		const search = urlParams.get('search');
+		const tanggalDari = urlParams.get('tanggal_dari');
+		const tanggalSampai = urlParams.get('tanggal_sampai');
+
+		if (from && (from === 'auto_entry' || from === 'auto_entry_bulk')) {
+			// Show success message
+			let message = 'Data berkas hasil input otomatis ditampilkan di bawah.';
+
+			if (search) {
+				// Single entry - search for specific nomor perkara
+				$('#nomorPerkaraFilter').val(search);
+				message = `Menampilkan data berkas untuk perkara <strong>${search}</strong> yang baru saja dimasukkan.`;
+			} else if (tanggalDari && tanggalSampai) {
+				// Bulk entry - filter by date range
+				$('#tanggalDariFilter').val(tanggalDari);
+				$('#tanggalSampaiFilter').val(tanggalSampai);
+
+				const dateFormatted = formatDateIndonesia(tanggalDari);
+				message = `Menampilkan data berkas untuk tanggal <strong>${dateFormatted}</strong> yang baru saja dimasukkan.`;
+			} else if (from === 'auto_entry_bulk') {
+				// Show all recent entries
+				message = 'Menampilkan semua data berkas yang baru saja dimasukkan melalui sistem otomatis.';
+			}
+
+			$('#autoEntryMessage').html(message);
+			$('#autoEntrySuccessAlert').show();
+
+			// Auto trigger search
+			setTimeout(function() {
+				$('#searchForm').submit();
+			}, 500);
+
+			// Add back to auto entry button
+			addBackToAutoEntryButton();
+		}
+	}
+
+	// Add back to auto entry button
+	function addBackToAutoEntryButton() {
+		const backButton = `
+			<a href="${getAjaxUrl('notelen/berkas_masuk_otomatis')}" class="btn btn-outline-primary btn-sm ml-2">
+				<i class="fas fa-arrow-left"></i> Kembali ke Input Otomatis
+			</a>
+		`;
+		$('.card-title').first().append(backButton);
+	}
 
 	// Function untuk hapus semua data berkas
 	function deleteAllBerkas() {
@@ -1401,6 +1464,19 @@
 				window.location.href = getAjaxUrl('notelen/ajax_delete_berkas') + '?id=' + berkas_id + '&redirect=1';
 			}
 		});
+	}
+
+	// Helper function for date formatting
+	function formatDateIndonesia(dateString) {
+		if (!dateString) return '-';
+		const date = new Date(dateString);
+		const options = {
+			weekday: 'long',
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric'
+		};
+		return date.toLocaleDateString('id-ID', options);
 	}
 </script>
 

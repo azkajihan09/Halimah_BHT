@@ -505,9 +505,21 @@
 					Swal.fire({
 						icon: 'success',
 						title: 'Berhasil!',
-						text: `Perkara ${nomorPerkara} berhasil dimasukkan ke berkas`,
-						timer: 2000,
-						showConfirmButton: false
+						html: `
+							<p>Perkara <strong>${nomorPerkara}</strong> berhasil dimasukkan ke berkas.</p>
+							<hr>
+							<p class="mb-2"><i class="fas fa-question-circle text-info"></i> Ingin melihat data yang baru saja dimasukkan?</p>
+						`,
+						showCancelButton: true,
+						confirmButtonText: '<i class="fas fa-eye"></i> Lihat Data Berkas',
+						cancelButtonText: '<i class="fas fa-check"></i> Tetap di Sini',
+						confirmButtonColor: '#007bff',
+						cancelButtonColor: '#28a745'
+					}).then((result) => {
+						if (result.isConfirmed) {
+							// Redirect ke berkas template dengan filter nomor perkara
+							window.location.href = getAjaxUrl('notelen/berkas_template') + '?search=' + encodeURIComponent(nomorPerkara) + '&from=auto_entry';
+						}
 					});
 
 					// Refresh data
@@ -569,12 +581,35 @@
 			dataType: 'json',
 			success: function(response) {
 				if (response.success) {
+					const totalInserted = response.total_inserted || 0;
+					const tanggalFormatted = tanggalMasukNotelen ? formatDateIndonesia(tanggalMasukNotelen) : 'hari ini';
+
 					Swal.fire({
 						icon: 'success',
 						title: 'Berhasil!',
-						text: `${response.total_inserted || 0} perkara berhasil dimasukkan ke berkas`,
-						timer: 2000,
-						showConfirmButton: false
+						html: `
+							<p><strong>${totalInserted}</strong> perkara berhasil dimasukkan ke berkas untuk tanggal <strong>${tanggalFormatted}</strong>.</p>
+							<hr>
+							<p class="mb-2"><i class="fas fa-question-circle text-info"></i> Ingin melihat semua data berkas yang baru dimasukkan?</p>
+						`,
+						showDenyButton: true,
+						showCancelButton: true,
+						confirmButtonText: '<i class="fas fa-list"></i> Lihat Semua Data Berkas',
+						denyButtonText: '<i class="fas fa-calendar"></i> Lihat Data Hari Ini',
+						cancelButtonText: '<i class="fas fa-check"></i> Tetap di Sini',
+						confirmButtonColor: '#007bff',
+						denyButtonColor: '#fd7e14',
+						cancelButtonColor: '#28a745'
+					}).then((result) => {
+						if (result.isConfirmed) {
+							// Lihat semua data berkas
+							window.location.href = getAjaxUrl('notelen/berkas_template') + '?from=auto_entry_bulk';
+						} else if (result.isDenied) {
+							// Lihat data berkas hari ini saja
+							const today = new Date().toISOString().split('T')[0];
+							const filterDate = tanggalMasukNotelen || today;
+							window.location.href = getAjaxUrl('notelen/berkas_template') + '?tanggal_dari=' + filterDate + '&tanggal_sampai=' + filterDate + '&from=auto_entry';
+						}
 					});
 
 					// Refresh data
