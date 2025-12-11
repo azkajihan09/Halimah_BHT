@@ -155,11 +155,11 @@
 									<label>&nbsp;</label><br>
 									<div class="btn-group">
 										<a href="<?= base_url('notelen/berkas_masuk_otomatis') ?>" class="btn btn-primary btn-sm">
-											<i class="fas fa-calendar-day"></i> Input Otomatis
+											<i class="fas fa-calendar-day"></i> Tambah Perkara Harian
 										</a>
-										<button type="button" class="btn btn-success btn-sm" onclick="openNewBerkasModal()">
+										<!-- <button type="button" class="btn btn-success btn-sm" onclick="openNewBerkasModal()">
 											<i class="fas fa-plus"></i> Tambah Manual
-										</button>
+										</button> -->
 										<button type="button" class="btn btn-danger btn-sm" onclick="deleteAllBerkas()">
 											<i class="fas fa-trash"></i> Hapus Semua Data/Hati2
 										</button>

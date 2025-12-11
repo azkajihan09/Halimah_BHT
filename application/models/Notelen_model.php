@@ -857,11 +857,8 @@ class Notelen_model extends CI_Model
 					END
 				END as perkiraan_bht,
 				
-				-- JSP (Juru Sita Pengganti) hanya jika ada transaksi PIP
-				CASE
-					WHEN pb_pip.tanggal_transaksi IS NULL THEN '-'
-					ELSE REPLACE(pen.jurusita_text, 'Juru Sita Pengganti', '')
-				END as jsp,
+				-- JSP (Juru Sita Pengganti) - always show
+				COALESCE(REPLACE(pen.jurusita_text, 'Juru Sita Pengganti', ''), '-') as jsp,
 				
 				-- Status BHT dengan kekhususan PA
 				CASE 
