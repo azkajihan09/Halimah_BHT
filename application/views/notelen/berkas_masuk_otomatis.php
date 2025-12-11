@@ -218,16 +218,14 @@
 								<table class="table table-bordered table-striped table-hover" id="perkaraPutusTable">
 									<thead class="thead-dark">
 										<tr>
-											<th width="5%">No</th>
-											<th width="12%">Nomor Perkara</th>
-											<th width="10%">Tanggal Putus</th>
-											<th width="15%">Jenis Perkara</th>
-											<th width="10%">Status BHT</th>
-											<th width="12%">Majelis Hakim</th>
-											<th width="10%">JSP</th>
-											<th width="8%">Kategori</th>
-											<th width="10%">Status Berkas</th>
-											<th width="8%">Aksi</th>
+											<th width="8%">No</th>
+											<th width="20%">Nomor Perkara</th>
+											<th width="15%">Tanggal Putus</th>
+											<th width="20%">Jenis Perkara</th>
+											<th width="18%">Majelis Hakim</th>
+											<th width="12%">JSP</th>
+											<th width="15%">Status Berkas</th>
+											<th width="12%">Aksi</th>
 										</tr>
 									</thead>
 									<tbody id="perkaraPutusTableBody">
@@ -256,105 +254,6 @@
 
 		</div>
 	</section>
-</div>
-
-<!-- Modal Detail Perkara -->
-<div class="modal fade" id="detailPerkaraModal" tabindex="-1">
-	<div class="modal-dialog modal-xl">
-		<div class="modal-content">
-			<div class="modal-header bg-info">
-				<h4 class="modal-title">
-					<i class="fas fa-info-circle"></i>
-					Detail Perkara Putus
-				</h4>
-				<button type="button" class="close" data-dismiss="modal">
-					<span>&times;</span>
-				</button>
-			</div>
-			<div class="modal-body">
-				<div class="row">
-					<div class="col-md-6">
-						<table class="table table-borderless">
-							<tr>
-								<td width="35%"><strong>Nomor Perkara:</strong></td>
-								<td id="detailNomorPerkara">-</td>
-							</tr>
-							<tr>
-								<td><strong>Jenis Perkara:</strong></td>
-								<td id="detailJenisPerkara">-</td>
-							</tr>
-							<tr>
-								<td><strong>Tanggal Putus:</strong></td>
-								<td id="detailTanggalPutus">-</td>
-							</tr>
-							<tr>
-								<td><strong>Majelis Hakim:</strong></td>
-								<td id="detailHakim">-</td>
-							</tr>
-							<tr>
-								<td><strong>JSP:</strong></td>
-								<td id="detailJsp">-</td>
-							</tr>
-						</table>
-					</div>
-					<div class="col-md-6">
-						<table class="table table-borderless">
-							<tr>
-								<td width="35%"><strong>Status BHT:</strong></td>
-								<td id="detailStatusBht">-</td>
-							</tr>
-							<tr>
-								<td><strong>Kategori:</strong></td>
-								<td id="detailKategori">-</td>
-							</tr>
-							<tr>
-								<td><strong>Perkiraan BHT:</strong></td>
-								<td id="detailPerkiraanBht">-</td>
-							</tr>
-							<tr>
-								<td><strong>Target BHT:</strong></td>
-								<td id="detailTargetBht">-</td>
-							</tr>
-							<tr>
-								<td><strong>Sumber PBT:</strong></td>
-								<td id="detailSumberPbt">-</td>
-							</tr>
-						</table>
-					</div>
-				</div>
-
-				<div class="row mt-3">
-					<div class="col-12">
-						<h6><strong>Informasi Tambahan:</strong></h6>
-						<div class="alert alert-light">
-							<div class="row">
-								<div class="col-md-4">
-									<small><strong>Tanggal PBT Efektif:</strong></small><br>
-									<span id="detailTanggalPbtEfektif" class="badge badge-info">-</span>
-								</div>
-								<div class="col-md-4">
-									<small><strong>Hari Sejak Putus:</strong></small><br>
-									<span id="detailHariSejakPutus" class="badge badge-secondary">-</span>
-								</div>
-								<div class="col-md-4">
-									<small><strong>Sisa Hari ke Target:</strong></small><br>
-									<span id="detailSisaHari" class="badge badge-warning">-</span>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">
-					<i class="fas fa-times"></i> Tutup
-				</button>
-				<button type="button" class="btn btn-success" onclick="masukkanKeBerkas()" id="masukkanBerkasBtn">
-					<i class="fas fa-download"></i> Masukkan ke Berkas
-				</button>
-			</div>
-		</div>
-	</div>
 </div>
 
 <!-- JavaScript -->
@@ -455,7 +354,6 @@
 		}
 
 		data.forEach((item, index) => {
-			const statusBadge = getStatusBadge(item.kategori_status);
 			const statusBerkasBadge = getStatusBerkasBadge(item.status_berkas || 'Belum Masuk');
 
 			const row = `
@@ -473,29 +371,18 @@
 					<span class="badge badge-secondary">${item.jenis_perkara}</span>
 				</td>
 				<td>
-					<span class="badge ${getStatusBhtClass(item.status_bht)}">${item.status_bht}</span>
-				</td>
-				<td>
 					<small>${item.hakim || '-'}</small>
 				</td>
 				<td>
 					<span class="badge badge-light">${item.jsp || '-'}</span>
 				</td>
 				<td>
-					${statusBadge}
-				</td>
-				<td>
 					${statusBerkasBadge}
 				</td>
 				<td>
-					<div class="btn-group-vertical btn-group-sm">
-						<button type="button" class="btn btn-info btn-xs" onclick="lihatDetailPerkara('${item.perkara_id}', ${index})" title="Lihat Detail">
-							<i class="fas fa-eye"></i>
-						</button>
-						<button type="button" class="btn btn-success btn-xs" onclick="masukkanKeBerkasLangsung('${item.perkara_id}', '${item.nomor_perkara}')" title="Masukkan ke Berkas" ${item.status_berkas === 'Sudah Masuk' ? 'disabled' : ''}>
-							<i class="fas fa-download"></i>
-						</button>
-					</div>
+					<button type="button" class="btn btn-success btn-sm" onclick="masukkanKeBerkasLangsung('${item.perkara_id}', '${item.nomor_perkara}')" title="Masukkan ke Berkas" ${item.status_berkas === 'Sudah Masuk' ? 'disabled' : ''}>
+						<i class="fas fa-download"></i> Masukkan
+					</button>
 				</td>
 			</tr>
 		`;
@@ -549,53 +436,6 @@
 		$('#dataTableContainer').hide();
 		$('#statisticsRow').hide();
 		$('#refreshButton').find('i').removeClass('fa-spin');
-	}
-
-	// Lihat detail perkara
-	function lihatDetailPerkara(perkaraId, index) {
-		if (!window.currentPerkaraData || !window.currentPerkaraData[index]) {
-			Swal.fire('Error', 'Data perkara tidak ditemukan', 'error');
-			return;
-		}
-
-		const data = window.currentPerkaraData[index];
-
-		// Fill modal dengan data
-		$('#detailNomorPerkara').text(data.nomor_perkara);
-		$('#detailJenisPerkara').text(data.jenis_perkara);
-		$('#detailTanggalPutus').text(formatDate(data.tanggal_putus));
-		$('#detailHakim').html(data.hakim || '-');
-		$('#detailJsp').text(data.jsp || '-');
-		$('#detailStatusBht').html(`<span class="badge ${getStatusBhtClass(data.status_bht)}">${data.status_bht}</span>`);
-		$('#detailKategori').html(`<span class="badge ${getKategoriClass(data.kategori_status)}">${data.kategori_status}</span>`);
-		$('#detailPerkiraanBht').text(formatDate(data.perkiraan_bht));
-		$('#detailTargetBht').text(formatDate(data.target_bht));
-		$('#detailSumberPbt').text(data.sumber_pbt || '-');
-		$('#detailTanggalPbtEfektif').text(formatDate(data.tanggal_pbt_efektif));
-		$('#detailHariSejakPutus').text(data.hari_sejak_putus + ' hari');
-		$('#detailSisaHari').text(data.sisa_hari_ke_target + ' hari');
-
-		// Store perkara ID for masukkan berkas button
-		$('#detailPerkaraModal').data('perkara-id', perkaraId);
-		$('#detailPerkaraModal').data('nomor-perkara', data.nomor_perkara);
-
-		// Show/hide masukkan berkas button
-		if (data.status_berkas === 'Sudah Masuk') {
-			$('#masukkanBerkasBtn').hide();
-		} else {
-			$('#masukkanBerkasBtn').show();
-		}
-
-		$('#detailPerkaraModal').modal('show');
-	}
-
-	// Masukkan ke berkas dari modal detail
-	function masukkanKeBerkas() {
-		const perkaraId = $('#detailPerkaraModal').data('perkara-id');
-		const nomorPerkara = $('#detailPerkaraModal').data('nomor-perkara');
-
-		masukkanKeBerkasLangsung(perkaraId, nomorPerkara);
-		$('#detailPerkaraModal').modal('hide');
 	}
 
 	// Masukkan ke berkas langsung
@@ -750,17 +590,6 @@
 		return date.toLocaleDateString('id-ID', options);
 	}
 
-	function getStatusBadge(status) {
-		const badges = {
-			'SELESAI': '<span class="badge badge-success">SELESAI</span>',
-			'NORMAL': '<span class="badge badge-primary">NORMAL</span>',
-			'URGENT': '<span class="badge badge-warning">URGENT</span>',
-			'TERLAMBAT': '<span class="badge badge-danger">TERLAMBAT</span>',
-			'CRITICAL': '<span class="badge badge-dark">CRITICAL</span>'
-		};
-		return badges[status] || '<span class="badge badge-secondary">' + status + '</span>';
-	}
-
 	function getStatusBerkasBadge(status) {
 		const badges = {
 			'PANITERA_PENGGANTI': '<span class="badge badge-primary">Panitera Pengganti</span>',
@@ -772,25 +601,6 @@
 			'Sudah Masuk': '<span class="badge badge-success">Sudah Masuk</span>'
 		};
 		return badges[status] || '<span class="badge badge-secondary">' + status + '</span>';
-	}
-
-	function getStatusBhtClass(status) {
-		if (status.includes('Critical') || status.includes('CRITICAL')) return 'badge-danger';
-		if (status.includes('Terlambat') || status.includes('TERLAMBAT')) return 'badge-warning';
-		if (status.includes('Urgent') || status.includes('URGENT')) return 'badge-info';
-		if (status.includes('Sudah BHT') || status.includes('SELESAI')) return 'badge-success';
-		return 'badge-secondary';
-	}
-
-	function getKategoriClass(kategori) {
-		const classes = {
-			'SELESAI': 'badge-success',
-			'NORMAL': 'badge-primary',
-			'URGENT': 'badge-warning',
-			'TERLAMBAT': 'badge-danger',
-			'CRITICAL': 'badge-dark'
-		};
-		return classes[kategori] || 'badge-secondary';
 	}
 </script>
 
