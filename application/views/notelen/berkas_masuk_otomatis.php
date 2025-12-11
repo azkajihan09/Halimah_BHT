@@ -106,6 +106,12 @@
 											<button type="button" class="btn btn-outline-info btn-sm" onclick="setTanggal('week')">
 												<i class="fas fa-calendar-week"></i> Minggu Lalu
 											</button>
+											<button type="button" class="btn btn-outline-success btn-sm mt-1" onclick="loadPerkaraPutusHarian()">
+												<i class="fas fa-sync-alt"></i> Muat Ulang Data
+											</button>
+											<a href="<?= base_url('notelen/berkas_template') ?>" class="btn btn-outline-info btn-sm mt-1">
+												<i class="fas fa-list"></i> Lihat Semua Berkas
+											</a>
 										</div>
 									</div>
 								</div>

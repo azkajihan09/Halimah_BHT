@@ -154,6 +154,9 @@
 								<div class="col-md-2 text-right">
 									<label>&nbsp;</label><br>
 									<div class="btn-group">
+										<a href="<?= base_url('notelen/berkas_masuk_otomatis') ?>" class="btn btn-primary btn-sm">
+											<i class="fas fa-calendar-day"></i> Input Otomatis
+										</a>
 										<button type="button" class="btn btn-success btn-sm" onclick="openNewBerkasModal()">
 											<i class="fas fa-plus"></i> Tambah
 										</button>
