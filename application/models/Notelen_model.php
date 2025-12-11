@@ -54,7 +54,8 @@ class Notelen_model extends CI_Model
 		}
 
 		$this->notelen_db->group_by('bm.id');
-		$this->notelen_db->order_by('bm.tanggal_masuk_notelen', 'DESC');
+		$this->notelen_db->order_by('bm.id', 'DESC');
+		$this->notelen_db->order_by('bm.created_at', 'DESC');
 
 		if ($limit) {
 			$this->notelen_db->limit($limit, $offset);
