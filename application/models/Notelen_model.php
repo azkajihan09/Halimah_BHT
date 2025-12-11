@@ -772,4 +772,382 @@ class Notelen_model extends CI_Model
 
 		return $diff->days;
 	}
+
+	// ===============================================
+	// BERKAS MASUK OTOMATIS HARIAN
+	// ===============================================
+
+	/**
+	 * Get perkara putus harian untuk sistem berkas masuk otomatis
+	 */
+	public function get_perkara_putus_harian($tanggal)
+	{
+		$query = $this->sipp_db->select("
+			p.nomor_perkara,
+			p.perkara_id,
+			p.jenis_perkara_id,
+			p.jenis_perkara_nama as jenis_perkara,
+			DATE(pp.tanggal_putusan) as tanggal_putus,
+			pp.putusan_verstek,
+			SUBSTRING_INDEX(pen.majelis_hakim_nama, '</br>', 3) as hakim,
+			DATE(pppp.tanggal_pemberitahuan_putusan) as tanggal_pemberitahuan_putusan,
+			COALESCE(DATE(pppp.tanggal_pemberitahuan_putusan), DATE(pp.tanggal_putusan)) as tanggal_pbt_efektif,
+			
+			-- Keterangan Perkara berdasarkan tahapan terakhir
+			CASE
+				WHEN p.tahapan_terakhir_id >= 30 THEN 'Kasasi'
+				WHEN p.tahapan_terakhir_id >= 20 THEN 'Banding'
+				WHEN p.tahapan_terakhir_id = 16 THEN 'Verzet'
+				ELSE 'Normal'
+			END as keterangan_perkara,
+			
+			-- Data untuk ikrar talak (khusus cerai talak)
+			CASE
+				WHEN p.jenis_perkara_id = 346 THEN pit.penetapan_majelis_hakim
+				ELSE '-'
+			END as pmh_ikrar,
+			
+			-- Tanggal transaksi PIP (biaya 29/30) 
+			pb_pip.tanggal_transaksi as trans_pip,
+			
+			-- Perkiraan BHT yang lebih akurat
+			CASE
+				WHEN p.tahapan_terakhir_id >= 20 OR p.tahapan_terakhir_id = 16 THEN 'Cek Data Upaya Hukum'
+				ELSE CASE
+					WHEN pb_pip.tanggal_transaksi IS NULL THEN DATE_ADD(pp.tanggal_putusan, INTERVAL 15 DAY)
+					ELSE CASE
+						WHEN pppp.tanggal_pemberitahuan_putusan IS NULL THEN 'TGL PIP belum ada'
+						ELSE DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 15 DAY)
+					END
+				END
+			END as perkiraan_bht,
+			
+			-- JSP (Juru Sita Pengganti) hanya jika ada transaksi PIP
+			CASE
+				WHEN pb_pip.tanggal_transaksi IS NULL THEN '-'
+				ELSE REPLACE(pen.jurusita_text, 'Juru Sita Pengganti', '')
+			END as jsp,
+			
+			-- Status BHT dengan kekhususan PA
+			CASE 
+				WHEN pp.tanggal_bht IS NOT NULL THEN 'Sudah BHT'
+				WHEN p.jenis_perkara_nama LIKE '%Cerai Talak%' THEN
+					CASE 
+						WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 21 THEN 'Critical - Menunggu Ikrar Talak'
+						WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 14 THEN 'Terlambat - Menunggu Ikrar Talak'
+						WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 10 THEN 'Urgent - Menunggu Ikrar Talak'
+						WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'Critical - Menunggu Ikrar Talak'
+						WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'Terlambat - Menunggu Ikrar Talak'
+						WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 10 THEN 'Urgent - Menunggu Ikrar Talak'
+						ELSE 'Belum BHT - Menunggu Ikrar Talak'
+					END
+				ELSE
+					CASE 
+						WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 21 THEN 'Critical - Belum BHT'
+						WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 14 THEN 'Terlambat - Belum BHT'
+						WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 10 THEN 'Urgent - Belum BHT'
+						WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'Critical - Belum BHT'
+						WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'Terlambat - Belum BHT'
+						WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 10 THEN 'Urgent - Belum BHT'
+						ELSE 'Belum BHT'
+					END
+			END as status_bht,
+			
+			p.perkara_id,
+			pp.tanggal_bht,
+			
+			CASE 
+				WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY)
+				ELSE DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY)
+			END as target_bht,
+			
+			-- Hari sejak putus (untuk backward compatibility)
+			DATEDIFF(CURDATE(), pp.tanggal_putusan) as hari_sejak_putus,
+			
+			-- Hari sejak PBT ke target BHT (logika baru)
+			CASE 
+				WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
+					DATEDIFF(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 14 DAY), pppp.tanggal_pemberitahuan_putusan)
+				ELSE 
+					DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 14 DAY), pp.tanggal_putusan)
+			END as hari_sejak_pbt_ke_target,
+			
+			-- Sisa hari ke target BHT (logika kompleks) - KONSISTEN dengan perkiraan_bht (15 hari)
+			CASE 
+				-- Jika sudah ada tanggal BHT (SELESAI), hitung selisih dari perkiraan BHT
+				WHEN pp.tanggal_bht IS NOT NULL THEN 
+					CASE 
+						WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
+							DATEDIFF(pp.tanggal_bht, DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 15 DAY))
+						ELSE 
+							DATEDIFF(pp.tanggal_bht, DATE_ADD(pp.tanggal_putusan, INTERVAL 15 DAY))
+					END
+				-- Jika belum selesai, hitung sisa hari ke deadline (perkiraan BHT)
+				WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 
+					DATEDIFF(DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 15 DAY), CURDATE())
+				ELSE 
+					DATEDIFF(DATE_ADD(pp.tanggal_putusan, INTERVAL 15 DAY), CURDATE())
+			END as sisa_hari_ke_target,
+			
+			-- Status keterlambatan pengisian BHT (logika kompleks)
+			CASE 
+				WHEN pp.tanggal_bht IS NOT NULL THEN 
+					CASE 
+						-- Jika tanggal BHT sama dengan perkiraan BHT (15 hari)
+						WHEN (pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND 
+							  pp.tanggal_bht = DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 15 DAY)) OR
+							 (pppp.tanggal_pemberitahuan_putusan IS NULL AND 
+							  pp.tanggal_bht = DATE_ADD(pp.tanggal_putusan, INTERVAL 15 DAY)) THEN 'TEPAT WAKTU'
+						-- Jika tanggal BHT lebih cepat dari perkiraan BHT (15 hari)
+						WHEN (pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND 
+							  pp.tanggal_bht < DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 15 DAY)) OR
+							 (pppp.tanggal_pemberitahuan_putusan IS NULL AND 
+							  pp.tanggal_bht < DATE_ADD(pp.tanggal_putusan, INTERVAL 15 DAY)) THEN 'LEBIH CEPAT'
+						-- Jika tanggal BHT terlambat 1 hari (masih toleransi) - 16 hari dari awal
+						WHEN (pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND 
+							  pp.tanggal_bht = DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 16 DAY)) OR
+							 (pppp.tanggal_pemberitahuan_putusan IS NULL AND 
+							  pp.tanggal_bht = DATE_ADD(pp.tanggal_putusan, INTERVAL 16 DAY)) THEN 'TOLERANSI 1 HARI'
+						-- Jika tanggal BHT lebih lambat dari perkiraan BHT (lebih dari 1 hari) - >16 hari dari awal
+						WHEN (pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND 
+							  pp.tanggal_bht > DATE_ADD(pppp.tanggal_pemberitahuan_putusan, INTERVAL 16 DAY)) OR
+							 (pppp.tanggal_pemberitahuan_putusan IS NULL AND 
+							  pp.tanggal_bht > DATE_ADD(pp.tanggal_putusan, INTERVAL 16 DAY)) THEN 'TERLAMBAT INPUT'
+						ELSE 'SELESAI'
+					END
+				ELSE 'BELUM SELESAI'
+			END as status_pengisian_bht,
+			
+			CASE 
+				WHEN pp.tanggal_bht IS NOT NULL THEN 'SELESAI'
+				WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 21 THEN 'CRITICAL'
+				WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 14 THEN 'TERLAMBAT'
+				WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL AND DATEDIFF(CURDATE(), pppp.tanggal_pemberitahuan_putusan) > 10 THEN 'URGENT'
+				WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 21 THEN 'CRITICAL'
+				WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 14 THEN 'TERLAMBAT'
+				WHEN DATEDIFF(CURDATE(), pp.tanggal_putusan) > 10 THEN 'URGENT'
+				ELSE 'NORMAL'
+			END as kategori_status,
+			
+			-- Informasi sumber PBT
+			CASE 
+				WHEN pppp.tanggal_pemberitahuan_putusan IS NOT NULL THEN 'Dari Pemberitahuan Putusan'
+				ELSE 'Dari Tanggal Putusan'
+			END as sumber_pbt
+		");
+
+		$this->sipp_db->from('perkara p');
+		$this->sipp_db->join('perkara_putusan pp', 'p.perkara_id = pp.perkara_id', 'inner');
+		$this->sipp_db->join('perkara_penetapan pen', 'p.perkara_id = pen.perkara_id', 'left');
+		$this->sipp_db->join('(SELECT pppp.perkara_id, MIN(pppp.tanggal_pemberitahuan_putusan) as tanggal_pemberitahuan_putusan 
+							  FROM perkara_putusan_pemberitahuan_putusan pppp 
+							  GROUP BY pppp.perkara_id) pppp', 'p.perkara_id = pppp.perkara_id', 'left');
+		$this->sipp_db->join('perkara_akta_cerai pac', 'p.perkara_id = pac.perkara_id', 'left');
+		$this->sipp_db->join('perkara_ikrar_talak pit', 'p.perkara_id = pit.perkara_id', 'left');
+
+		// JOIN untuk mendapatkan tanggal transaksi PIP (biaya jenis 29/30)
+		$this->sipp_db->join('(SELECT perkara_id, MIN(tanggal_transaksi) as tanggal_transaksi 
+							  FROM perkara_biaya 
+							  WHERE jenis_biaya_id IN (29, 30) 
+							  GROUP BY perkara_id) pb_pip', 'p.perkara_id = pb_pip.perkara_id', 'left');
+
+		$this->sipp_db->where('DATE(pp.tanggal_putusan)', $tanggal);
+		$this->sipp_db->where('pp.tanggal_putusan IS NOT NULL');
+
+		// Filter untuk tidak menampilkan perkara yang dicabut
+		$this->_filter_perkara_dicabut();
+
+		$this->sipp_db->order_by('pp.tanggal_putusan', 'DESC');
+
+		$result = $this->sipp_db->get()->result();
+
+		// Check status berkas untuk setiap perkara
+		foreach ($result as &$row) {
+			$existing_berkas = $this->get_berkas_by_nomor($row->nomor_perkara);
+			$row->status_berkas = $existing_berkas ? 'Sudah Masuk' : 'Belum Masuk';
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Get statistics for daily case view
+	 */
+	public function get_perkara_putus_harian_stats($tanggal)
+	{
+		// Get all data first
+		$data = $this->get_perkara_putus_harian($tanggal);
+
+		$stats = array(
+			'total' => count($data),
+			'sudah_masuk' => 0,
+			'belum_masuk' => 0,
+			'perlu_perhatian' => 0 // Critical + Terlambat
+		);
+
+		foreach ($data as $row) {
+			if ($row->status_berkas == 'Sudah Masuk') {
+				$stats['sudah_masuk']++;
+			} else {
+				$stats['belum_masuk']++;
+			}
+
+			if (in_array($row->kategori_status, ['CRITICAL', 'TERLAMBAT'])) {
+				$stats['perlu_perhatian']++;
+			}
+		}
+
+		return $stats;
+	}
+
+	/**
+	 * Filter untuk perkara yang dicabut
+	 */
+	private function _filter_perkara_dicabut()
+	{
+		// Filter perkara dicabut berdasarkan kondisi standar PA
+		// Hanya filter berdasarkan jenis perkara nama (kolom yang pasti ada)
+		$this->sipp_db->where("(p.jenis_perkara_nama NOT LIKE '%dicabut%' OR p.jenis_perkara_nama IS NULL)");
+		// Removed alasan_putus_id filter karena kolom tidak ada di database SIPP
+		// $this->sipp_db->where("(p.alasan_putus_id != 8 OR p.alasan_putus_id IS NULL)"); // 8 = dicabut
+	}
+
+	/**
+	 * Insert berkas dari perkara otomatis (single)
+	 */
+	public function insert_berkas_from_perkara_otomatis($perkara_id, $nomor_perkara)
+	{
+		try {
+			// Get detail perkara dari SIPP
+			$perkara_detail = $this->get_perkara_detail_by_nomor($nomor_perkara);
+
+			if (!$perkara_detail) {
+				return array('success' => false, 'message' => 'Data perkara tidak ditemukan di SIPP');
+			}
+
+			// Check if already exists
+			$existing = $this->get_berkas_by_nomor($nomor_perkara);
+			if ($existing) {
+				return array('success' => false, 'message' => 'Berkas sudah ada di sistem notelen');
+			}
+
+			// Prepare berkas data
+			$berkas_data = array(
+				'nomor_perkara' => $nomor_perkara,
+				'perkara_id_sipp' => $perkara_id,
+				'jenis_perkara' => $perkara_detail->jenis_perkara,
+				'tanggal_putusan' => $perkara_detail->tanggal_putusan,
+				'majelis_hakim' => $perkara_detail->majelis_hakim,
+				'panitera_pengganti' => $perkara_detail->panitera_pengganti,
+				'jurusita' => $perkara_detail->jurusita,
+				'status_berkas' => 'PANITERA_PENGGANTI',
+				'tanggal_masuk_notelen' => date('Y-m-d'),
+				'catatan_notelen' => 'Auto-insert dari sistem perkara putus harian',
+				'created_at' => date('Y-m-d H:i:s'),
+				'updated_at' => date('Y-m-d H:i:s')
+			);
+
+			// Insert to berkas_masuk
+			$this->notelen_db->insert('berkas_masuk', $berkas_data);
+			$berkas_id = $this->notelen_db->insert_id();
+
+			if ($berkas_id) {
+				return array('success' => true, 'message' => 'Berkas berhasil dimasukkan', 'berkas_id' => $berkas_id);
+			} else {
+				return array('success' => false, 'message' => 'Gagal menyimpan berkas');
+			}
+		} catch (Exception $e) {
+			log_message('error', 'Error insert berkas otomatis: ' . $e->getMessage());
+			return array('success' => false, 'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage());
+		}
+	}
+
+	/**
+	 * Insert berkas bulk dari perkara otomatis (multiple)
+	 */
+	public function insert_berkas_bulk_from_perkara_otomatis($perkara_ids)
+	{
+		try {
+			$success_count = 0;
+			$error_count = 0;
+			$errors = array();
+
+			$this->notelen_db->trans_start();
+
+			foreach ($perkara_ids as $perkara_id) {
+				// Get nomor perkara first
+				$perkara_query = "SELECT nomor_perkara FROM perkara WHERE perkara_id = ?";
+				$perkara_result = $this->sipp_db->query($perkara_query, array($perkara_id))->row();
+
+				if (!$perkara_result) {
+					$error_count++;
+					$errors[] = "Perkara ID $perkara_id tidak ditemukan";
+					continue;
+				}
+
+				$nomor_perkara = $perkara_result->nomor_perkara;
+
+				// Check if already exists
+				$existing = $this->get_berkas_by_nomor($nomor_perkara);
+				if ($existing) {
+					$error_count++;
+					$errors[] = "Berkas $nomor_perkara sudah ada";
+					continue;
+				}
+
+				// Get detail perkara
+				$perkara_detail = $this->get_perkara_detail_by_nomor($nomor_perkara);
+
+				if (!$perkara_detail) {
+					$error_count++;
+					$errors[] = "Detail perkara $nomor_perkara tidak ditemukan";
+					continue;
+				}
+
+				// Prepare berkas data
+				$berkas_data = array(
+					'nomor_perkara' => $nomor_perkara,
+					'perkara_id_sipp' => $perkara_id,
+					'jenis_perkara' => $perkara_detail->jenis_perkara,
+					'tanggal_putusan' => $perkara_detail->tanggal_putusan,
+					'majelis_hakim' => $perkara_detail->majelis_hakim,
+					'panitera_pengganti' => $perkara_detail->panitera_pengganti,
+					'jurusita' => $perkara_detail->jurusita,
+					'status_berkas' => 'PANITERA_PENGGANTI',
+					'tanggal_masuk_notelen' => date('Y-m-d'),
+					'catatan_notelen' => 'Auto-insert bulk dari sistem perkara putus harian',
+					'created_at' => date('Y-m-d H:i:s'),
+					'updated_at' => date('Y-m-d H:i:s')
+				);
+
+				// Insert to berkas_masuk
+				$this->notelen_db->insert('berkas_masuk', $berkas_data);
+				if ($this->notelen_db->affected_rows() > 0) {
+					$success_count++;
+				} else {
+					$error_count++;
+					$errors[] = "Gagal insert berkas $nomor_perkara";
+				}
+			}
+
+			$this->notelen_db->trans_complete();
+
+			return array(
+				'success' => $this->notelen_db->trans_status(),
+				'total_inserted' => $success_count,
+				'total_errors' => $error_count,
+				'errors' => $errors,
+				'message' => "$success_count berkas berhasil dimasukkan, $error_count error"
+			);
+		} catch (Exception $e) {
+			$this->notelen_db->trans_rollback();
+			log_message('error', 'Error insert berkas bulk: ' . $e->getMessage());
+			return array(
+				'success' => false,
+				'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage(),
+				'total_inserted' => 0,
+				'total_errors' => count($perkara_ids)
+			);
+		}
+	}
 }

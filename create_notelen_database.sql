@@ -75,24 +75,29 @@ SELECT
     COUNT(*) as total_berkas_masuk,
     COUNT(
         CASE
-            WHEN status_berkas = 'MASUK' THEN 1
+            WHEN status_berkas = 'PANITERA_PENGGANTI' THEN 1
         END
-    ) as berkas_masuk_baru,
+    ) as berkas_panitera_pengganti,
     COUNT(
         CASE
-            WHEN status_berkas = 'PROSES' THEN 1
+            WHEN status_berkas = 'ALIH_MEDIA' THEN 1
         END
-    ) as berkas_dalam_proses,
+    ) as berkas_alih_media,
     COUNT(
         CASE
-            WHEN status_berkas = 'SELESAI' THEN 1
+            WHEN status_berkas = 'BELUM_ADA_PBT' THEN 1
         END
-    ) as berkas_selesai,
+    ) as berkas_belum_ada_pbt,
     COUNT(
         CASE
-            WHEN status_berkas = 'ARSIP' THEN 1
+            WHEN status_berkas = 'MENUNGGU_BHT' THEN 1
         END
-    ) as berkas_diarsip,
+    ) as berkas_menunggu_bht,
+    COUNT(
+        CASE
+            WHEN status_berkas = 'SELESAI_ARSIP' THEN 1
+        END
+    ) as berkas_selesai_arsip,
     COUNT(
         CASE
             WHEN DATE(tanggal_masuk_notelen) = CURDATE() THEN 1

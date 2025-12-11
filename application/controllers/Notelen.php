@@ -1320,4 +1320,220 @@ class Notelen extends CI_Controller
 		$data['title'] = 'Dashboard Gallery - Notelen System';
 		$this->load->view('notelen/dashboard_gallery', $data);
 	}
+
+	// ===============================================
+	// BERKAS MASUK OTOMATIS HARIAN
+	// ===============================================
+
+	/**
+	 * Berkas Masuk Otomatis Harian - Main page
+	 */
+	public function berkas_masuk_otomatis()
+	{
+		try {
+			$data = array(
+				'title' => 'Berkas Masuk Otomatis Harian',
+				'page_title' => 'Berkas Masuk Otomatis Harian',
+				'breadcrumb' => 'Notelen / Berkas Otomatis Harian'
+			);
+
+			$this->load->view('notelen/berkas_masuk_otomatis', $data);
+		} catch (Exception $e) {
+			log_message('error', 'Error in berkas_masuk_otomatis: ' . $e->getMessage());
+			show_error('Terjadi kesalahan sistem: ' . $e->getMessage(), 500);
+		}
+	}
+
+	/**
+	 * AJAX - Get perkara putus harian
+	 */
+	public function ajax_get_perkara_putus_harian()
+	{
+		header('Content-Type: application/json; charset=utf-8');
+
+		$tanggal = $this->input->post('tanggal');
+
+		if (!$tanggal) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Tanggal harus diisi'
+			));
+			exit();
+		}
+
+		// Validate date format
+		if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Format tanggal tidak valid (gunakan YYYY-MM-DD)'
+			));
+			exit();
+		}
+
+		try {
+			// Get perkara putus harian
+			$perkara_data = $this->notelen->get_perkara_putus_harian($tanggal);
+
+			// Get statistics
+			$stats = $this->notelen->get_perkara_putus_harian_stats($tanggal);
+
+			echo json_encode(array(
+				'success' => true,
+				'data' => $perkara_data,
+				'stats' => $stats,
+				'message' => 'Data berhasil dimuat',
+				'tanggal' => $tanggal,
+				'total_records' => count($perkara_data)
+			));
+		} catch (Exception $e) {
+			log_message('error', 'Error get perkara putus harian: ' . $e->getMessage());
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+			));
+		}
+
+		exit();
+	}
+
+	/**
+	 * AJAX - Masukkan berkas otomatis (single)
+	 */
+	public function ajax_masukkan_berkas_otomatis()
+	{
+		header('Content-Type: application/json; charset=utf-8');
+
+		$perkara_id = $this->input->post('perkara_id');
+		$nomor_perkara = trim($this->input->post('nomor_perkara'));
+
+		if (!$perkara_id || !$nomor_perkara) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Perkara ID dan nomor perkara harus diisi'
+			));
+			exit();
+		}
+
+		try {
+			$result = $this->notelen->insert_berkas_from_perkara_otomatis($perkara_id, $nomor_perkara);
+			echo json_encode($result);
+		} catch (Exception $e) {
+			log_message('error', 'Error masukkan berkas otomatis: ' . $e->getMessage());
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+			));
+		}
+
+		exit();
+	}
+
+	/**
+	 * AJAX - Masukkan berkas bulk (multiple)
+	 */
+	public function ajax_masukkan_berkas_bulk()
+	{
+		header('Content-Type: application/json; charset=utf-8');
+
+		$perkara_ids = $this->input->post('perkara_ids');
+
+		if (!$perkara_ids || !is_array($perkara_ids)) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Data perkara IDs tidak valid'
+			));
+			exit();
+		}
+
+		// Validate perkara IDs (should be integers)
+		$valid_ids = array();
+		foreach ($perkara_ids as $id) {
+			if (is_numeric($id) && (int)$id > 0) {
+				$valid_ids[] = (int)$id;
+			}
+		}
+
+		if (empty($valid_ids)) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Tidak ada perkara ID yang valid'
+			));
+			exit();
+		}
+
+		try {
+			$result = $this->notelen->insert_berkas_bulk_from_perkara_otomatis($valid_ids);
+			echo json_encode($result);
+		} catch (Exception $e) {
+			log_message('error', 'Error masukkan berkas bulk: ' . $e->getMessage());
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+			));
+		}
+
+		exit();
+	}
+
+	/**
+	 * AJAX - Get detail perkara untuk modal
+	 */
+	public function ajax_get_detail_perkara_harian()
+	{
+		header('Content-Type: application/json; charset=utf-8');
+
+		$perkara_id = $this->input->get('perkara_id');
+		$nomor_perkara = $this->input->get('nomor_perkara');
+
+		if (!$perkara_id && !$nomor_perkara) {
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Perkara ID atau nomor perkara harus diisi'
+			));
+			exit();
+		}
+
+		try {
+			// Get detail dari model berdasarkan nomor perkara
+			if ($nomor_perkara) {
+				$detail = $this->notelen->get_perkara_detail_by_nomor($nomor_perkara);
+			} else {
+				// If only perkara_id provided, get nomor perkara first using load database
+				$this->load->database('default'); // Load SIPP database
+				$perkara_query = $this->db->query("SELECT nomor_perkara FROM perkara WHERE perkara_id = ?", array($perkara_id));
+				$perkara_result = $perkara_query->row();
+
+				if (!$perkara_result) {
+					echo json_encode(array(
+						'success' => false,
+						'message' => 'Perkara tidak ditemukan'
+					));
+					exit();
+				}
+
+				$detail = $this->notelen->get_perkara_detail_by_nomor($perkara_result->nomor_perkara);
+			}
+
+			if ($detail) {
+				echo json_encode(array(
+					'success' => true,
+					'data' => $detail,
+					'message' => 'Detail perkara berhasil dimuat'
+				));
+			} else {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Detail perkara tidak ditemukan'
+				));
+			}
+		} catch (Exception $e) {
+			log_message('error', 'Error get detail perkara harian: ' . $e->getMessage());
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+			));
+		}
+
+		exit();
+	}
 }

@@ -93,6 +93,13 @@
 							</a>
 						</li>
 						<li class="nav-item">
+							<a href="<?php echo site_url('notelen/berkas_masuk_otomatis') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'berkas_masuk_otomatis' ? 'active' : '' ?>">
+								<i class="fas fa-calendar-day nav-icon text-primary"></i>
+								<p>Berkas Masuk Otomatis</p>
+								<span class="badge badge-primary right">AUTO</span>
+							</a>
+						</li>
+						<li class="nav-item">
 							<a href="<?php echo site_url('notelen/berkas_pbt') ?>" class="nav-link <?= $this->uri->segment(1) == 'notelen' && $this->uri->segment(2) == 'berkas_pbt' ? 'active' : '' ?>">
 								<i class="fas fa-gavel nav-icon text-info"></i>
 								<p>Berkas PBT</p>
