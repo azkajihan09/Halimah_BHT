@@ -49,8 +49,8 @@ class Notelen_model extends CI_Model
 		}
 
 		if (!empty($filters['tanggal_dari']) && !empty($filters['tanggal_sampai'])) {
-			$this->notelen_db->where('bm.tanggal_putusan >=', $filters['tanggal_dari']);
-			$this->notelen_db->where('bm.tanggal_putusan <=', $filters['tanggal_sampai']);
+			$this->notelen_db->where('bm.tanggal_masuk_notelen >=', $filters['tanggal_dari']);
+			$this->notelen_db->where('bm.tanggal_masuk_notelen <=', $filters['tanggal_sampai']);
 		}
 
 		$this->notelen_db->group_by('bm.id');
@@ -80,8 +80,8 @@ class Notelen_model extends CI_Model
 		}
 
 		if (!empty($filters['tanggal_dari']) && !empty($filters['tanggal_sampai'])) {
-			$this->notelen_db->where('bm.tanggal_putusan >=', $filters['tanggal_dari']);
-			$this->notelen_db->where('bm.tanggal_putusan <=', $filters['tanggal_sampai']);
+			$this->notelen_db->where('bm.tanggal_masuk_notelen >=', $filters['tanggal_dari']);
+			$this->notelen_db->where('bm.tanggal_masuk_notelen <=', $filters['tanggal_sampai']);
 		}
 
 		return $this->notelen_db->count_all_results();
@@ -224,6 +224,35 @@ class Notelen_model extends CI_Model
 		$this->notelen_db->trans_complete();
 
 		return $this->notelen_db->trans_status();
+	}
+
+	/**
+	 * Delete all berkas masuk
+	 */
+	public function delete_all_berkas_masuk()
+	{
+		try {
+			// Start transaction
+			$this->notelen_db->trans_start();
+
+			// Delete all berkas masuk
+			$this->notelen_db->empty_table('berkas_masuk');
+
+			// Complete transaction
+			$this->notelen_db->trans_complete();
+
+			// Check if transaction was successful
+			if ($this->notelen_db->trans_status() === FALSE) {
+				log_message('error', 'Transaction failed during delete all berkas masuk');
+				return false;
+			}
+
+			log_message('info', 'All berkas masuk data deleted successfully');
+			return true;
+		} catch (Exception $e) {
+			log_message('error', 'Error in delete_all_berkas_masuk: ' . $e->getMessage());
+			return false;
+		}
 	}
 
     // ===============================================

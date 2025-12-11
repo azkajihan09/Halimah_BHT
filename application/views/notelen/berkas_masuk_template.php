@@ -97,7 +97,7 @@
 						</div>
 						<div class="card-body">
 							<form method="GET" action="<?= base_url('notelen/berkas_template') ?>" class="row">
-								<div class="col-md-3">
+								<div class="col-md-2">
 									<div class="form-group">
 										<label>Status Berkas:</label>
 										<select name="status" class="form-control">
@@ -110,14 +110,28 @@
 										</select>
 									</div>
 								</div>
-								<div class="col-md-3">
+								<div class="col-md-2">
 									<div class="form-group">
 										<label>Nomor Perkara:</label>
 										<input type="text" name="nomor" class="form-control" placeholder="Cari nomor perkara..."
 											value="<?= isset($filters['nomor_perkara']) ? $filters['nomor_perkara'] : '' ?>">
 									</div>
 								</div>
-								<div class="col-md-3">
+								<div class="col-md-2">
+									<div class="form-group">
+										<label>Tanggal Masuk Dari:</label>
+										<input type="date" name="tanggal_dari" class="form-control"
+											value="<?= isset($filters['tanggal_dari']) ? $filters['tanggal_dari'] : '' ?>">
+									</div>
+								</div>
+								<div class="col-md-2">
+									<div class="form-group">
+										<label>Tanggal Masuk Sampai:</label>
+										<input type="date" name="tanggal_sampai" class="form-control"
+											value="<?= isset($filters['tanggal_sampai']) ? $filters['tanggal_sampai'] : '' ?>">
+									</div>
+								</div>
+								<div class="col-md-2">
 									<div class="form-group">
 										<label>&nbsp;</label><br>
 										<button type="submit" class="btn btn-primary">
@@ -128,11 +142,14 @@
 										</a>
 									</div>
 								</div>
-								<div class="col-md-3 text-right">
+								<div class="col-md-2 text-right">
 									<label>&nbsp;</label><br>
 									<div class="btn-group">
-										<button type="button" class="btn btn-success" onclick="openNewBerkasModal()">
-											<i class="fas fa-plus"></i> Tambah Berkas
+										<button type="button" class="btn btn-success btn-sm" onclick="openNewBerkasModal()">
+											<i class="fas fa-plus"></i> Tambah
+										</button>
+										<button type="button" class="btn btn-danger btn-sm" onclick="deleteAllBerkas()">
+											<i class="fas fa-trash"></i> Hapus Semua
 										</button>
 									</div>
 								</div>
@@ -658,6 +675,87 @@
 		// Setup autocomplete nomor perkara (saat ready)
 		setupNomorPerkaraAutocomplete();
 	});
+
+	// Function untuk hapus semua data berkas
+	function deleteAllBerkas() {
+		Swal.fire({
+			title: 'Konfirmasi Hapus Semua Data',
+			html: `
+				<div class="text-left">
+					<p><strong>PERINGATAN!</strong></p>
+					<p>Anda akan menghapus <strong>SEMUA</strong> data berkas masuk notelen.</p>
+					<p>Tindakan ini <span class="text-danger"><strong>TIDAK DAPAT DIBATALKAN!</strong></span></p>
+					<p>Pastikan Anda telah membackup data jika diperlukan.</p>
+					<hr>
+					<p>Ketik <strong>"HAPUS SEMUA"</strong> untuk konfirmasi:</p>
+				</div>
+			`,
+			input: 'text',
+			inputPlaceholder: 'Ketik: HAPUS SEMUA',
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonColor: '#dc3545',
+			cancelButtonColor: '#6c757d',
+			confirmButtonText: 'Ya, Hapus Semua!',
+			cancelButtonText: 'Batal',
+			preConfirm: (inputValue) => {
+				if (inputValue !== 'HAPUS SEMUA') {
+					Swal.showValidationMessage('Silakan ketik "HAPUS SEMUA" untuk konfirmasi');
+					return false;
+				}
+				return true;
+			}
+		}).then((result) => {
+			if (result.isConfirmed) {
+				// Show loading
+				Swal.fire({
+					title: 'Menghapus Data...',
+					text: 'Mohon tunggu, sedang menghapus semua data berkas masuk.',
+					icon: 'info',
+					allowOutsideClick: false,
+					showConfirmButton: false,
+					didOpen: () => {
+						Swal.showLoading();
+					}
+				});
+
+				// Proceed with deletion
+				$.ajax({
+					url: getAjaxUrl('notelen/ajax_delete_all_berkas'),
+					type: 'POST',
+					dataType: 'json',
+					timeout: 60000, // 60 second timeout for bulk operations
+					success: function(response) {
+						if (response && response.success) {
+							Swal.fire({
+								icon: 'success',
+								title: 'Berhasil!',
+								text: `Semua data berkas masuk berhasil dihapus. ${response.deleted_count || 0} berkas telah dihapus.`,
+								timer: 3000
+							}).then(() => {
+								// Reload halaman
+								window.location.reload();
+							});
+						} else {
+							Swal.fire({
+								icon: 'error',
+								title: 'Gagal!',
+								text: response.message || 'Terjadi kesalahan saat menghapus data'
+							});
+						}
+					},
+					error: function(xhr, status, error) {
+						console.error('Delete all error:', error);
+						Swal.fire({
+							icon: 'error',
+							title: 'Error!',
+							text: 'Terjadi kesalahan koneksi saat menghapus data. Silakan coba lagi.'
+						});
+					}
+				});
+			}
+		});
+	}
 
 	function openNewBerkasModal() {
 		$('#newBerkasModal').modal('show');

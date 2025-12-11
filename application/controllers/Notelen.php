@@ -188,8 +188,8 @@ class Notelen extends CI_Controller
 			$filters = array(
 				'status_berkas' => $this->input->get('status') ?: $this->session->userdata('notelen_filter_status') ?: '',
 				'nomor_perkara' => $this->input->get('nomor') ?: $this->session->userdata('notelen_filter_nomor') ?: '',
-				'tanggal_dari' => $this->input->get('dari') ?: $this->session->userdata('notelen_filter_dari') ?: '',
-				'tanggal_sampai' => $this->input->get('sampai') ?: $this->session->userdata('notelen_filter_sampai') ?: ''
+				'tanggal_dari' => $this->input->get('tanggal_dari') ?: $this->session->userdata('notelen_filter_dari') ?: '',
+				'tanggal_sampai' => $this->input->get('tanggal_sampai') ?: $this->session->userdata('notelen_filter_sampai') ?: ''
 			);
 
 			// Save filters to session
@@ -736,6 +736,72 @@ class Notelen extends CI_Controller
 			));
 		}
 		exit();
+	}
+
+	/**
+	 * Delete all berkas masuk
+	 */
+	public function ajax_delete_all_berkas()
+	{
+		// Clear any output buffer
+		while (ob_get_level()) {
+			ob_end_clean();
+		}
+
+		// Disable error display for AJAX
+		ini_set('display_errors', 0);
+		error_reporting(0);
+
+		// Set response headers
+		header('Content-Type: application/json');
+		header('Cache-Control: no-cache, must-revalidate');
+
+		try {
+			// Log deletion attempt
+			log_message('info', 'Attempting to delete all berkas masuk data');
+
+			// Get count before deletion
+			$total_count = $this->notelen->count_berkas_masuk();
+
+			if ($total_count == 0) {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Tidak ada data berkas masuk untuk dihapus',
+					'deleted_count' => 0
+				));
+				exit();
+			}
+
+			// Delete all berkas
+			$result = $this->notelen->delete_all_berkas_masuk();
+
+			if ($result) {
+				log_message('info', 'Successfully deleted all berkas masuk data. Count: ' . $total_count);
+
+				echo json_encode(array(
+					'success' => true,
+					'message' => 'Semua data berkas masuk berhasil dihapus',
+					'deleted_count' => $total_count
+				));
+			} else {
+				echo json_encode(array(
+					'success' => false,
+					'message' => 'Gagal menghapus data berkas masuk',
+					'deleted_count' => 0
+				));
+			}
+
+			exit();
+		} catch (Exception $e) {
+			log_message('error', 'Error deleting all berkas masuk: ' . $e->getMessage());
+
+			echo json_encode(array(
+				'success' => false,
+				'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage(),
+				'deleted_count' => 0
+			));
+			exit();
+		}
 	}
 
     // ===============================================
