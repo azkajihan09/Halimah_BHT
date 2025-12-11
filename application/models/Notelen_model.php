@@ -260,7 +260,7 @@ class Notelen_model extends CI_Model
     // ===============================================
 
 	/**
-	 * Get perkara putus untuk dropdown - SEMUA data dari SIPP
+	 * Get perkara putus untuk dropdown - HANYA Pdt.G (Gugatan) dari SIPP
 	 */
 	public function get_perkara_putus_dropdown($search = '', $limit = 1000)
 	{
@@ -278,6 +278,7 @@ class Notelen_model extends CI_Model
             LEFT JOIN perkara_penetapan pen ON p.perkara_id = pen.perkara_id
             WHERE pp.tanggal_putusan IS NOT NULL
             AND YEAR(pp.tanggal_putusan) >= 2024
+            AND p.nomor_perkara LIKE '%Pdt.G%'
         ";
 
 		if (!empty($search)) {
@@ -290,7 +291,7 @@ class Notelen_model extends CI_Model
 	}
 
 	/**
-	 * Get detail perkara by nomor perkara
+	 * Get detail perkara by nomor perkara - HANYA Pdt.G (Gugatan)
 	 */
 	public function get_perkara_detail_by_nomor($nomor_perkara)
 	{
@@ -308,6 +309,7 @@ class Notelen_model extends CI_Model
             LEFT JOIN perkara_penetapan pen ON p.perkara_id = pen.perkara_id
             WHERE p.nomor_perkara = ?
             AND pp.tanggal_putusan IS NOT NULL
+            AND p.nomor_perkara LIKE '%Pdt.G%'
         ";
 
 		$result = $this->sipp_db->query($query, array($nomor_perkara))->row();
@@ -983,9 +985,11 @@ class Notelen_model extends CI_Model
 		$this->sipp_db->where('DATE(pp.tanggal_putusan)', $tanggal);
 		$this->sipp_db->where('pp.tanggal_putusan IS NOT NULL');
 
+		// Filter untuk HANYA menampilkan perkara Pdt.G (Gugatan)
+		$this->sipp_db->like('p.nomor_perkara', '%Pdt.G%');
+
 		// Filter untuk tidak menampilkan perkara yang dicabut
 		$this->_filter_perkara_dicabut();
-
 		$this->sipp_db->order_by('pp.tanggal_putusan', 'DESC');
 
 		$result = $this->sipp_db->get()->result();
@@ -1044,7 +1048,7 @@ class Notelen_model extends CI_Model
 	/**
 	 * Insert berkas dari perkara otomatis (single)
 	 */
-	public function insert_berkas_from_perkara_otomatis($perkara_id, $nomor_perkara)
+	public function insert_berkas_from_perkara_otomatis($perkara_id, $nomor_perkara, $tanggal_masuk_notelen = null)
 	{
 		try {
 			// Get detail perkara dari SIPP
@@ -1060,6 +1064,9 @@ class Notelen_model extends CI_Model
 				return array('success' => false, 'message' => 'Berkas sudah ada di sistem notelen');
 			}
 
+			// Use provided date or default to today
+			$tanggal_masuk = $tanggal_masuk_notelen ? $tanggal_masuk_notelen : date('Y-m-d');
+
 			// Prepare berkas data
 			$berkas_data = array(
 				'nomor_perkara' => $nomor_perkara,
@@ -1070,7 +1077,7 @@ class Notelen_model extends CI_Model
 				'panitera_pengganti' => $perkara_detail->panitera_pengganti,
 				'jurusita' => $perkara_detail->jurusita,
 				'status_berkas' => 'PANITERA_PENGGANTI',
-				'tanggal_masuk_notelen' => date('Y-m-d'),
+				'tanggal_masuk_notelen' => $tanggal_masuk,
 				'catatan_notelen' => 'Auto-insert dari sistem perkara putus harian',
 				'created_at' => date('Y-m-d H:i:s'),
 				'updated_at' => date('Y-m-d H:i:s')
@@ -1094,23 +1101,26 @@ class Notelen_model extends CI_Model
 	/**
 	 * Insert berkas bulk dari perkara otomatis (multiple)
 	 */
-	public function insert_berkas_bulk_from_perkara_otomatis($perkara_ids)
+	public function insert_berkas_bulk_from_perkara_otomatis($perkara_ids, $tanggal_masuk_notelen = null)
 	{
 		try {
 			$success_count = 0;
 			$error_count = 0;
 			$errors = array();
 
+			// Use provided date or default to today
+			$tanggal_masuk = $tanggal_masuk_notelen ? $tanggal_masuk_notelen : date('Y-m-d');
+
 			$this->notelen_db->trans_start();
 
 			foreach ($perkara_ids as $perkara_id) {
 				// Get nomor perkara first
-				$perkara_query = "SELECT nomor_perkara FROM perkara WHERE perkara_id = ?";
+				$perkara_query = "SELECT nomor_perkara FROM perkara WHERE perkara_id = ? AND nomor_perkara LIKE '%Pdt.G%'";
 				$perkara_result = $this->sipp_db->query($perkara_query, array($perkara_id))->row();
 
 				if (!$perkara_result) {
 					$error_count++;
-					$errors[] = "Perkara ID $perkara_id tidak ditemukan";
+					$errors[] = "Perkara ID $perkara_id tidak ditemukan atau bukan Pdt.G";
 					continue;
 				}
 
@@ -1143,7 +1153,7 @@ class Notelen_model extends CI_Model
 					'panitera_pengganti' => $perkara_detail->panitera_pengganti,
 					'jurusita' => $perkara_detail->jurusita,
 					'status_berkas' => 'PANITERA_PENGGANTI',
-					'tanggal_masuk_notelen' => date('Y-m-d'),
+					'tanggal_masuk_notelen' => $tanggal_masuk,
 					'catatan_notelen' => 'Auto-insert bulk dari sistem perkara putus harian',
 					'created_at' => date('Y-m-d H:i:s'),
 					'updated_at' => date('Y-m-d H:i:s')

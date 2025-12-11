@@ -256,6 +256,43 @@
 	</section>
 </div>
 
+<!-- Modal untuk Pilih Tanggal Masuk Notelen -->
+<div class="modal fade" id="modalPilihTanggal" tabindex="-1" role="dialog" aria-labelledby="modalPilihTanggalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-primary text-white">
+				<h5 class="modal-title" id="modalPilihTanggalLabel">
+					<i class="fas fa-calendar-alt"></i> Pilih Tanggal Masuk Notelen
+				</h5>
+				<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<label for="tanggalMasukNotelen">Tanggal Masuk Notelen:</label>
+					<input type="date" class="form-control" id="tanggalMasukNotelen" value="">
+					<small class="form-text text-muted">
+						Kosongkan untuk menggunakan tanggal hari ini
+					</small>
+				</div>
+				<div class="alert alert-info">
+					<i class="fas fa-info-circle"></i>
+					<strong>Info:</strong> Data yang akan dimasukkan hanya perkara <strong>Pdt.G (Gugatan)</strong>.
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">
+					<i class="fas fa-times"></i> Batal
+				</button>
+				<button type="button" class="btn btn-success" id="btnKonfirmasiMasukkan">
+					<i class="fas fa-download"></i> Masukkan ke Berkas
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 <!-- JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -438,32 +475,29 @@
 		$('#refreshButton').find('i').removeClass('fa-spin');
 	}
 
-	// Masukkan ke berkas langsung
+	// Masukkan ke berkas langsung dengan pilihan tanggal
 	function masukkanKeBerkasLangsung(perkaraId, nomorPerkara) {
-		Swal.fire({
-			title: 'Masukkan ke Berkas?',
-			text: `Apakah Anda yakin ingin memasukkan perkara ${nomorPerkara} ke berkas notelen?`,
-			icon: 'question',
-			showCancelButton: true,
-			confirmButtonColor: '#28a745',
-			cancelButtonColor: '#dc3545',
-			confirmButtonText: 'Ya, Masukkan!',
-			cancelButtonText: 'Batal'
-		}).then((result) => {
-			if (result.isConfirmed) {
-				prosesmasukkanKeBerkas(perkaraId, nomorPerkara);
-			}
-		});
+		// Set current date as default
+		$('#tanggalMasukNotelen').val(new Date().toISOString().split('T')[0]);
+
+		// Store current operation data
+		$('#modalPilihTanggal').data('perkara-id', perkaraId);
+		$('#modalPilihTanggal').data('nomor-perkara', nomorPerkara);
+		$('#modalPilihTanggal').data('operation', 'single');
+
+		// Show modal
+		$('#modalPilihTanggal').modal('show');
 	}
 
 	// Proses masukkan ke berkas
-	function prosesmasukkanKeBerkas(perkaraId, nomorPerkara) {
+	function prosesmasukkanKeBerkas(perkaraId, nomorPerkara, tanggalMasukNotelen = null) {
 		$.ajax({
 			url: getAjaxUrl('notelen/ajax_masukkan_berkas_otomatis'),
 			type: 'POST',
 			data: {
 				perkara_id: perkaraId,
-				nomor_perkara: nomorPerkara
+				nomor_perkara: nomorPerkara,
+				tanggal_masuk_notelen: tanggalMasukNotelen
 			},
 			dataType: 'json',
 			success: function(response) {
@@ -496,7 +530,7 @@
 		});
 	}
 
-	// Masukkan semua berkas
+	// Masukkan semua berkas dengan pilihan tanggal
 	function masukkanSemuaBerkas() {
 		if (!window.currentPerkaraData) {
 			Swal.fire('Error', 'Tidak ada data perkara', 'error');
@@ -510,31 +544,27 @@
 			return;
 		}
 
-		Swal.fire({
-			title: 'Masukkan Semua ke Berkas?',
-			text: `Akan memasukkan ${belumMasuk.length} perkara ke berkas notelen`,
-			icon: 'question',
-			showCancelButton: true,
-			confirmButtonColor: '#28a745',
-			cancelButtonColor: '#dc3545',
-			confirmButtonText: 'Ya, Masukkan Semua!',
-			cancelButtonText: 'Batal'
-		}).then((result) => {
-			if (result.isConfirmed) {
-				prosesMasukkanSemuaBerkas(belumMasuk);
-			}
-		});
+		// Set current date as default
+		$('#tanggalMasukNotelen').val(new Date().toISOString().split('T')[0]);
+
+		// Store current operation data
+		$('#modalPilihTanggal').data('data-array', belumMasuk);
+		$('#modalPilihTanggal').data('operation', 'bulk');
+
+		// Show modal
+		$('#modalPilihTanggal').modal('show');
 	}
 
 	// Proses masukkan semua berkas
-	function prosesMasukkanSemuaBerkas(dataArray) {
+	function prosesMasukkanSemuaBerkas(dataArray, tanggalMasukNotelen = null) {
 		const perkaraIds = dataArray.map(item => item.perkara_id);
 
 		$.ajax({
 			url: getAjaxUrl('notelen/ajax_masukkan_berkas_bulk'),
 			type: 'POST',
 			data: {
-				perkara_ids: perkaraIds
+				perkara_ids: perkaraIds,
+				tanggal_masuk_notelen: tanggalMasukNotelen
 			},
 			dataType: 'json',
 			success: function(response) {
@@ -566,6 +596,24 @@
 			}
 		});
 	}
+
+	// Event handler untuk konfirmasi di modal
+	$(document).on('click', '#btnKonfirmasiMasukkan', function() {
+		const operation = $('#modalPilihTanggal').data('operation');
+		const tanggalMasukNotelen = $('#tanggalMasukNotelen').val();
+
+		// Close modal first
+		$('#modalPilihTanggal').modal('hide');
+
+		if (operation === 'single') {
+			const perkaraId = $('#modalPilihTanggal').data('perkara-id');
+			const nomorPerkara = $('#modalPilihTanggal').data('nomor-perkara');
+			prosesmasukkanKeBerkas(perkaraId, nomorPerkara, tanggalMasukNotelen);
+		} else if (operation === 'bulk') {
+			const dataArray = $('#modalPilihTanggal').data('data-array');
+			prosesMasukkanSemuaBerkas(dataArray, tanggalMasukNotelen);
+		}
+	});
 
 	// Helper functions
 	function formatDate(dateString) {

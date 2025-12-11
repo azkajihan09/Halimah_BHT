@@ -1465,6 +1465,7 @@ class Notelen extends CI_Controller
 
 		$perkara_id = $this->input->post('perkara_id');
 		$nomor_perkara = trim($this->input->post('nomor_perkara'));
+		$tanggal_masuk_notelen = $this->input->post('tanggal_masuk_notelen'); // Optional date
 
 		if (!$perkara_id || !$nomor_perkara) {
 			echo json_encode(array(
@@ -1475,7 +1476,7 @@ class Notelen extends CI_Controller
 		}
 
 		try {
-			$result = $this->notelen->insert_berkas_from_perkara_otomatis($perkara_id, $nomor_perkara);
+			$result = $this->notelen->insert_berkas_from_perkara_otomatis($perkara_id, $nomor_perkara, $tanggal_masuk_notelen);
 			echo json_encode($result);
 		} catch (Exception $e) {
 			log_message('error', 'Error masukkan berkas otomatis: ' . $e->getMessage());
@@ -1496,6 +1497,7 @@ class Notelen extends CI_Controller
 		header('Content-Type: application/json; charset=utf-8');
 
 		$perkara_ids = $this->input->post('perkara_ids');
+		$tanggal_masuk_notelen = $this->input->post('tanggal_masuk_notelen'); // Optional date
 
 		if (!$perkara_ids || !is_array($perkara_ids)) {
 			echo json_encode(array(
@@ -1522,7 +1524,7 @@ class Notelen extends CI_Controller
 		}
 
 		try {
-			$result = $this->notelen->insert_berkas_bulk_from_perkara_otomatis($valid_ids);
+			$result = $this->notelen->insert_berkas_bulk_from_perkara_otomatis($valid_ids, $tanggal_masuk_notelen);
 			echo json_encode($result);
 		} catch (Exception $e) {
 			log_message('error', 'Error masukkan berkas bulk: ' . $e->getMessage());
