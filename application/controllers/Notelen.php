@@ -495,9 +495,13 @@ class Notelen extends CI_Controller
 
 			$nomor_perkara = trim($this->input->post('nomor_perkara'));
 			$tanggal_putusan = $this->input->post('tanggal_putusan');
+			$tanggal_register = $this->input->post('tanggal_register');
+			$tanggal_masuk_notelen = $this->input->post('tanggal_masuk_notelen');
 			$jenis_perkara = $this->input->post('jenis_perkara');
 			$majelis_hakim = $this->input->post('majelis_hakim');
 			$panitera_pengganti = $this->input->post('panitera_pengganti');
+			$jurusita = $this->input->post('jurusita');
+			$status_berkas = $this->input->post('status_berkas');
 			$catatan = $this->input->post('catatan_notelen');
 
 			// Validasi
@@ -523,12 +527,15 @@ class Notelen extends CI_Controller
 
 			$data = array(
 				'nomor_perkara' => $nomor_perkara,
-				'perkara_id_sipp' => 0, // Manual entry
+				'perkara_id_sipp' => $this->input->post('perkara_id_sipp') ?: 0,
 				'jenis_perkara' => $jenis_perkara,
 				'tanggal_putusan' => $tanggal_putusan,
+				'tanggal_register' => $tanggal_register ?: date('Y-m-d'),
+				'tanggal_masuk_notelen' => !empty($tanggal_masuk_notelen) ? $tanggal_masuk_notelen : null,
 				'majelis_hakim' => $majelis_hakim,
 				'panitera_pengganti' => $panitera_pengganti,
-				'status_berkas' => 'MASUK',
+				'jurusita' => $jurusita,
+				'status_berkas' => $status_berkas ?: 'PANITERA_PENGGANTI',
 				'catatan_notelen' => $catatan
 			);
 
@@ -603,6 +610,8 @@ class Notelen extends CI_Controller
 			$berkas_id = $this->input->post('berkas_id');
 			$nomor_perkara = trim($this->input->post('nomor_perkara'));
 			$tanggal_putusan = $this->input->post('tanggal_putusan');
+			$tanggal_register = $this->input->post('tanggal_register');
+			$tanggal_masuk_notelen = $this->input->post('tanggal_masuk_notelen');
 			$jenis_perkara = $this->input->post('jenis_perkara');
 			$majelis_hakim = $this->input->post('majelis_hakim');
 			$panitera_pengganti = $this->input->post('panitera_pengganti');
@@ -632,6 +641,8 @@ class Notelen extends CI_Controller
 			// Prepare update data
 			$update_data = array(
 				'tanggal_putusan' => $tanggal_putusan,
+				'tanggal_register' => $tanggal_register,
+				'tanggal_masuk_notelen' => !empty($tanggal_masuk_notelen) ? $tanggal_masuk_notelen : null,
 				'jenis_perkara' => $jenis_perkara,
 				'majelis_hakim' => $majelis_hakim,
 				'panitera_pengganti' => $panitera_pengganti,

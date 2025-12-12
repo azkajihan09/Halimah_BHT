@@ -418,6 +418,12 @@
 						<small class="form-text text-info">Tanggal register berkas (otomatis hari ini)</small>
 					</div>
 
+					<div class="form-group">
+						<label>Tanggal Masuk Notelen</label>
+						<input type="date" name="tanggal_masuk_notelen" id="tanggalMasukNotelen" class="form-control">
+						<small class="form-text text-info">Tanggal berkas masuk ke notelen (kosong jika belum diisi)</small>
+					</div>
+
 					<div class="row">
 						<div class="col-md-6">
 							<div class="form-group">
@@ -503,8 +509,14 @@
 
 					<div class="form-group">
 						<label>Tanggal Register Berkas *</label>
-						<input type="date" name="tanggal_register" id="editTanggalRegister" class="form-control" readonly required>
-						<small class="form-text text-muted">Tanggal register berkas tidak dapat diubah</small>
+						<input type="date" name="tanggal_register" id="editTanggalRegister" class="form-control" required>
+						<small class="form-text text-info">Tanggal register berkas</small>
+					</div>
+
+					<div class="form-group">
+						<label>Tanggal Masuk Notelen</label>
+						<input type="date" name="tanggal_masuk_notelen" id="editTanggalMasuk" class="form-control">
+						<small class="form-text text-info">Tanggal berkas masuk ke notelen (kosong jika belum diisi)</small>
 					</div>
 
 					<div class="row">
@@ -543,8 +555,8 @@
 
 					<div class="form-group">
 						<label>Jurusita</label>
-						<input type="text" name="jurusita" id="editJurusita" class="form-control" readonly>
-						<small class="form-text text-muted">Jurusita tidak dapat diubah</small>
+						<input type="text" name="jurusita" id="editJurusita" class="form-control">
+						<small class="form-text text-info">Nama jurusita yang menangani</small>
 					</div>
 
 					<div class="form-group">
@@ -599,6 +611,15 @@
 				<div class="row">
 					<div class="col-md-6">
 						<div class="info-box">
+							<span class="info-box-icon bg-primary"><i class="fas fa-calendar-plus"></i></span>
+							<div class="info-box-content">
+								<span class="info-box-text">Tanggal Register Berkas</span>
+								<span class="info-box-number" id="viewTanggalRegister">-</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="info-box">
 							<span class="info-box-icon bg-success"><i class="fas fa-balance-scale"></i></span>
 							<div class="info-box-content">
 								<span class="info-box-text">Jenis Perkara</span>
@@ -606,6 +627,9 @@
 							</div>
 						</div>
 					</div>
+				</div>
+
+				<div class="row">
 					<div class="col-md-6">
 						<div class="info-box">
 							<span class="info-box-icon bg-info"><i class="fas fa-flag"></i></span>
@@ -615,9 +639,6 @@
 							</div>
 						</div>
 					</div>
-				</div>
-
-				<div class="row">
 					<div class="col-md-6">
 						<div class="info-box">
 							<span class="info-box-icon bg-secondary"><i class="fas fa-calendar-alt"></i></span>
@@ -1154,12 +1175,16 @@
 		$('#editBerkasForm')[0].reset();
 		$('#editBerkasId').val(berkas_id);
 
-		// Pastikan field readonly tetap readonly (tanpa disabled agar data terkirim)
+		// Set field readonly untuk data yang tidak boleh diubah
 		$('#editTanggalPutusan').prop('readonly', true);
 		$('#editJenisPerkara').prop('readonly', true);
 		$('#editMajelisHakim').prop('readonly', true);
 		$('#editPaniteraPengganti').prop('readonly', true);
-		$('#editJurusita').prop('readonly', true);
+
+		// Field yang bisa diedit
+		$('#editTanggalRegister').prop('readonly', false);
+		$('#editTanggalMasuk').prop('readonly', false);
+		$('#editJurusita').prop('readonly', false);
 
 		// Load data berkas untuk edit
 		loadBerkasForEdit(berkas_id);
