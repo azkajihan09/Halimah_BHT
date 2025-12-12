@@ -121,10 +121,12 @@ class Notelen_model extends CI_Model
 				'perkara_id_sipp' => $data['perkara_id_sipp'],
 				'jenis_perkara' => isset($data['jenis_perkara']) ? $data['jenis_perkara'] : null,
 				'tanggal_putusan' => $data['tanggal_putusan'],
-				'tanggal_masuk_notelen' => isset($data['tanggal_masuk_notelen']) ? $data['tanggal_masuk_notelen'] : date('Y-m-d'),
+				'tanggal_register' => isset($data['tanggal_register']) && !empty($data['tanggal_register']) ? $data['tanggal_register'] : date('Y-m-d'),
+				'tanggal_masuk_notelen' => isset($data['tanggal_masuk_notelen']) && !empty($data['tanggal_masuk_notelen']) ? $data['tanggal_masuk_notelen'] : null,
 				'majelis_hakim' => isset($data['majelis_hakim']) ? $data['majelis_hakim'] : null,
 				'panitera_pengganti' => isset($data['panitera_pengganti']) ? $data['panitera_pengganti'] : null,
-				'status_berkas' => isset($data['status_berkas']) ? $data['status_berkas'] : 'MASUK',
+				'jurusita' => isset($data['jurusita']) ? $data['jurusita'] : null,
+				'status_berkas' => isset($data['status_berkas']) ? $data['status_berkas'] : 'PANITERA_PENGGANTI',
 				'catatan_notelen' => isset($data['catatan_notelen']) ? $data['catatan_notelen'] : null
 			);
 

@@ -12,8 +12,8 @@ CREATE TABLE `berkas_masuk` (
     `perkara_id_sipp` int(11) NOT NULL,
     `jenis_perkara` varchar(100) NULL,
     `tanggal_putusan` date NOT NULL,
-	`tanggal_register` date NOT NULL,
-    `tanggal_masuk_notelen` date NOT NULL,
+    `tanggal_register` date NOT NULL,
+    `tanggal_masuk_notelen` date NULL,
     `majelis_hakim` text NULL,
     `panitera_pengganti` varchar(255) NULL,
     `jurusita` varchar(255) NULL,
@@ -220,18 +220,17 @@ FROM
 -- =============================================
 COMMIT;
 
-
-
 -- Step 1: Tambah kolom dengan nullable dulu  // pakai ini dlu ya
-ALTER TABLE `berkas_masuk` 
-ADD COLUMN `tanggal_register` date NULL 
-AFTER `tanggal_putusan`;
+ALTER TABLE `berkas_masuk`
+ADD COLUMN `tanggal_register` date NULL AFTER `tanggal_putusan`;
 
 -- Step 2: Update data existing dengan nilai dari created_at
-UPDATE `berkas_masuk` 
-SET `tanggal_register` = DATE(`created_at`) 
-WHERE `tanggal_register` IS NULL;
+UPDATE `berkas_masuk`
+SET
+    `tanggal_register` = DATE(`created_at`)
+WHERE
+    `tanggal_register` IS NULL;
 
 -- Step 3: Ubah kolom jadi NOT NULL
-ALTER TABLE `berkas_masuk` 
+ALTER TABLE `berkas_masuk`
 MODIFY COLUMN `tanggal_register` date NOT NULL;
