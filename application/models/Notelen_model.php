@@ -122,7 +122,7 @@ class Notelen_model extends CI_Model
 				'jenis_perkara' => isset($data['jenis_perkara']) ? $data['jenis_perkara'] : null,
 				'tanggal_putusan' => $data['tanggal_putusan'],
 				'tanggal_register' => isset($data['tanggal_register']) && !empty($data['tanggal_register']) ? $data['tanggal_register'] : date('Y-m-d'),
-				'tanggal_masuk_notelen' => isset($data['tanggal_masuk_notelen']) && !empty($data['tanggal_masuk_notelen']) ? $data['tanggal_masuk_notelen'] : null,
+				'tanggal_masuk_notelen' => null, // SELALU NULL untuk input baru - harus diisi manual saja
 				'majelis_hakim' => isset($data['majelis_hakim']) ? $data['majelis_hakim'] : null,
 				'panitera_pengganti' => isset($data['panitera_pengganti']) ? $data['panitera_pengganti'] : null,
 				'jurusita' => isset($data['jurusita']) ? $data['jurusita'] : null,

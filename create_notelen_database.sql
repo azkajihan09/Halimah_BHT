@@ -262,6 +262,21 @@ WHERE
     `tanggal_masuk_notelen` = CURDATE()
     AND `catatan_notelen` LIKE '%Auto-insert%';
 
--- Step 4: Pastikan kolom tanggal_masuk_notelen tetap NULL dengan komentar
+-- Step 4: Reset semua tanggal_masuk_notelen yang sama dengan tanggal_putusan (kemungkinan auto-fill)
+UPDATE `berkas_masuk`
+SET
+    `tanggal_masuk_notelen` = NULL
+WHERE
+    `tanggal_masuk_notelen` = `tanggal_putusan`;
+
+-- Step 5: Reset berkas yang dibuat dalam 3 hari terakhir dan tanggal_masuk_notelen sama dengan hari ini
+UPDATE `berkas_masuk`
+SET
+    `tanggal_masuk_notelen` = NULL
+WHERE
+    `tanggal_masuk_notelen` = CURDATE()
+    AND `created_at` >= DATE_SUB(CURDATE(), INTERVAL 3 DAY);
+
+-- Step 6: Pastikan kolom tanggal_masuk_notelen tetap NULL dengan komentar yang jelas
 ALTER TABLE `berkas_masuk`
-MODIFY COLUMN `tanggal_masuk_notelen` date NULL COMMENT 'Tanggal berkas masuk notelen - harus diisi manual, tidak auto-fill';
+MODIFY COLUMN `tanggal_masuk_notelen` date NULL COMMENT 'Tanggal berkas masuk notelen - HARUS DIISI MANUAL, TIDAK AUTO-FILL';
