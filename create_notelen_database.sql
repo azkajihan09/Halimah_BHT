@@ -13,7 +13,7 @@ CREATE TABLE `berkas_masuk` (
     `jenis_perkara` varchar(100) NULL,
     `tanggal_putusan` date NOT NULL,
     `tanggal_register` date NOT NULL,
-    `tanggal_masuk_notelen` date NULL,
+    `tanggal_masuk_notelen` date NULL COMMENT 'Tanggal berkas masuk notelen - harus diisi manual, tidak auto-fill',
     `majelis_hakim` text NULL,
     `panitera_pengganti` varchar(255) NULL,
     `jurusita` varchar(255) NULL,
@@ -234,3 +234,34 @@ WHERE
 -- Step 3: Ubah kolom jadi NOT NULL
 ALTER TABLE `berkas_masuk`
 MODIFY COLUMN `tanggal_register` date NOT NULL;
+
+-- =============================================
+-- CLEANUP TANGGAL_MASUK_NOTELEN AUTO-FILL
+-- =============================================
+
+-- Step 1: Reset semua tanggal_masuk_notelen yang auto-generated menjadi NULL
+-- Menghapus data yang sama dengan tanggal_register (kemungkinan auto-fill)
+UPDATE `berkas_masuk`
+SET
+    `tanggal_masuk_notelen` = NULL
+WHERE
+    `tanggal_masuk_notelen` = `tanggal_register`;
+
+-- Step 2: Reset tanggal_masuk_notelen yang sama dengan created_at date (kemungkinan auto-fill)
+UPDATE `berkas_masuk`
+SET
+    `tanggal_masuk_notelen` = NULL
+WHERE
+    `tanggal_masuk_notelen` = DATE(`created_at`);
+
+-- Step 3: Reset tanggal_masuk_notelen yang sama dengan tanggal hari ini untuk data baru
+UPDATE `berkas_masuk`
+SET
+    `tanggal_masuk_notelen` = NULL
+WHERE
+    `tanggal_masuk_notelen` = CURDATE()
+    AND `catatan_notelen` LIKE '%Auto-insert%';
+
+-- Step 4: Pastikan kolom tanggal_masuk_notelen tetap NULL dengan komentar
+ALTER TABLE `berkas_masuk`
+MODIFY COLUMN `tanggal_masuk_notelen` date NULL COMMENT 'Tanggal berkas masuk notelen - harus diisi manual, tidak auto-fill';

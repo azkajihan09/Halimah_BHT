@@ -393,6 +393,8 @@ class Notelen extends CI_Controller
 
 			$nomor_perkara = trim($this->input->post('nomor_perkara'));
 			$tanggal_putusan = $this->input->post('tanggal_putusan');
+			$tanggal_register = $this->input->post('tanggal_register');
+			$tanggal_masuk_notelen = $this->input->post('tanggal_masuk_notelen');
 			$jenis_perkara = $this->input->post('jenis_perkara');
 			$majelis_hakim = $this->input->post('majelis_hakim');
 			$panitera_pengganti = $this->input->post('panitera_pengganti');
@@ -425,7 +427,8 @@ class Notelen extends CI_Controller
 				'perkara_id_sipp' => 0,
 				'jenis_perkara' => $jenis_perkara,
 				'tanggal_putusan' => $tanggal_putusan,
-				'tanggal_masuk_notelen' => date('Y-m-d'),
+				'tanggal_register' => !empty($tanggal_register) ? $tanggal_register : null,
+				'tanggal_masuk_notelen' => !empty($tanggal_masuk_notelen) ? $tanggal_masuk_notelen : null,
 				'majelis_hakim' => $majelis_hakim,
 				'panitera_pengganti' => $panitera_pengganti,
 				'jurusita' => $jurusita,

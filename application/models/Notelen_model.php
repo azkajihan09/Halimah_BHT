@@ -1073,7 +1073,7 @@ class Notelen_model extends CI_Model
 				'panitera_pengganti' => $perkara_detail->panitera_pengganti,
 				'jurusita' => $perkara_detail->jurusita,
 				'status_berkas' => 'PANITERA_PENGGANTI',
-				'tanggal_masuk_notelen' => date('Y-m-d'),
+				'tanggal_masuk_notelen' => null,
 				'catatan_notelen' => 'Auto-insert dari sistem perkara putus harian',
 				'created_at' => date('Y-m-d H:i:s'),
 				'updated_at' => date('Y-m-d H:i:s')
@@ -1150,7 +1150,7 @@ class Notelen_model extends CI_Model
 					'panitera_pengganti' => $perkara_detail->panitera_pengganti,
 					'jurusita' => $perkara_detail->jurusita,
 					'status_berkas' => 'PANITERA_PENGGANTI',
-					'tanggal_masuk_notelen' => date('Y-m-d'),
+					'tanggal_masuk_notelen' => null,
 					'catatan_notelen' => 'Auto-insert bulk dari sistem perkara putus harian',
 					'created_at' => date('Y-m-d H:i:s'),
 					'updated_at' => date('Y-m-d H:i:s')
