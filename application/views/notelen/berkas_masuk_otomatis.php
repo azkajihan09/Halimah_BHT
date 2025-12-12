@@ -269,7 +269,7 @@
 		<div class="modal-content">
 			<div class="modal-header bg-primary text-white">
 				<h5 class="modal-title" id="modalPilihTanggalLabel">
-					<i class="fas fa-calendar-alt"></i> Pilih Tanggal Masuk Notelen
+					<i class="fas fa-calendar-alt"></i> Pilih Tanggal Berkas Masuk
 				</h5>
 				<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
@@ -277,7 +277,7 @@
 			</div>
 			<div class="modal-body">
 				<div class="form-group">
-					<label for="tanggalMasukNotelen">Tanggal Masuk Notelen:</label>
+					<label for="tanggalMasukNotelen">Tanggal Berkas Masuk:</label>
 					<input type="date" class="form-control" id="tanggalMasukNotelen" value="">
 					<small class="form-text text-muted">
 						Kosongkan untuk menggunakan tanggal hari ini
