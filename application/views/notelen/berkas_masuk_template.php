@@ -184,16 +184,17 @@
 									<thead class="thead-dark">
 										<tr>
 											<th width="4%">No</th>
-											<th width="15%">Nomor Perkara *</th>
-											<th width="10%">Tanggal Putusan *</th>
-											<th width="10%">Jenis Perkara</th>
-											<th width="8%">Berkas Masuk</th>
-											<th width="8%">Status Berkas</th>
-											<th width="10%">Majelis Hakim</th>
-											<th width="8%">Panitera</th>
-											<th width="8%">Jurusita</th>
-											<th width="12%">Catatan Notelen</th>
-											<th width="10%">Aksi</th>
+											<th width="14%">Nomor Perkara *</th>
+											<th width="9%">Tanggal Putusan *</th>
+											<th width="8%">Tanggal Register</th>
+											<th width="9%">Jenis Perkara</th>
+											<th width="7%">Berkas Masuk</th>
+											<th width="7%">Status Berkas</th>
+											<th width="9%">Majelis Hakim</th>
+											<th width="7%">Panitera</th>
+											<th width="7%">Jurusita</th>
+											<th width="11%">Catatan Notelen</th>
+											<th width="9%">Aksi</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -207,6 +208,13 @@
 													<td>
 														<?php if (isset($berkas->tanggal_putusan)): ?>
 															<?= date('d/m/Y', strtotime($berkas->tanggal_putusan)) ?>
+														<?php else: ?>
+															<span class="text-muted">-</span>
+														<?php endif; ?>
+													</td>
+													<td>
+														<?php if (isset($berkas->tanggal_register)): ?>
+															<span class="badge badge-info"><?= date('d/m/Y', strtotime($berkas->tanggal_register)) ?></span>
 														<?php else: ?>
 															<span class="text-muted">-</span>
 														<?php endif; ?>
@@ -404,6 +412,12 @@
 						<small id="tanggalHelp" class="form-text text-muted">Manual input atau auto-fill dari SIPP</small>
 					</div>
 
+					<div class="form-group">
+						<label>Tanggal Register Berkas *</label>
+						<input type="date" name="tanggal_register" id="tanggalRegister" class="form-control" readonly required>
+						<small class="form-text text-info">Tanggal register berkas (otomatis hari ini)</small>
+					</div>
+
 					<div class="row">
 						<div class="col-md-6">
 							<div class="form-group">
@@ -485,6 +499,12 @@
 						<label>Tanggal Putusan *</label>
 						<input type="date" name="tanggal_putusan" id="editTanggalPutusan" class="form-control" readonly required>
 						<small class="form-text text-muted">Tanggal putusan tidak dapat diubah</small>
+					</div>
+
+					<div class="form-group">
+						<label>Tanggal Register Berkas *</label>
+						<input type="date" name="tanggal_register" id="editTanggalRegister" class="form-control" readonly required>
+						<small class="form-text text-muted">Tanggal register berkas tidak dapat diubah</small>
 					</div>
 
 					<div class="row">
@@ -832,6 +852,9 @@
 		$('#nomorPerkara').data('selected-from-sipp', false);
 		$('#perkaraIdSipp').val('');
 
+		// Set tanggal register to today
+		$('#tanggalRegister').val(new Date().toISOString().split('T')[0]);
+
 		// Reset visual indicators
 		updateFieldLabels(false);
 
@@ -1013,6 +1036,7 @@
 		// Clear previous data
 		$('#viewNomorPerkara').text('-');
 		$('#viewTanggalPutusan').text('-');
+		$('#viewTanggalRegister').text('-');
 		$('#viewJenisPerkara').text('-');
 		$('#viewStatusBerkas').text('-');
 		$('#viewTanggalMasuk').text('-');
@@ -1043,6 +1067,7 @@
 					// Populate data
 					$('#viewNomorPerkara').text(berkas.nomor_perkara || '-');
 					$('#viewTanggalPutusan').text(berkas.tanggal_putusan ? formatDate(berkas.tanggal_putusan) : '-');
+					$('#viewTanggalRegister').text(berkas.tanggal_register ? formatDate(berkas.tanggal_register) : '-');
 					$('#viewJenisPerkara').text(berkas.jenis_perkara || '-');
 
 					// Status dengan badge
@@ -1156,6 +1181,7 @@
 
 					// Pastikan field readonly tetap readonly (tanpa disabled agar data terkirim)
 					$('#editTanggalPutusan').prop('readonly', true);
+					$('#editTanggalRegister').prop('readonly', true);
 					$('#editJenisPerkara').prop('readonly', true);
 					$('#editMajelisHakim').prop('readonly', true);
 					$('#editPaniteraPengganti').prop('readonly', true);
@@ -1164,6 +1190,7 @@
 					// Set data
 					$('#editNomorPerkara').val(berkas.nomor_perkara || '');
 					$('#editTanggalPutusan').val(berkas.tanggal_putusan || '');
+					$('#editTanggalRegister').val(berkas.tanggal_register || '');
 					$('#editJenisPerkara').val(berkas.jenis_perkara || '');
 					$('#editStatusBerkas').val(berkas.status_berkas || 'PANITERA_PENGGANTI');
 					$('#editMajelisHakim').val(berkas.majelis_hakim || '');

@@ -269,7 +269,7 @@
 		<div class="modal-content">
 			<div class="modal-header bg-primary text-white">
 				<h5 class="modal-title" id="modalPilihTanggalLabel">
-					<i class="fas fa-calendar-alt"></i> Pilih Tanggal Berkas Masuk
+					<i class="fas fa-calendar-alt"></i> Pilih Tanggal Register Berkas
 				</h5>
 				<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
@@ -277,10 +277,10 @@
 			</div>
 			<div class="modal-body">
 				<div class="form-group">
-					<label for="tanggalMasukNotelen">Tanggal Berkas Masuk:</label>
-					<input type="date" class="form-control" id="tanggalMasukNotelen" value="">
+					<label for="tanggalRegister">Tanggal Register Berkas:</label>
+					<input type="date" class="form-control" id="tanggalRegister" value="" readonly>
 					<small class="form-text text-muted">
-						Kosongkan untuk menggunakan tanggal hari ini
+						Tanggal otomatis hari ini (tidak dapat diubah)
 					</small>
 				</div>
 				<div class="alert alert-info">
@@ -487,8 +487,8 @@
 
 	// Masukkan ke berkas langsung dengan pilihan tanggal
 	function masukkanKeBerkasLangsung(perkaraId, nomorPerkara) {
-		// Set current date as default
-		$('#tanggalMasukNotelen').val(new Date().toISOString().split('T')[0]);
+		// Set current date as default and make it readonly
+		$('#tanggalRegister').val(new Date().toISOString().split('T')[0]);
 
 		// Store current operation data
 		$('#modalPilihTanggal').data('perkara-id', perkaraId);
@@ -500,26 +500,50 @@
 	}
 
 	// Proses masukkan ke berkas
-	function prosesmasukkanKeBerkas(perkaraId, nomorPerkara, tanggalMasukNotelen = null) {
+	function prosesmasukkanKeBerkas(perkaraId, nomorPerkara, tanggalRegister = null) {
+		// Show loading indicator
+		Swal.fire({
+			title: 'Memproses...',
+			html: 'Sedang memasukkan berkas, harap tunggu...',
+			allowOutsideClick: false,
+			allowEscapeKey: false,
+			showConfirmButton: false,
+			didOpen: () => {
+				Swal.showLoading();
+			}
+		});
+
 		$.ajax({
 			url: getAjaxUrl('notelen/ajax_masukkan_berkas_otomatis'),
 			type: 'POST',
 			data: {
 				perkara_id: perkaraId,
 				nomor_perkara: nomorPerkara,
-				tanggal_masuk_notelen: tanggalMasukNotelen
+				tanggal_register: tanggalRegister
 			},
 			dataType: 'json',
 			success: function(response) {
-				if (response.success) {
+				console.log('Response masukkan berkas:', response);
+				console.log('Response type:', typeof response);
+				console.log('Response success value:', response ? response.success : 'undefined');
+
+				// Pastikan response ada dan memiliki property success yang true
+				if (response && (response.success === true || response.success === 'true')) {
+					// Tampilkan notifikasi sukses yang jelas
 					Swal.fire({
 						icon: 'success',
-						title: 'Berhasil!',
+						title: '✅ Berhasil!',
 						html: `
-							<p>Perkara <strong>${nomorPerkara}</strong> berhasil dimasukkan ke berkas.</p>
-							<hr>
-							<p class="mb-2"><i class="fas fa-question-circle text-info"></i> Ingin melihat data yang baru saja dimasukkan?</p>
+							<div class="text-center">
+								<h5 class="text-success mb-3">Perkara berhasil dimasukkan ke berkas!</h5>
+								<p><strong>Nomor Perkara:</strong> ${nomorPerkara}</p>
+								<p><strong>Tanggal Register:</strong> ${tanggalRegister || 'Hari ini'}</p>
+								<hr>
+								<p class="mb-2"><i class="fas fa-question-circle text-info"></i> Ingin melihat data yang baru saja dimasukkan?</p>
+							</div>
 						`,
+						timer: 5000,
+						timerProgressBar: true,
 						showCancelButton: true,
 						confirmButtonText: '<i class="fas fa-eye"></i> Lihat Data Berkas',
 						cancelButtonText: '<i class="fas fa-check"></i> Tetap di Sini',
@@ -535,11 +559,15 @@
 					// Refresh data
 					loadPerkaraPutusHarian();
 				} else {
+					// Tampilkan error message yang jelas
+					const errorMessage = response && response.message ? response.message : 'Terjadi kesalahan saat memasukkan berkas';
 					Swal.fire({
 						icon: 'error',
-						title: 'Gagal!',
-						text: response.message || 'Terjadi kesalahan saat memasukkan berkas'
+						title: '❌ Gagal!',
+						text: errorMessage,
+						confirmButtonColor: '#dc3545'
 					});
+					console.error('Proses gagal:', response);
 				}
 			},
 			error: function() {
@@ -567,7 +595,7 @@
 		}
 
 		// Set current date as default
-		$('#tanggalMasukNotelen').val(new Date().toISOString().split('T')[0]);
+		$('#tanggalRegister').val(new Date().toISOString().split('T')[0]);
 
 		// Store current operation data
 		$('#modalPilihTanggal').data('data-array', belumMasuk);
@@ -578,30 +606,56 @@
 	}
 
 	// Proses masukkan semua berkas
-	function prosesMasukkanSemuaBerkas(dataArray, tanggalMasukNotelen = null) {
+	function prosesMasukkanSemuaBerkas(dataArray, tanggalRegister = null) {
 		const perkaraIds = dataArray.map(item => item.perkara_id);
+
+		// Show loading indicator
+		Swal.fire({
+			title: 'Memproses Bulk Insert...',
+			html: `Sedang memasukkan ${dataArray.length} berkas, harap tunggu...`,
+			allowOutsideClick: false,
+			allowEscapeKey: false,
+			showConfirmButton: false,
+			didOpen: () => {
+				Swal.showLoading();
+			}
+		});
 
 		$.ajax({
 			url: getAjaxUrl('notelen/ajax_masukkan_berkas_bulk'),
 			type: 'POST',
 			data: {
 				perkara_ids: perkaraIds,
-				tanggal_masuk_notelen: tanggalMasukNotelen
+				tanggal_register: tanggalRegister
 			},
 			dataType: 'json',
 			success: function(response) {
-				if (response.success) {
-					const totalInserted = response.total_inserted || 0;
-					const tanggalFormatted = tanggalMasukNotelen ? formatDateIndonesia(tanggalMasukNotelen) : 'hari ini';
+				console.log('Response masukkan berkas bulk:', response);
+				console.log('Response type:', typeof response);
+				console.log('Response success value:', response ? response.success : 'undefined');
 
+				// Pastikan response ada dan memiliki property success yang true
+				if (response && (response.success === true || response.success === 'true')) {
+					const totalInserted = response.total_inserted || 0;
+					const tanggalFormatted = tanggalRegister ? formatDateIndonesia(tanggalRegister) : 'hari ini';
+
+					// Tampilkan notifikasi sukses yang jelas
 					Swal.fire({
 						icon: 'success',
-						title: 'Berhasil!',
+						title: '✅ Berhasil!',
 						html: `
-							<p><strong>${totalInserted}</strong> perkara berhasil dimasukkan ke berkas untuk tanggal <strong>${tanggalFormatted}</strong>.</p>
-							<hr>
-							<p class="mb-2"><i class="fas fa-question-circle text-info"></i> Ingin melihat semua data berkas yang baru dimasukkan?</p>
+							<div class="text-center">
+								<h5 class="text-success mb-3">Berkas berhasil dimasukkan!</h5>
+								<div class="alert alert-success">
+									<strong>${totalInserted} perkara</strong> berhasil dimasukkan ke berkas
+								</div>
+								<p><strong>Tanggal Register:</strong> ${tanggalFormatted}</p>
+								<hr>
+								<p class="mb-2"><i class="fas fa-question-circle text-info"></i> Ingin melihat semua data berkas yang baru dimasukkan?</p>
+							</div>
 						`,
+						timer: 6000,
+						timerProgressBar: true,
 						showDenyButton: true,
 						showCancelButton: true,
 						confirmButtonText: '<i class="fas fa-list"></i> Lihat Semua Data Berkas',
@@ -617,7 +671,7 @@
 						} else if (result.isDenied) {
 							// Lihat data berkas hari ini saja
 							const today = new Date().toISOString().split('T')[0];
-							const filterDate = tanggalMasukNotelen || today;
+							const filterDate = tanggalRegister || today;
 							window.location.href = getAjaxUrl('notelen/berkas_template') + '?tanggal_dari=' + filterDate + '&tanggal_sampai=' + filterDate + '&from=auto_entry';
 						}
 					});
@@ -625,18 +679,27 @@
 					// Refresh data
 					loadPerkaraPutusHarian();
 				} else {
+					// Tampilkan error message yang jelas
+					const errorMessage = response && response.message ? response.message : 'Terjadi kesalahan saat memasukkan berkas';
 					Swal.fire({
 						icon: 'error',
-						title: 'Gagal!',
-						text: response.message || 'Terjadi kesalahan saat memasukkan berkas'
+						title: '❌ Gagal!',
+						text: errorMessage,
+						confirmButtonColor: '#dc3545'
 					});
+					console.error('Proses bulk gagal:', response);
 				}
 			},
-			error: function() {
+			error: function(xhr, status, error) {
+				console.error('AJAX Error masukkan berkas bulk:', xhr.responseText, status, error);
 				Swal.fire({
 					icon: 'error',
-					title: 'Error!',
-					text: 'Terjadi kesalahan koneksi ke server'
+					title: '🔴 Error Koneksi!',
+					html: `
+						<p>Terjadi kesalahan koneksi ke server saat memasukkan berkas bulk</p>
+						<small class="text-muted">Error: ${error}</small>
+					`,
+					confirmButtonColor: '#dc3545'
 				});
 			}
 		});
@@ -645,7 +708,7 @@
 	// Event handler untuk konfirmasi di modal
 	$(document).on('click', '#btnKonfirmasiMasukkan', function() {
 		const operation = $('#modalPilihTanggal').data('operation');
-		const tanggalMasukNotelen = $('#tanggalMasukNotelen').val();
+		const tanggalRegister = $('#tanggalRegister').val();
 
 		// Close modal first
 		$('#modalPilihTanggal').modal('hide');
@@ -653,10 +716,10 @@
 		if (operation === 'single') {
 			const perkaraId = $('#modalPilihTanggal').data('perkara-id');
 			const nomorPerkara = $('#modalPilihTanggal').data('nomor-perkara');
-			prosesmasukkanKeBerkas(perkaraId, nomorPerkara, tanggalMasukNotelen);
+			prosesmasukkanKeBerkas(perkaraId, nomorPerkara, tanggalRegister);
 		} else if (operation === 'bulk') {
 			const dataArray = $('#modalPilihTanggal').data('data-array');
-			prosesMasukkanSemuaBerkas(dataArray, tanggalMasukNotelen);
+			prosesMasukkanSemuaBerkas(dataArray, tanggalRegister);
 		}
 	});
 

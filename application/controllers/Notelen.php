@@ -1472,11 +1472,17 @@ class Notelen extends CI_Controller
 	 */
 	public function ajax_masukkan_berkas_otomatis()
 	{
+		// Clear output buffer
+		while (ob_get_level()) {
+			ob_end_clean();
+		}
+
 		header('Content-Type: application/json; charset=utf-8');
+		header('Cache-Control: no-cache, must-revalidate');
 
 		$perkara_id = $this->input->post('perkara_id');
 		$nomor_perkara = trim($this->input->post('nomor_perkara'));
-		$tanggal_masuk_notelen = $this->input->post('tanggal_masuk_notelen'); // Optional date
+		$tanggal_register = $this->input->post('tanggal_register'); // Optional date
 
 		if (!$perkara_id || !$nomor_perkara) {
 			echo json_encode(array(
@@ -1487,7 +1493,11 @@ class Notelen extends CI_Controller
 		}
 
 		try {
-			$result = $this->notelen->insert_berkas_from_perkara_otomatis($perkara_id, $nomor_perkara, $tanggal_masuk_notelen);
+			$result = $this->notelen->insert_berkas_from_perkara_otomatis($perkara_id, $nomor_perkara, $tanggal_register);
+
+			// Log untuk debugging
+			log_message('debug', 'Insert berkas result: ' . json_encode($result));
+
 			echo json_encode($result);
 		} catch (Exception $e) {
 			log_message('error', 'Error masukkan berkas otomatis: ' . $e->getMessage());
@@ -1505,10 +1515,16 @@ class Notelen extends CI_Controller
 	 */
 	public function ajax_masukkan_berkas_bulk()
 	{
+		// Clear output buffer
+		while (ob_get_level()) {
+			ob_end_clean();
+		}
+
 		header('Content-Type: application/json; charset=utf-8');
+		header('Cache-Control: no-cache, must-revalidate');
 
 		$perkara_ids = $this->input->post('perkara_ids');
-		$tanggal_masuk_notelen = $this->input->post('tanggal_masuk_notelen'); // Optional date
+		$tanggal_register = $this->input->post('tanggal_register'); // Optional date
 
 		if (!$perkara_ids || !is_array($perkara_ids)) {
 			echo json_encode(array(
@@ -1535,7 +1551,11 @@ class Notelen extends CI_Controller
 		}
 
 		try {
-			$result = $this->notelen->insert_berkas_bulk_from_perkara_otomatis($valid_ids, $tanggal_masuk_notelen);
+			$result = $this->notelen->insert_berkas_bulk_from_perkara_otomatis($valid_ids, $tanggal_register);
+
+			// Log untuk debugging
+			log_message('debug', 'Insert berkas bulk result: ' . json_encode($result));
+
 			echo json_encode($result);
 		} catch (Exception $e) {
 			log_message('error', 'Error masukkan berkas bulk: ' . $e->getMessage());
