@@ -519,7 +519,7 @@
 					<div class="form-group">
 						<label>Tanggal Register Berkas *</label>
 						<input type="date" name="tanggal_register" id="editTanggalRegister" class="form-control" readonly required>
-						<small class="form-text text-info">Tanggal register berkas</small>
+						<small class="form-text text-muted">Tanggal register berkas tidak dapat diubah</small>
 					</div>
 
 					<div class="form-group">
@@ -565,7 +565,7 @@
 					<div class="form-group">
 						<label>Jurusita</label>
 						<input type="text" name="jurusita" id="editJurusita" class="form-control" readonly>
-						<small class="form-text text-info">jurusita tidak dapat diubah</small>
+						<small class="form-text text-muted">Jurusita tidak dapat diubah</small>
 					</div>
 
 					<div class="form-group">
@@ -1213,14 +1213,14 @@
 		// Set field readonly untuk data yang tidak boleh diubah
 		$('#editTanggalPutusan').prop('readonly', true);
 		$('#editNomorPerkara').prop('readonly', true);
+		$('#editTanggalRegister').prop('readonly', true);
 		$('#editJenisPerkara').prop('readonly', true);
 		$('#editMajelisHakim').prop('readonly', true);
 		$('#editPaniteraPengganti').prop('readonly', true);
+		$('#editJurusita').prop('readonly', true);
 
 		// Field yang bisa diedit
-		$('#editTanggalRegister').prop('readonly', false);
 		$('#editTanggalMasuk').prop('readonly', false);
-		$('#editJurusita').prop('readonly', false);
 		$('#editStatusBerkas').prop('disabled', false);
 
 		// Load data berkas untuk edit
