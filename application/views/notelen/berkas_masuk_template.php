@@ -221,12 +221,12 @@
 													</td>
 													<td><?= isset($berkas->jenis_perkara) ? $berkas->jenis_perkara : '-' ?></td>
 													<td>
-														<?php if (isset($berkas->tanggal_masuk_notelen)): ?>
-															<?= date('d/m/Y', strtotime($berkas->tanggal_masuk_notelen)) ?>
-														<?php else: ?>
-															<?= date('d/m/Y') ?>
-														<?php endif; ?>
-													</td>
+    <?php if (isset($berkas->tanggal_masuk_notelen) && !empty($berkas->tanggal_masuk_notelen)): ?>
+        <?= date('d/m/Y', strtotime($berkas->tanggal_masuk_notelen)) ?>
+    <?php else: ?>
+        <span class="text-muted">Belum diisi</span>
+    <?php endif; ?>
+</td>
 													<td>
 														<?php
 														$status = isset($berkas->status_berkas) ? $berkas->status_berkas : 'PANITERA_PENGGANTI';
