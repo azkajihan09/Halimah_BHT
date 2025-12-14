@@ -206,27 +206,31 @@
 														<div class="font-weight-bold text-primary"><?= isset($berkas->nomor_perkara) ? $berkas->nomor_perkara : '-' ?></div>
 													</td>
 													<td>
-														<?php if (isset($berkas->tanggal_putusan)): ?>
-															<?= date('d/m/Y', strtotime($berkas->tanggal_putusan)) ?>
+														<?php if (isset($berkas->tanggal_putusan) && !empty($berkas->tanggal_putusan)): ?>
+															<span class="badge badge-warning"><?= date('d/m/Y', strtotime($berkas->tanggal_putusan)) ?></span>
 														<?php else: ?>
 															<span class="text-muted">-</span>
 														<?php endif; ?>
 													</td>
 													<td>
-														<?php if (isset($berkas->tanggal_register)): ?>
+														<?php if (isset($berkas->tanggal_register) && !empty($berkas->tanggal_register)): ?>
 															<span class="badge badge-info"><?= date('d/m/Y', strtotime($berkas->tanggal_register)) ?></span>
 														<?php else: ?>
 															<span class="text-muted">-</span>
 														<?php endif; ?>
 													</td>
-													<td><?= isset($berkas->jenis_perkara) ? $berkas->jenis_perkara : '-' ?></td>
 													<td>
-    <?php if (isset($berkas->tanggal_masuk_notelen) && !empty($berkas->tanggal_masuk_notelen)): ?>
-        <?= date('d/m/Y', strtotime($berkas->tanggal_masuk_notelen)) ?>
-    <?php else: ?>
-        <span class="text-muted">Belum diisi</span>
-    <?php endif; ?>
-</td>
+														<small class="text-muted" style="font-size: 0.85em;">
+															<?= isset($berkas->jenis_perkara) && !empty($berkas->jenis_perkara) ? $berkas->jenis_perkara : '-' ?>
+														</small>
+													</td>
+													<td>
+														<?php if (isset($berkas->tanggal_masuk_notelen) && !empty($berkas->tanggal_masuk_notelen)): ?>
+															<span class="badge badge-success"><?= date('d/m/Y', strtotime($berkas->tanggal_masuk_notelen)) ?></span>
+														<?php else: ?>
+															<span class="text-muted"><i class="fas fa-clock"></i> Belum diisi</span>
+														<?php endif; ?>
+													</td>
 													<td>
 														<?php
 														$status = isset($berkas->status_berkas) ? $berkas->status_berkas : 'PANITERA_PENGGANTI';
@@ -283,19 +287,19 @@
 													</td>
 													<td>
 														<div class="btn-group" role="group">
-															<button type="button" class="btn btn-info btn-sm"
-																onclick="viewBerkasDetail(<?= $berkas->id ?>)"
-																title="Lihat Detail">
+															<button type="button" class="btn btn-info btn-sm" 
+																	onclick="viewBerkasDetail(<?= $berkas->id ?>)" 
+																	title="Lihat Detail">
 																<i class="fas fa-eye"></i>
 															</button>
-															<button type="button" class="btn btn-warning btn-sm"
-																onclick="openEditBerkasModal(<?= $berkas->id ?>)"
-																title="Edit berkas">
+															<button type="button" class="btn btn-warning btn-sm" 
+																	onclick="openEditBerkasModal(<?= $berkas->id ?>)" 
+																	title="Edit Berkas">
 																<i class="fas fa-edit"></i>
 															</button>
-															<button type="button" class="btn btn-danger btn-sm"
-																onclick="deleteBerkas(<?= $berkas->id ?>, '<?= isset($berkas->nomor_perkara) ? $berkas->nomor_perkara : '' ?>')"
-																title="Hapus berkas">
+															<button type="button" class="btn btn-danger btn-sm" 
+																	onclick="deleteBerkas(<?= $berkas->id ?>, '<?= isset($berkas->nomor_perkara) ? addslashes($berkas->nomor_perkara) : '' ?>')" 
+																	title="Hapus Berkas">
 																<i class="fas fa-trash"></i>
 															</button>
 														</div>
@@ -304,10 +308,15 @@
 											<?php endforeach; ?>
 										<?php else: ?>
 											<tr>
-												<td colspan="10" class="text-center text-muted py-4">
-													<i class="fas fa-folder-open fa-3x mb-3"></i><br>
-													<h4>Belum Ada Data Berkas</h4>
-													<p>Klik tombol "Tambah Berkas" atau "Sync SIPP" untuk menambah data</p>
+												<td colspan="12" class="text-center text-muted py-5">
+													<div class="empty-state">
+														<i class="fas fa-folder-open fa-4x mb-3 text-secondary"></i>
+														<h4 class="text-secondary">Belum Ada Data Berkas</h4>
+														<p class="text-muted">Gunakan fitur <strong>"Tambah Perkara Harian"</strong> untuk menambah data berkas otomatis</p>
+														<a href="<?= base_url('notelen/berkas_masuk_otomatis') ?>" class="btn btn-primary btn-sm mt-2">
+															<i class="fas fa-plus"></i> Tambah Berkas Otomatis
+														</a>
+													</div>
 												</td>
 											</tr>
 										<?php endif; ?>
@@ -509,7 +518,7 @@
 
 					<div class="form-group">
 						<label>Tanggal Register Berkas *</label>
-						<input type="date" name="tanggal_register" id="editTanggalRegister" class="form-control" required>
+						<input type="date" name="tanggal_register" id="editTanggalRegister" class="form-control" readonly required>
 						<small class="form-text text-info">Tanggal register berkas</small>
 					</div>
 
@@ -555,8 +564,8 @@
 
 					<div class="form-group">
 						<label>Jurusita</label>
-						<input type="text" name="jurusita" id="editJurusita" class="form-control">
-						<small class="form-text text-info">Nama jurusita yang menangani</small>
+						<input type="text" name="jurusita" id="editJurusita" class="form-control" readonly>
+						<small class="form-text text-info">jurusita tidak dapat diubah</small>
 					</div>
 
 					<div class="form-group">
@@ -720,6 +729,32 @@
 
 <!-- JavaScript untuk SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Custom Styles untuk Empty State -->
+<style>
+.empty-state {
+	padding: 2rem 1rem;
+}
+
+.empty-state h4 {
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+}
+
+.empty-state p {
+	margin-bottom: 0.5rem;
+	font-size: 0.9rem;
+}
+
+.table td {
+	vertical-align: middle;
+}
+
+.badge {
+	font-size: 0.8rem;
+	padding: 0.35rem 0.5rem;
+}
+</style>
 
 <script>
 	$(document).ready(function() {
@@ -1177,6 +1212,7 @@
 
 		// Set field readonly untuk data yang tidak boleh diubah
 		$('#editTanggalPutusan').prop('readonly', true);
+		$('#editNomorPerkara').prop('readonly', true);
 		$('#editJenisPerkara').prop('readonly', true);
 		$('#editMajelisHakim').prop('readonly', true);
 		$('#editPaniteraPengganti').prop('readonly', true);
@@ -1185,6 +1221,7 @@
 		$('#editTanggalRegister').prop('readonly', false);
 		$('#editTanggalMasuk').prop('readonly', false);
 		$('#editJurusita').prop('readonly', false);
+		$('#editStatusBerkas').prop('disabled', false);
 
 		// Load data berkas untuk edit
 		loadBerkasForEdit(berkas_id);
@@ -1204,24 +1241,23 @@
 				if (response.success && response.berkas) {
 					var berkas = response.berkas;
 
-					// Pastikan field readonly tetap readonly (tanpa disabled agar data terkirim)
-					$('#editTanggalPutusan').prop('readonly', true);
-					$('#editTanggalRegister').prop('readonly', true);
-					$('#editJenisPerkara').prop('readonly', true);
-					$('#editMajelisHakim').prop('readonly', true);
-					$('#editPaniteraPengganti').prop('readonly', true);
-					$('#editJurusita').prop('readonly', true);
-
-					// Set data
+					// JANGAN ubah property readonly di sini - sudah diset di openEditBerkasModal()
+					// Hanya set data saja
 					$('#editNomorPerkara').val(berkas.nomor_perkara || '');
 					$('#editTanggalPutusan').val(berkas.tanggal_putusan || '');
 					$('#editTanggalRegister').val(berkas.tanggal_register || '');
+					$('#editTanggalMasuk').val(berkas.tanggal_masuk_notelen || '');
 					$('#editJenisPerkara').val(berkas.jenis_perkara || '');
 					$('#editStatusBerkas').val(berkas.status_berkas || 'PANITERA_PENGGANTI');
 					$('#editMajelisHakim').val(berkas.majelis_hakim || '');
 					$('#editPaniteraPengganti').val(berkas.panitera_pengganti || '');
 					$('#editJurusita').val(berkas.jurusita || '');
 					$('#editCatatanNotelen').val(berkas.catatan_notelen || '');
+					
+					console.log('Data loaded successfully:', {
+						tanggal_register: berkas.tanggal_register,
+						tanggal_masuk_notelen: berkas.tanggal_masuk_notelen
+					});
 				} else {
 					Swal.fire({
 						icon: 'error',
