@@ -287,10 +287,15 @@
 													</td>
 													<td>
 														<div class="btn-group" role="group">
-															<button type="button" class="btn btn-info btn-sm" 
+															<!-- <button type="button" class="btn btn-info btn-sm" 
 																	onclick="viewBerkasDetail(<?= $berkas->id ?>)" 
 																	title="Lihat Detail">
 																<i class="fas fa-eye"></i>
+															</button> -->
+															<button type="button" class="btn btn-success btn-sm" 
+																	onclick="hitungSelisihHari(<?= $berkas->id ?>, '<?= $berkas->tanggal_register ?>', '<?= $berkas->tanggal_masuk_notelen ?>')" 
+																	title="Hitung Selisih Hari">
+																<i class="fas fa-calculator"></i>
 															</button>
 															<button type="button" class="btn btn-warning btn-sm" 
 																	onclick="openEditBerkasModal(<?= $berkas->id ?>)" 
@@ -1568,6 +1573,81 @@
 			day: 'numeric'
 		};
 		return date.toLocaleDateString('id-ID', options);
+	}
+
+	// Function untuk menghitung selisih hari
+	function hitungSelisihHari(berkas_id, tanggal_register, tanggal_masuk_notelen) {
+		var selisihHari = 0;
+		var statusText = '';
+		var iconType = '';
+		var alertType = '';
+		
+		if (!tanggal_register) {
+			Swal.fire({
+				icon: 'warning',
+				title: 'Data Tidak Lengkap',
+				text: 'Tanggal register berkas tidak tersedia'
+			});
+			return;
+		}
+		
+		if (!tanggal_masuk_notelen || tanggal_masuk_notelen === 'null' || tanggal_masuk_notelen === '') {
+			selisihHari = 0;
+			statusText = 'Berkas belum masuk ke notelen';
+			iconType = 'warning';
+			alertType = 'warning';
+		} else {
+			// Hitung selisih hari
+			var dateRegister = new Date(tanggal_register);
+			var dateMasuk = new Date(tanggal_masuk_notelen);
+			var diffTime = dateMasuk - dateRegister;
+			selisihHari = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+			
+			if (selisihHari < 0) {
+				statusText = 'Tanggal masuk notelen lebih awal dari tanggal register';
+				iconType = 'warning';
+				alertType = 'warning';
+			} else if (selisihHari === 0) {
+				statusText = 'Berkas masuk notelen di hari yang sama';
+				iconType = 'success';
+				alertType = 'success';
+			} else {
+				statusText = 'Berkas masuk notelen ' + selisihHari + ' hari setelah register';
+				iconType = 'info';
+				alertType = 'info';
+			}
+		}
+		
+		// Format tanggal untuk ditampilkan
+		var tanggalRegisterFormat = tanggal_register ? formatDate(tanggal_register) : '-';
+		var tanggalMasukFormat = (tanggal_masuk_notelen && tanggal_masuk_notelen !== 'null') ? formatDate(tanggal_masuk_notelen) : 'Belum diisi';
+		
+		Swal.fire({
+			icon: iconType,
+			title: 'Perhitungan Selisih Hari',
+			html: `
+				<div class="text-left">
+					<div class="alert alert-${alertType}">
+						<strong>Selisih Hari: ${selisihHari} hari</strong>
+					</div>
+					<hr>
+					<div class="row">
+						<div class="col-6">
+							<strong>Tanggal Register:</strong><br>
+							<span class="badge badge-primary">${tanggalRegisterFormat}</span>
+						</div>
+						<div class="col-6">
+							<strong>Tanggal Masuk Notelen:</strong><br>
+							<span class="badge badge-${tanggal_masuk_notelen && tanggal_masuk_notelen !== 'null' ? 'success' : 'secondary'}">${tanggalMasukFormat}</span>
+						</div>
+					</div>
+					<hr>
+					<p class="text-muted small mb-0">${statusText}</p>
+				</div>
+			`,
+			confirmButtonText: 'Tutup',
+			width: '500px'
+		});
 	}
 </script>
 
