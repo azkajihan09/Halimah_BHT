@@ -12,7 +12,7 @@ CREATE TABLE `berkas_masuk` (
     `perkara_id_sipp` int(11) NOT NULL,
     `jenis_perkara` varchar(100) NULL,
     `tanggal_putusan` date NOT NULL,
-    `tanggal_register` date NOT NULL,
+    `tanggal_register` date NULL,
     `tanggal_masuk_notelen` date NULL COMMENT 'Tanggal berkas masuk notelen - harus diisi manual, tidak auto-fill',
     `majelis_hakim` text NULL,
     `panitera_pengganti` varchar(255) NULL,
