@@ -35,6 +35,82 @@ CREATE TABLE `berkas_masuk` (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- =============================================
+-- TABEL USERS (SISTEM LOGIN)
+
+-- =============================================
+CREATE TABLE `users` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `username` varchar(50) NOT NULL,
+    `password` varchar(255) NOT NULL,
+    `email` varchar(100) NULL,
+    `full_name` varchar(100) NOT NULL,
+    `user_level` enum(
+        'admin',
+        'staff',
+        'panitera_pengganti'
+    ) NOT NULL DEFAULT 'staff',
+    `is_active` tinyint(1) NOT NULL DEFAULT 1,
+    `last_login` datetime NULL,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `username` (`username`),
+    UNIQUE KEY `email` (`email`),
+    INDEX `idx_user_level` (`user_level`),
+    INDEX `idx_is_active` (`is_active`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Insert default users
+INSERT INTO
+    `users` (
+        `username`,
+        `password`,
+        `email`,
+        `full_name`,
+        `user_level`
+    )
+VALUES (
+        'admin',
+        '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+        'admin@pengadilan.com',
+        'Administrator System',
+        'admin'
+    ),
+    (
+        'staff1',
+        '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+        'staff1@pengadilan.com',
+        'Staff Notelen 1',
+        'staff'
+    ),
+    (
+        'panitera1',
+        '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+        'panitera1@pengadilan.com',
+        'Panitera Pengganti 1',
+        'panitera_pengganti'
+    );
+-- Default password untuk semua: 'password'
+
+-- =============================================
+-- TABEL USER SESSIONS (OPSIONAL)
+-- =============================================
+CREATE TABLE `user_sessions` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `user_id` int(11) NOT NULL,
+    `session_id` varchar(128) NOT NULL,
+    `ip_address` varchar(45) NOT NULL,
+    `user_agent` text NULL,
+    `last_activity` int(11) NOT NULL,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_session_id` (`session_id`),
+    INDEX `idx_last_activity` (`last_activity`),
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- =============================================
 -- TABEL BERKAS PBT (PEMBACAAN BERITA TALAK)
 -- =============================================
 CREATE TABLE `berkas_pbt` (

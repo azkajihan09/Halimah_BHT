@@ -12,7 +12,13 @@ class Notelen extends CI_Controller
 		parent::__construct();
 		$this->load->library('session');
 		$this->load->model('Notelen_model', 'notelen');
-		$this->load->helper(array('url', 'form'));
+		$this->load->helper(array('url', 'form', 'auth'));
+
+		// Require login for all methods
+		require_login();
+
+		// Check if user has permission to access berkas
+		require_permission('view_berkas');
 	}
 
     // ===============================================

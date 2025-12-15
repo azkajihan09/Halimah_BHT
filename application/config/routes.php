@@ -85,6 +85,10 @@ $route['test/bht/template'] = 'bht_reminder_test/test_with_template';
 
 // ========== ROUTES UNTUK SISTEM NOTELEN (BERKAS MASUK) ==========
 
+// Route untuk Admin Dashboard
+$route['admin/dashboard'] = 'dashboard/admin';
+$route['admin'] = 'dashboard/admin';
+
 // Route untuk Notelen System  
 $route['notelen'] = 'notelen/index';
 $route['notelen/berkas-masuk'] = 'notelen/index';
