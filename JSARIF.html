@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SI-JSP | Pengadilan Agama Amuntai</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet" href="http://192.168.1.11/Halimah_BHT/assets/plugins/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="http://192.168.1.11/Halimah_BHT/assets/dist/css/adminlte.min.css">
+    
+    <style>
+        .navbar-green { background-color: #046354; color: white; }
+        .main-sidebar { background-color: #046354; background-image: linear-gradient(to bottom, #046354, #024a3e); }
+        .card-primary.card-outline { border-top: 3px solid #046354; }
+        .btn-primary { background-color: #046354; border-color: #035045; }
+        .status-clickable { cursor: pointer; transition: 0.2s; border: 1px solid rgba(0,0,0,0.1); }
+        .status-clickable:hover { transform: scale(1.05); }
+        /* Memperjelas fokus input saat menggunakan Enter */
+        .form-control:focus { border-color: #046354; box-shadow: 0 0 5px rgba(4,99,84,0.5); }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+    <nav class="main-header navbar navbar-expand navbar-green navbar-dark">
+        <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a></li>
+            <li class="nav-item d-none d-sm-inline-block"><a href="#" class="nav-link"><i class="fas fa-home mr-1"></i> Beranda Monitoring</a></li>
+        </ul>
+    </nav>
+
+    <aside class="main-sidebar sidebar-dark-green elevation-4">
+        <a href="#" class="brand-link navbar-green">
+            <img src="http://192.168.1.11/Halimah_BHT/assets/dist/img/logo-mahkamah-agung.png" class="brand-image img-circle elevation-2">
+            <span class="brand-text font-weight-light">SI-JSP</span>
+        </a>
+        <div class="sidebar">
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column">
+                    <li class="nav-item"><a href="#" class="nav-link active"><i class="nav-icon fas fa-file-invoice"></i><p>Monitoring Perkara</p></a></li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <div class="content-wrapper">
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6"><h1 class="m-0 text-dark"><i class="fas fa-print mr-2"></i> Ekspor & Pantau Data</h1></div>
+                    <div class="col-sm-6 text-right">
+                        <button class="btn btn-success btn-sm" onclick="exportExcel()"><i class="fas fa-file-excel mr-1"></i> Excel</button>
+                        <button class="btn btn-danger btn-sm" onclick="exportPDF()"><i class="fas fa-file-pdf mr-1"></i> PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="content">
+            <div class="container-fluid">
+                <div class="card card-primary card-outline">
+                    <div class="card-header"><h3 class="card-title"><i class="fas fa-keyboard mr-1"></i> Input Data (Gunakan Enter)</h3></div>
+                    <form id="formTambah">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>No. Perkara</label>
+                                        <input type="text" name="no_perkara" class="form-control nav-input" placeholder=".../Pdt.G/..." required>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Klasifikasi</label>
+                                        <select class="form-control nav-input" id="kategori" onchange="filterJenis()">
+                                            <option value="Gugatan">Gugatan</option>
+                                            <option value="Permohonan">Permohonan</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Jenis</label>
+                                        <select name="jenis" id="jenis_perkara" class="form-control nav-input"></select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Para Pihak</label>
+                                        <input type="text" name="pihak" class="form-control nav-input" placeholder="Nama P vs T" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Alamat Objek/Pihak</label>
+                                        <input type="text" name="alamat" class="form-control nav-input" placeholder="Jl. Raya..." required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer text-right">
+                            <button type="submit" class="btn btn-primary" id="btnSimpan"><i class="fas fa-save mr-1"></i> Simpan (Ctrl+Enter)</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card card-primary card-outline">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-sm" id="tabelPerkara">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>No. Perkara</th>
+                                        <th>Jenis</th>
+                                        <th>Pihak</th>
+                                        <th>Alamat</th>
+                                        <th>Status</th>
+                                        <th>Update</th>
+                                        <th style="width: 90px">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal fade" id="statusModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header navbar-green text-white">
+                    <h4 class="modal-title"><i class="fas fa-tasks mr-2"></i> Update Status</h4>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <select id="selectStatus" class="form-control form-control-lg nav-input">
+                        <option value="Dipanggil">Dipanggil</option>
+                        <option value="Sidang Pertama">Sidang Pertama</option>
+                        <option value="Sidang Lanjutan">Sidang Lanjutan</option>
+                        <option value="Putusan">Putusan</option>
+                        <option value="PBT">PBT (Pemberitahuan)</option>
+                    </select>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary btn-block" onclick="simpanStatus()">Simpan Perubahan</button></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<script src="http://192.168.1.11/Halimah_BHT/assets/plugins/jquery/jquery.min.js"></script>
+<script src="http://192.168.1.11/Halimah_BHT/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="http://192.168.1.11/Halimah_BHT/assets/dist/js/adminlte.min.js"></script>
+
+<script>
+    const dataJenis = {
+        "Gugatan": ["Cerai Gugat", "Cerai Talak", "Gugatan Harta Bersama", "Hadhanah", "Nafkah", "Wali Adhal", "Gugatan Waris", "Ekonomi Syariah", "Lain-lain"],
+        "Permohonan": ["Dispensasi kawin", "Isbat nikah", "Izin poligami", "Penetapan ahli waris", "Perwalian anak", "Pengampuan", "Lain-lain"]
+    };
+
+    let daftarPerkara = JSON.parse(localStorage.getItem('jsp_v2_data')) || [];
+    let editIndex = -1;
+
+    // --- FITUR NAVIGASI KEYBOARD (ENTER) ---
+    $(document).on('keydown', '.nav-input', function(e) {
+        if (e.which === 13) { // Tombol Enter
+            e.preventDefault();
+            let inputs = $('.nav-input');
+            let idx = inputs.index(this);
+            if (idx === inputs.length - 1) {
+                $('#formTambah').submit(); // Submit jika sudah di input terakhir
+            } else {
+                inputs[idx + 1].focus(); // Pindah ke baris/kolom bawahnya
+            }
+        }
+    });
+
+    function filterJenis() {
+        let k = $('#kategori').val();
+        let s = $('#jenis_perkara');
+        s.empty();
+        dataJenis[k].forEach(v => s.append(`<option value="${v}">${v}</option>`));
+    }
+
+    function renderTabel() {
+        const tbody = $('#tabelPerkara tbody');
+        tbody.empty();
+        daftarPerkara.forEach((p, index) => {
+            let b = p.status === 'Dipanggil' ? 'badge-warning' : (p.status === 'Putusan' ? 'badge-success' : (p.status === 'PBT' ? 'badge-danger' : 'badge-info'));
+            tbody.append(`
+                <tr>
+                    <td><b>${p.no}</b></td>
+                    <td><small>${p.jenis}</small></td>
+                    <td>${p.pihak}</td>
+                    <td><small>${p.alamat}</small></td>
+                    <td><span class="badge ${b} status-clickable p-2" onclick="openStatus(${index})">${p.status}</span></td>
+                    <td><small>${p.update}</small></td>
+                    <td>
+                        <button class="btn btn-xs btn-info" onclick="prepareEdit(${index})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-xs btn-danger" onclick="hapusData(${index})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `);
+        });
+        localStorage.setItem('jsp_v2_data', JSON.stringify(daftarPerkara));
+    }
+
+    $('#formTambah').submit(function(e) {
+        e.preventDefault();
+        const data = {
+            no: $('input[name="no_perkara"]').val(),
+            jenis: $('#jenis_perkara').val(),
+            pihak: $('input[name="pihak"]').val(),
+            alamat: $('input[name="alamat"]').val(),
+            tgl: editIndex === -1 ? new Date().toLocaleDateString('id-ID') : daftarPerkara[editIndex].tgl,
+            status: editIndex === -1 ? "Dipanggil" : daftarPerkara[editIndex].status,
+            update: new Date().toLocaleString('id-ID')
+        };
+        if (editIndex === -1) daftarPerkara.unshift(data);
+        else { daftarPerkara[editIndex] = data; editIndex = -1; $('#btnSimpan').html('<i class="fas fa-save mr-1"></i> Simpan'); }
+        this.reset();
+        renderTabel();
+        $('.nav-input').first().focus();
+    });
+
+    function prepareEdit(index) {
+        editIndex = index;
+        const p = daftarPerkara[index];
+        $('input[name="no_perkara"]').val(p.no);
+        $('input[name="pihak"]').val(p.pihak);
+        $('input[name="alamat"]').val(p.alamat);
+        $('#btnSimpan').html('<i class="fas fa-sync mr-1"></i> Update');
+        window.scrollTo(0,0);
+    }
+
+    function hapusData(index) {
+        if(confirm('Hapus data?')) { daftarPerkara.splice(index, 1); renderTabel(); }
+    }
+
+    // --- FITUR EXPORT ---
+    function exportExcel() {
+        const ws = XLSX.utils.json_to_sheet(daftarPerkara);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Data_JSP");
+        XLSX.writeFile(wb, "Monitoring_JSP_" + new Date().toLocaleDateString() + ".xlsx");
+    }
+
+    function exportPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text("Laporan Monitoring Perkara JSP", 14, 15);
+        const rows = daftarPerkara.map(p => [p.no, p.jenis, p.pihak, p.alamat, p.status, p.update]);
+        doc.autoTable({ head: [['No Perkara', 'Jenis', 'Pihak', 'Alamat', 'Status', 'Update']], body: rows, startY: 20 });
+        doc.save("Laporan_JSP.pdf");
+    }
+
+    function openStatus(index) { activeStatusIndex = index; $('#statusModal').modal('show'); }
+    function simpanStatus() {
+        daftarPerkara[activeStatusIndex].status = $('#selectStatus').val();
+        daftarPerkara[activeStatusIndex].update = new Date().toLocaleString('id-ID');
+        $('#statusModal').modal('hide');
+        renderTabel();
+    }
+
+    $(document).ready(function() { filterJenis(); renderTabel(); });
+</script>
+</body>
+</html>

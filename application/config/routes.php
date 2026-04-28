@@ -105,3 +105,11 @@ $route['api/notelen/stats'] = 'notelen/ajax_get_stats';
 $route['notelen/export/(:any)'] = 'notelen/export';
 $route['export/notelen/excel'] = 'notelen/export?format=excel';
 $route['export/notelen/pdf'] = 'notelen/export?format=pdf';
+
+// Route untuk SI-JSP monitoring perkara
+$route['jsarif'] = 'jsarif/index';
+$route['jsarif/export-excel'] = 'jsarif/export_excel';
+$route['api/jsarif/list'] = 'jsarif/ajax_list';
+$route['api/jsarif/save'] = 'jsarif/ajax_save';
+$route['api/jsarif/update-status'] = 'jsarif/ajax_update_status';
+$route['api/jsarif/delete'] = 'jsarif/ajax_delete';
