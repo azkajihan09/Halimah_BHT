@@ -45,6 +45,19 @@ class Jsarif extends CI_Controller
         ));
     }
 
+    public function ajax_perkara_detail()
+    {
+        $nomor = trim((string) $this->input->get('nomor_perkara'));
+        $detail = $this->jsarif->get_sipp_perkara_detail($nomor);
+
+        if (!$detail) {
+            $this->_json_response(array('success' => false, 'message' => 'Data perkara tidak ditemukan di SIPP'), 404);
+            return;
+        }
+
+        $this->_json_response(array('success' => true, 'data' => $detail));
+    }
+
     public function ajax_save()
     {
         $id = (int) $this->input->post('id');

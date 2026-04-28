@@ -39,7 +39,7 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label>Klasifikasi</label>
-                                    <select name="klasifikasi" class="form-control nav-input" id="kategori" onchange="filterJenis()">
+                                    <select name="klasifikasi" class="form-control nav-input" id="kategori">
                                         <option value="Gugatan">Gugatan</option>
                                         <option value="Permohonan">Permohonan</option>
                                     </select>
@@ -48,7 +48,7 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label>Jenis</label>
-                                    <select name="jenis" id="jenis_perkara" class="form-control nav-input"></select>
+                                    <input type="text" name="jenis" id="jenis_perkara" class="form-control nav-input" placeholder="Jenis perkara">
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -151,11 +151,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-    const dataJenis = {
-        Gugatan: ['Cerai Gugat', 'Cerai Talak', 'Gugatan Harta Bersama', 'Hadhanah', 'Nafkah', 'Wali Adhal', 'Gugatan Waris', 'Ekonomi Syariah', 'Lain-lain'],
-        Permohonan: ['Dispensasi kawin', 'Isbat nikah', 'Izin poligami', 'Penetapan ahli waris', 'Perwalian anak', 'Pengampuan', 'Lain-lain']
-    };
-
     const badgeClassMap = {
         'Dipanggil': 'badge-warning',
         'Sidang Pertama': 'badge-primary',
@@ -169,7 +164,8 @@
         save: '<?= site_url('jsarif/ajax_save') ?>',
         updateStatus: '<?= site_url('jsarif/ajax_update_status') ?>',
         delete: '<?= site_url('jsarif/ajax_delete') ?>',
-        searchPerkara: '<?= site_url('jsarif/ajax_search_perkara') ?>'
+        searchPerkara: '<?= site_url('jsarif/ajax_search_perkara') ?>',
+        perkaraDetail: '<?= site_url('jsarif/ajax_perkara_detail') ?>'
     };
 
     let suggestRequest = null;
@@ -222,6 +218,27 @@
         }, 250);
     });
 
+    function loadPerkaraDetail(nomor) {
+        $.ajax({
+            url: endpoints.perkaraDetail,
+            method: 'GET',
+            dataType: 'json',
+            data: { nomor_perkara: nomor }
+        }).done(function(response) {
+            const detail = response && response.data;
+            if (!detail) return;
+            if (detail.klasifikasi === 'Gugatan' || detail.klasifikasi === 'Permohonan') {
+                $('#kategori').val(detail.klasifikasi);
+            }
+            filterJenis(detail.jenis_perkara_nama || '');
+            $('input[name="pihak"]').val(detail.pihak || '');
+            $('input[name="alamat"]').val(detail.alamat || '');
+        }).fail(function(xhr) {
+            const response = xhr.responseJSON || {};
+            showAlert(response.message || 'Gagal mengambil detail perkara', 'warning');
+        });
+    }
+
     $(document).on('click', '.suggest-item', function() {
         const $this = $(this);
         const no = $this.data('no');
@@ -234,7 +251,7 @@
         }
         filterJenis(jenis);
         $('#suggestPerkara').hide().empty();
-        $('input[name="pihak"]').focus();
+        loadPerkaraDetail(no);
     });
 
     $(document).on('click', function(event) {
@@ -260,15 +277,7 @@
     });
 
     function filterJenis(selectedValue) {
-        const klasifikasi = $('#kategori').val();
-        const jenisSelect = $('#jenis_perkara');
-        const options = dataJenis[klasifikasi] || [];
-
-        jenisSelect.empty();
-        options.forEach(function(item) {
-            const isSelected = selectedValue && selectedValue === item ? ' selected' : '';
-            jenisSelect.append('<option value="' + escapeHtml(item) + '"' + isSelected + '>' + escapeHtml(item) + '</option>');
-        });
+        $('#jenis_perkara').val(selectedValue || '');
     }
 
     function loadData() {
@@ -461,7 +470,6 @@
     }
 
     $(document).ready(function() {
-        filterJenis();
         loadData();
     });
 </script>

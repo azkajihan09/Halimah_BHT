@@ -142,6 +142,121 @@ class Jsarif_model extends CI_Model
         return $rows;
     }
 
+    public function get_sipp_perkara_detail($nomor_perkara)
+    {
+        $nomor_perkara = trim((string) $nomor_perkara);
+        if ($nomor_perkara === '') {
+            return null;
+        }
+
+        $select_cols = 'perkara_id, nomor_perkara, jenis_perkara_nama, pihak1_text, pihak2_text';
+
+        $perkara = $this->db_jsarif
+            ->select($select_cols)
+            ->from('perkara')
+            ->where('nomor_perkara', $nomor_perkara)
+            ->limit(1)
+            ->get()
+            ->row();
+
+        if (!$perkara) {
+            $perkara = $this->db_jsarif
+                ->select($select_cols)
+                ->from('perkara')
+                ->like('nomor_perkara', $nomor_perkara)
+                ->limit(1)
+                ->get()
+                ->row();
+        }
+
+        if (!$perkara) {
+            return null;
+        }
+
+        $klasifikasi = '';
+        if (stripos($perkara->nomor_perkara, 'Pdt.G') !== false) {
+            $klasifikasi = 'Gugatan';
+        } elseif (stripos($perkara->nomor_perkara, 'Pdt.P') !== false) {
+            $klasifikasi = 'Permohonan';
+        }
+
+        $nama1 = $this->_clean_html_text(isset($perkara->pihak1_text) ? $perkara->pihak1_text : '');
+        $nama2 = $this->_clean_html_text(isset($perkara->pihak2_text) ? $perkara->pihak2_text : '');
+
+        $nama_parts = array();
+        if ($nama1 !== '') $nama_parts[] = $nama1;
+        if ($nama2 !== '') $nama_parts[] = $nama2;
+        $pihak_text = implode(' vs ', $nama_parts);
+
+        $alamat1 = $this->_fetch_alamat_from_table('perkara_pihak1', $perkara->perkara_id);
+        $alamat2 = $this->_fetch_alamat_from_table('perkara_pihak2', $perkara->perkara_id);
+
+        $alamat_parts = array();
+        if ($alamat1 !== '') $alamat_parts[] = $alamat1;
+        if ($alamat2 !== '') $alamat_parts[] = $alamat2;
+        $alamat_text = implode(' ; ', $alamat_parts);
+
+        return array(
+            'nomor_perkara' => $perkara->nomor_perkara,
+            'jenis_perkara_nama' => $perkara->jenis_perkara_nama,
+            'klasifikasi' => $klasifikasi,
+            'pihak' => $pihak_text,
+            'alamat' => $alamat_text
+        );
+    }
+
+    private function _clean_html_text($text)
+    {
+        $text = (string) $text;
+        $text = preg_replace('/<br\s*\/?>/i', ' ', $text);
+        $text = strip_tags($text);
+        $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
+        $text = preg_replace('/\s+/', ' ', $text);
+        return trim($text);
+    }
+
+    private function _fetch_alamat_from_table($table, $perkara_id)
+    {
+        $db = $this->db_jsarif;
+        $original_debug = isset($db->db_debug) ? $db->db_debug : false;
+        $db->db_debug = false;
+
+        if (!$db->table_exists($table)) {
+            $db->db_debug = $original_debug;
+            return '';
+        }
+
+        $fields = array_map('strtolower', $db->list_fields($table));
+        $candidates = array('alamat', 'alamat_pihak', 'alamat_lengkap', 'tempat_tinggal');
+        $alamat_col = null;
+        foreach ($candidates as $c) {
+            if (in_array($c, $fields, true)) {
+                $alamat_col = $c;
+                break;
+            }
+        }
+
+        if (!$alamat_col) {
+            $db->db_debug = $original_debug;
+            return '';
+        }
+
+        $db->select($alamat_col . ' AS alamat');
+        $db->from($table);
+        $db->where('perkara_id', (int) $perkara_id);
+        $rows = $db->get();
+        $db->db_debug = $original_debug;
+
+        if (!$rows) return '';
+
+        $list = array();
+        foreach ($rows->result() as $row) {
+            $a = $this->_clean_html_text($row->alamat);
+            if ($a !== '' && !in_array($a, $list, true)) $list[] = $a;
+        }
+        return implode(', ', $list);
+    }
+
     private function find_by_nomor_perkara($no_perkara, $exclude_id = null)
     {
         $this->db_jsarif->from($this->table);
