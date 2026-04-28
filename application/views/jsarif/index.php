@@ -30,9 +30,10 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-2">
-                                <div class="form-group">
+                                <div class="form-group position-relative">
                                     <label>No. Perkara</label>
-                                    <input type="text" name="no_perkara" class="form-control nav-input" placeholder=".../Pdt.G/..." required>
+                                    <input type="text" name="no_perkara" id="input_no_perkara" class="form-control nav-input" placeholder="Ketik nomor (mis. 245)" autocomplete="off" required>
+                                    <div id="suggestPerkara" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1050; max-height: 260px; overflow-y: auto; display: none;"></div>
                                 </div>
                             </div>
                             <div class="col-md-2">
@@ -167,8 +168,80 @@
         list: '<?= site_url('jsarif/ajax_list') ?>',
         save: '<?= site_url('jsarif/ajax_save') ?>',
         updateStatus: '<?= site_url('jsarif/ajax_update_status') ?>',
-        delete: '<?= site_url('jsarif/ajax_delete') ?>'
+        delete: '<?= site_url('jsarif/ajax_delete') ?>',
+        searchPerkara: '<?= site_url('jsarif/ajax_search_perkara') ?>'
     };
+
+    let suggestRequest = null;
+    let suggestTimer = null;
+
+    function fetchSuggestions(keyword) {
+        const box = $('#suggestPerkara');
+        if (!keyword || keyword.length < 2) {
+            box.hide().empty();
+            return;
+        }
+
+        if (suggestRequest && suggestRequest.readyState !== 4) {
+            suggestRequest.abort();
+        }
+
+        suggestRequest = $.ajax({
+            url: endpoints.searchPerkara,
+            method: 'GET',
+            dataType: 'json',
+            data: { q: keyword }
+        }).done(function(response) {
+            const items = (response && response.data) || [];
+            if (!items.length) {
+                box.html('<div class="list-group-item text-muted small">Tidak ada nomor perkara yang cocok</div>').show();
+                return;
+            }
+
+            let html = '';
+            items.forEach(function(item) {
+                const jenis = item.jenis_perkara_nama || '';
+                const klas = item.klasifikasi || '';
+                html += '<button type="button" class="list-group-item list-group-item-action py-2 px-3 suggest-item"' +
+                    ' data-no="' + escapeHtml(item.nomor_perkara) + '"' +
+                    ' data-jenis="' + escapeHtml(jenis) + '"' +
+                    ' data-klasifikasi="' + escapeHtml(klas) + '">' +
+                    '<div><b>' + escapeHtml(item.nomor_perkara) + '</b></div>' +
+                    '<small class="text-muted">' + escapeHtml(jenis) + (klas ? ' &middot; ' + escapeHtml(klas) : '') + '</small>' +
+                    '</button>';
+            });
+            box.html(html).show();
+        });
+    }
+
+    $(document).on('input', '#input_no_perkara', function() {
+        const keyword = $(this).val();
+        window.clearTimeout(suggestTimer);
+        suggestTimer = window.setTimeout(function() {
+            fetchSuggestions(keyword);
+        }, 250);
+    });
+
+    $(document).on('click', '.suggest-item', function() {
+        const $this = $(this);
+        const no = $this.data('no');
+        const jenis = $this.data('jenis');
+        const klas = $this.data('klasifikasi');
+
+        $('#input_no_perkara').val(no);
+        if (klas === 'Gugatan' || klas === 'Permohonan') {
+            $('#kategori').val(klas);
+        }
+        filterJenis(jenis);
+        $('#suggestPerkara').hide().empty();
+        $('input[name="pihak"]').focus();
+    });
+
+    $(document).on('click', function(event) {
+        if (!$(event.target).closest('#input_no_perkara, #suggestPerkara').length) {
+            $('#suggestPerkara').hide();
+        }
+    });
 
     let daftarPerkara = [];
     let activeStatusId = null;

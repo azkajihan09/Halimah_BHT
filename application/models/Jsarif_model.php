@@ -9,7 +9,7 @@ class Jsarif_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
-        $this->db_jsarif = $this->load->database('notelen_db', true);
+        $this->db_jsarif = $this->db;
         $this->ensure_table();
     }
 
@@ -112,6 +112,34 @@ class Jsarif_model extends CI_Model
         $this->db_jsarif->delete($this->table);
 
         return $this->db_jsarif->affected_rows() > 0;
+    }
+
+    public function search_sipp_perkara($keyword, $limit = 15)
+    {
+        $keyword = trim((string) $keyword);
+        if ($keyword === '') {
+            return array();
+        }
+
+        $this->db_jsarif->select('nomor_perkara, jenis_perkara_nama');
+        $this->db_jsarif->from('perkara');
+        $this->db_jsarif->like('nomor_perkara', $keyword);
+        $this->db_jsarif->order_by('perkara_id', 'DESC');
+        $this->db_jsarif->limit((int) $limit);
+
+        $rows = $this->db_jsarif->get()->result();
+
+        foreach ($rows as $row) {
+            if (stripos($row->nomor_perkara, 'Pdt.G') !== false) {
+                $row->klasifikasi = 'Gugatan';
+            } elseif (stripos($row->nomor_perkara, 'Pdt.P') !== false) {
+                $row->klasifikasi = 'Permohonan';
+            } else {
+                $row->klasifikasi = '';
+            }
+        }
+
+        return $rows;
     }
 
     private function find_by_nomor_perkara($no_perkara, $exclude_id = null)

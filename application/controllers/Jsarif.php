@@ -34,6 +34,17 @@ class Jsarif extends CI_Controller
         ));
     }
 
+    public function ajax_search_perkara()
+    {
+        $keyword = trim((string) $this->input->get('q'));
+        $rows = $this->jsarif->search_sipp_perkara($keyword, 15);
+
+        $this->_json_response(array(
+            'success' => true,
+            'data' => $rows
+        ));
+    }
+
     public function ajax_save()
     {
         $id = (int) $this->input->post('id');
